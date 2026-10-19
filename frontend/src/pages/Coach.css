@@ -1,0 +1,626 @@
+/* P3 — Режим тренера: дашборд и карточка подопечного */
+.coach-page {
+  min-height: 100vh;
+  background: #1C1C1C;
+  color: #fff;
+  padding: 40px 20px 60px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.coach-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.coach-back {
+  background: #2a2a2a;
+  border: none;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.coach-back:active { transform: scale(0.94); }
+.coach-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Приглашение */
+.coach-invite-card {
+  background: linear-gradient(150deg, #2b2b2b, #232323);
+  border: 1px solid rgba(255, 107, 0, 0.25);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.coach-invite-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #FF8A24;
+}
+.coach-invite-hint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 8px 0 12px;
+  line-height: 1.4;
+}
+.coach-invite-code {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-align: center;
+  background: #1C1C1C;
+  border-radius: 12px;
+  padding: 14px;
+  color: #fff;
+  user-select: all;
+}
+.coach-invite-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.coach-chip-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.coach-chip-btn:active { transform: scale(0.97); background: #3d3d3d; }
+
+.coach-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 12px;
+}
+.coach-empty {
+  background: #2a2a2a;
+  border-radius: 14px;
+  padding: 24px 18px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Список подопечных */
+.coach-clients { display: flex; flex-direction: column; gap: 10px; }
+.client-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 16px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  color: #fff;
+  transition: transform 0.15s, background 0.15s;
+  width: 100%;
+}
+.client-card:active { transform: scale(0.99); background: #303030; }
+.client-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #FF6B00;
+  flex-shrink: 0;
+}
+.client-main { flex: 1; min-width: 0; }
+.client-name-row { display: flex; align-items: center; gap: 8px; }
+.client-name { font-size: 16px; font-weight: 600; }
+.client-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  padding: 2px 7px;
+  border-radius: 8px;
+}
+.client-live-btn {
+  cursor: pointer;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  padding: 3px 9px;
+  transition: background 0.15s, transform 0.12s;
+}
+.client-live-btn:active { transform: scale(0.95); }
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7);
+  animation: live-pulse 1.6s infinite;
+}
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 77, 77, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+}
+.client-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.client-plan-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.client-noplan { color: rgba(255, 255, 255, 0.4); font-style: italic; }
+.client-meta { font-size: 12px; color: rgba(255, 255, 255, 0.4); margin-top: 4px; }
+.client-chevron { color: rgba(255, 255, 255, 0.3); flex-shrink: 0; }
+
+.vis-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.vis-draft { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.6); }
+.vis-published { background: rgba(255, 138, 36, 0.18); color: #FF8A24; }
+
+/* Кнопка входа в живой просмотр тренировки (CoachClient) */
+.cl-live-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 12px;
+  transition: transform 0.12s, background 0.15s, border-color 0.15s;
+}
+.cl-live-entry:active { transform: scale(0.99); }
+.cl-live-entry.is-live {
+  border-color: rgba(255, 77, 77, 0.5);
+  background: linear-gradient(120deg, rgba(255, 77, 77, 0.12), #2a2a2a 60%);
+}
+.cl-live-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.cl-live-entry-left > svg { color: #FF8A24; flex-shrink: 0; }
+.cl-live-entry-text { display: flex; flex-direction: column; min-width: 0; }
+.cl-live-entry-title { font-size: 15px; font-weight: 700; }
+.cl-live-entry.is-live .cl-live-entry-title { color: #ff8585; }
+.cl-live-entry-sub {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Вход в статистику подопечного */
+.cl-stats-entry .cl-live-entry-left > svg { color: #36C5F0; }
+.cl-stats-entry:hover {
+  border-color: rgba(54, 197, 240, 0.4);
+  background: linear-gradient(120deg, rgba(54, 197, 240, 0.10), #2a2a2a 60%);
+}
+.cl-live-entry .live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7);
+  animation: live-pulse 1.6s infinite;
+}
+
+
+/* Карточка подопечного: блоки управления */
+.coach-noplan {
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 28px 18px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.coach-block {
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.coach-block-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.coach-block-title { font-size: 16px; font-weight: 600; }
+.coach-block-sub { font-size: 13px; color: rgba(255, 255, 255, 0.55); margin-top: 3px; }
+
+/* Фаза 3: кардио-норма подопечного */
+.coach-cardio-track {
+  height: 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.coach-cardio-track i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #FF8A24, #FF6B00);
+  transition: width 0.5s ease;
+}
+.coach-cardio-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.coach-cardio-stats span { display: inline-flex; align-items: center; gap: 5px; }
+.coach-cardio-stats b { color: #fff; }
+
+.coach-primary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1C1C1C;
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.coach-primary-btn:active { transform: scale(0.98); }
+.coach-primary-btn:disabled { opacity: 0.5; cursor: default; }
+.coach-primary-btn.is-secondary {
+  background: #333;
+  color: #fff;
+}
+.coach-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #FF8A24;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-top: 6px;
+}
+
+/* Дни (переиспользуем стиль из Programs) */
+.cfg-days { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.cfg-day {
+  flex: 1;
+  min-width: 38px;
+  background: #333;
+  color: rgba(255, 255, 255, 0.7);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cfg-day.active {
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  color: #1C1C1C;
+  border-color: transparent;
+}
+
+/* Недели */
+.weeks-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.week-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1f1f1f;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.week-row-click {
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.12s, background 0.15s, border-color 0.15s;
+}
+.week-row-click:active { transform: scale(0.99); }
+.week-row-click:hover { background: #262626; border-color: rgba(255, 138, 36, 0.25); }
+.week-row-right { display: flex; align-items: center; gap: 10px; }
+.week-edit-ico { color: rgba(255, 255, 255, 0.35); flex-shrink: 0; }
+.week-row-click:hover .week-edit-ico { color: #FF8A24; }
+.week-info { display: flex; align-items: baseline; gap: 10px; }
+.week-name { font-size: 15px; font-weight: 600; }
+.week-days { font-size: 12px; color: rgba(255, 255, 255, 0.45); }
+.week-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.week-toggle.on { background: rgba(255, 138, 36, 0.18); color: #FF8A24; }
+.week-toggle.off { background: #333; color: rgba(255, 255, 255, 0.5); }
+
+/* Список шаблонов (минимальная версия стилей Programs) */
+.programs-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.program-card { background: #2a2a2a; border-radius: 16px; padding: 16px; border: 2px solid transparent; }
+.program-card-head { display: flex; gap: 12px; align-items: center; }
+.program-card-icon {
+  width: 40px; height: 40px; border-radius: 12px; background: #333;
+  display: flex; align-items: center; justify-content: center; color: #FF8A24; flex-shrink: 0;
+}
+.program-card-titles { flex: 1; min-width: 0; }
+.program-card-name { font-size: 16px; font-weight: 600; margin: 0; }
+.program-card-desc { font-size: 13px; color: rgba(255, 255, 255, 0.6); margin: 10px 0; line-height: 1.4; }
+.program-card-meta { display: flex; gap: 6px; font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-bottom: 12px; }
+.program-card-button {
+  width: 100%; border: none; border-radius: 12px; padding: 12px;
+  font-size: 15px; font-weight: 600; color: #1C1C1C;
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.program-card-button:disabled { opacity: 0.6; }
+
+/* Модалка настройки */
+.cfg-overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+}
+.cfg-modal {
+  background: #232323; border-radius: 20px; padding: 22px; width: 100%; max-width: 380px;
+}
+.cfg-title { font-size: 19px; font-weight: 700; margin: 0; }
+.cfg-sub { font-size: 13px; color: rgba(255, 255, 255, 0.55); margin: 6px 0 16px; }
+.cfg-section { margin-bottom: 18px; }
+.cfg-section-title { font-size: 14px; font-weight: 600; }
+.cfg-hint { font-size: 12px; color: rgba(255, 255, 255, 0.45); font-weight: 400; }
+.cfg-maxes { display: flex; gap: 8px; margin-top: 10px; }
+.cfg-max { flex: 1; display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+.cfg-max input {
+  background: #1C1C1C; border: 1px solid #3a3a3a; border-radius: 10px;
+  padding: 10px; color: #fff; font-size: 15px; text-align: center;
+}
+.cfg-actions { display: flex; gap: 10px; margin-top: 8px; }
+.cfg-btn-cancel {
+  flex: 1; background: #333; color: #fff; border: none; border-radius: 12px; padding: 12px; font-weight: 600; cursor: pointer;
+}
+.cfg-btn-save {
+  flex: 2; background: linear-gradient(-34deg, #FF8A24, #FFDA24); color: #1C1C1C;
+  border: none; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer;
+}
+.cfg-btn-save:disabled { opacity: 0.5; cursor: default; }
+
+/* ===== Редактор плана ===== */
+.ed-planhead { margin-bottom: 14px; }
+.ed-planname {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+.ed-planname svg { color: rgba(255, 255, 255, 0.45); }
+.ed-plansub { font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 4px; }
+.ed-rename { display: flex; align-items: center; gap: 8px; }
+.ed-rename input {
+  flex: 1;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+}
+.ed-icon-ok, .ed-icon-x {
+  width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.ed-icon-ok { background: linear-gradient(-34deg, #FF8A24, #FFDA24); color: #1c1c1c; }
+.ed-icon-x { background: #333; color: #fff; }
+
+/* Недели */
+.ed-weeks {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.ed-weeks::-webkit-scrollbar { display: none; }
+.ed-week-pill {
+  flex: 0 0 auto;
+  background: #2a2a2a;
+  color: rgba(255, 255, 255, 0.7);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ed-week-pill.active { background: linear-gradient(-34deg, #FF8A24, #FFDA24); color: #1c1c1c; }
+.ed-week-add {
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  color: #FF8A24;
+  border: 1px dashed rgba(255, 138, 36, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.ed-week-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.ed-week-label { font-size: 16px; font-weight: 700; }
+.ed-del-week {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255, 107, 107, 0.12); color: #ff6b6b;
+  border: none; border-radius: 10px; padding: 7px 12px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+
+/* День */
+.ed-day {
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.ed-day-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ed-day-titles { min-width: 0; }
+.ed-day-name { font-size: 16px; font-weight: 600; display: block; }
+.ed-day-sub { font-size: 12px; color: rgba(255, 255, 255, 0.45); }
+.ed-day-acts { display: flex; gap: 6px; flex-shrink: 0; }
+.ed-icon {
+  width: 32px; height: 32px; border-radius: 9px; border: none;
+  background: #333; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.ed-icon-danger { background: rgba(255, 107, 107, 0.12); color: #ff6b6b; }
+
+.ed-ex-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.ed-ex-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: #1f1f1f; border-radius: 10px; padding: 10px 12px;
+}
+.ed-ex-info { min-width: 0; }
+.ed-ex-name { font-size: 14px; font-weight: 600; display: block; }
+.ed-ex-sets { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+.ed-ex-acts { display: flex; gap: 6px; flex-shrink: 0; }
+.ed-ex-empty { font-size: 13px; color: rgba(255, 255, 255, 0.35); padding: 6px 2px; }
+.ed-add-ex {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #333; color: #FF8A24; border: none;
+  border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.ed-add-day { margin-top: 8px; }
+.ed-open-btn { margin-top: 4px; margin-bottom: 4px; }
+
+/* Модалка: поля */
+.ed-modal { max-width: 420px; max-height: 88vh; overflow-y: auto; }
+.ed-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+.ed-field input, .ed-field select, .ed-field textarea {
+  background: #1C1C1C; border: 1px solid #3a3a3a; border-radius: 10px;
+  padding: 10px 12px; color: #fff; font-size: 15px; font-family: inherit;
+}
+.ed-field textarea { resize: vertical; }
+.ed-row2 { display: flex; gap: 10px; }
+.ed-row2 .ed-field { flex: 1; }
+.ed-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #fff; margin-bottom: 14px; cursor: pointer; }
+.ed-check input { width: 18px; height: 18px; accent-color: #FF8A24; }
+
+.ed-sets { background: #1f1f1f; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+.ed-sets-head, .ed-set-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 32px; gap: 8px; align-items: center;
+}
+.ed-sets-head { font-size: 11px; color: rgba(255, 255, 255, 0.45); margin-bottom: 8px; padding: 0 2px; }
+.ed-set-row { margin-bottom: 8px; }
+.ed-set-row input {
+  background: #1C1C1C; border: 1px solid #3a3a3a; border-radius: 8px;
+  padding: 9px; color: #fff; font-size: 15px; text-align: center; width: 100%;
+}
+.ed-set-del {
+  background: rgba(255, 107, 107, 0.12); color: #ff6b6b; border: none;
+  border-radius: 8px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.ed-addrow {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #333; color: #FF8A24; border: none; border-radius: 9px;
+  padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 2px;
+}
+
+/* Status Badges для live-статусов клиентов */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.2s;
+}
+
+.status-badge.status-completed {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.status-skipped {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.status-idle {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.15) 0%, rgba(75, 85, 99, 0.15) 100%);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+

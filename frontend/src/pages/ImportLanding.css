@@ -1,0 +1,322 @@
+/* Landing-страница импорта программы по ссылке (P6) */
+.il-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #1c1c1c;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 32px 20px 40px;
+  animation: twb-fade-in 0.35s ease both;
+  overflow-x: hidden;
+}
+.il-ambient {
+  position: absolute;
+  top: -140px; left: 50%;
+  transform: translateX(-50%);
+  width: 460px; height: 340px;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.16), transparent 70%);
+  filter: blur(34px);
+  pointer-events: none;
+}
+.il-logo { position: relative; width: 130px; margin-bottom: 22px; }
+
+.il-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 24px 20px;
+  text-align: center;
+  animation: twb-scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.il-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffce8a;
+  background: rgba(255, 138, 36, 0.12);
+  border-radius: 999px;
+  padding: 5px 12px;
+  margin-bottom: 14px;
+}
+.il-ico {
+  width: 54px; height: 54px;
+  margin: 0 auto 10px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #1c1c1c;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  box-shadow: 0 8px 24px rgba(255, 138, 36, 0.3);
+}
+.il-name { font-size: 21px; font-weight: 800; line-height: 1.2; }
+.il-author { font-size: 12.5px; color: rgba(255, 255, 255, 0.5); margin: 4px 0 8px; }
+.il-desc { font-size: 13px; color: rgba(255, 255, 255, 0.6); line-height: 1.5; margin-bottom: 10px; }
+.il-meta {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 6px;
+  font-size: 12.5px; color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 10px;
+}
+.il-tags { display: flex; justify-content: center; gap: 6px; margin-bottom: 18px; }
+.il-tag {
+  font-size: 11px; font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.il-tag-accent { color: #ffce8a; background: rgba(255, 138, 36, 0.14); }
+
+.il-choose { font-size: 13px; color: rgba(255, 255, 255, 0.55); margin-bottom: 10px; }
+.il-btn {
+  width: 100%;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14.5px; font-weight: 700;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  text-decoration: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.il-btn:active { transform: scale(0.98); }
+.il-btn:disabled { opacity: 0.6; }
+.il-btn-primary {
+  background: linear-gradient(-20deg, #ff8a24, #ffd24a);
+  color: #1c1c1c;
+}
+.il-btn-tg { background: #2aabee; color: #fff; }
+.il-btn-secondary {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  margin-top: 12px;
+}
+.il-note { font-size: 11.5px; color: rgba(255, 255, 255, 0.4); line-height: 1.45; }
+
+.il-card-error { color: #fb7185; }
+.il-card-error h2 { font-size: 18px; margin: 10px 0 6px; color: #fff; }
+.il-card-error p { font-size: 13px; color: rgba(255, 255, 255, 0.55); }
+
+.il-skel {
+  height: 26px;
+  border-radius: 10px;
+  background: linear-gradient(100deg, #2a2a2a 40%, #333 50%, #2a2a2a 60%);
+  background-size: 200% 100%;
+  animation: il-shimmer 1.4s ease-in-out infinite;
+  margin-bottom: 10px;
+}
+.il-skel-sm { height: 16px; width: 60%; margin: 0 auto; }
+@keyframes il-shimmer {
+  0% { background-position: 120% 0; }
+  100% { background-position: -80% 0; }
+}
+
+.il-code {
+  position: relative;
+  margin-top: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.05em;
+}
+
+/* -- Секции превью недели и прогноза -- */
+.il-section {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 20px;
+  animation: twb-scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.il-sec-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.il-sec-h svg { color: #ffb85a; }
+.il-sec-h h3 {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.il-sec-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: lowercase;
+}
+
+/* -- Дни первой недели -- */
+.il-days {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.il-day {
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 14px 14px 10px;
+}
+.il-day-h {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.07);
+}
+.il-day-idx {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1c1c1c;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+.il-day-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.2;
+}
+.il-ex {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.il-ex-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.il-ex-main {
+  min-width: 0;
+  flex: 1;
+}
+.il-ex-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.il-ex-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.il-ex-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.il-ex-tag-acc {
+  color: #ffce8a;
+  background: rgba(255, 138, 36, 0.14);
+}
+.il-ex-sets {
+  flex-shrink: 0;
+  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  text-align: right;
+  align-self: center;
+}
+
+/* -- Карточка прогноза -- */
+.il-fc {
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 16px;
+}
+.il-fc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.il-fc-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.il-fc-cell-r { text-align: right; align-items: flex-end; }
+.il-fc-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+.il-fc-val {
+  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1;
+}
+.il-fc-val-accent {
+  background: linear-gradient(-25deg, #ff8a24, #ffd24a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.il-fc-delta {
+  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 10px;
+  letter-spacing: -0.01em;
+}
+.il-fc-delta.up {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.11);
+}
+.il-fc-delta.down {
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.11);
+}
+.il-spark {
+  display: block;
+  width: 100%;
+  height: 80px;
+  margin: 4px 0 8px;
+}
+.il-fc-note {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.5;
+  text-align: center;
+  margin: 4px 0 0;
+}

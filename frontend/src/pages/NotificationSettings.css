@@ -1,0 +1,409 @@
+/* Страница настроек уведомлений */
+.notif-page {
+  min-height: 100vh;
+  background: #1C1C1C;
+  color: #fff;
+  padding: 40px 20px 80px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Шапка */
+.notif-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.notif-back {
+  background: #2a2a2a;
+  border: none;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.notif-back:active {
+  transform: scale(0.94);
+  background: #333;
+}
+
+.notif-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Загрузка */
+.notif-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Секция настроек */
+.notif-section {
+  margin-bottom: 24px;
+}
+
+.notif-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.notif-section-icon {
+  color: #FF8A24;
+}
+
+.notif-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Карточка настроек */
+.notif-card {
+  background: linear-gradient(150deg, #2b2b2b, #252525);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+/* Строка с переключателем */
+.notif-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.notif-toggle-row-border {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 18px;
+  margin-top: 18px;
+}
+
+.notif-toggle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-toggle-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.notif-toggle-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.3;
+}
+
+/* Кастомный переключатель */
+.notif-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.notif-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.notif-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #333;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 28px;
+}
+
+.notif-switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.notif-switch input:checked + .notif-switch-slider {
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  border-color: transparent;
+}
+
+.notif-switch input:checked + .notif-switch-slider:before {
+  transform: translateX(20px);
+  background: #fff;
+}
+
+.notif-switch input:focus + .notif-switch-slider {
+  box-shadow: 0 0 0 3px rgba(255, 138, 36, 0.2);
+}
+
+/* Блок слайдера */
+.notif-slider-block {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notif-slider-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FF8A24;
+  margin-bottom: 14px;
+}
+
+.notif-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 8px;
+  background: #1f1f1f;
+  outline: none;
+  -webkit-appearance: none;
+  margin: 14px 0;
+}
+
+.notif-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 138, 36, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.notif-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+  box-shadow: 0 2px 12px rgba(255, 138, 36, 0.6);
+}
+
+.notif-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(255, 138, 36, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.notif-slider::-moz-range-thumb:active {
+  transform: scale(1.15);
+  box-shadow: 0 2px 12px rgba(255, 138, 36, 0.6);
+}
+
+.notif-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 8px;
+  background: linear-gradient(to right, 
+    #FF8A24 0%, 
+    #FF8A24 var(--value, 0%), 
+    #1f1f1f var(--value, 0%), 
+    #1f1f1f 100%
+  );
+}
+
+.notif-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 6px;
+}
+
+/* Блок времени */
+.notif-time-block {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notif-time-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.notif-time-input {
+  width: 100%;
+  background: #1f1f1f;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.notif-time-input:focus {
+  outline: none;
+  border-color: #FF8A24;
+  background: #1C1C1C;
+}
+
+/* Тихие часы */
+.notif-quiet-times {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-quiet-time {
+  flex: 1;
+}
+
+.notif-quiet-separator {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+/* Кнопки действий */
+.notif-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.notif-test-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 138, 36, 0.3);
+  color: #FF8A24;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.notif-test-btn:active {
+  transform: scale(0.98);
+  background: #2e2e2e;
+  border-color: #FF8A24;
+}
+
+.notif-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1C1C1C;
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+  box-shadow: 0 4px 16px rgba(255, 138, 36, 0.3);
+}
+
+.notif-save-btn:active {
+  transform: scale(0.98);
+}
+
+.notif-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .notif-page {
+    padding: 24px 16px 80px;
+  }
+
+  .notif-title {
+    font-size: 20px;
+  }
+
+  .notif-quiet-times {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .notif-quiet-separator {
+    transform: rotate(90deg);
+    margin: 0;
+  }
+
+  .notif-quiet-time {
+    width: 100%;
+  }
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notif-section {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.notif-section:nth-child(2) { animation-delay: 0.05s; }
+.notif-section:nth-child(3) { animation-delay: 0.1s; }
+.notif-section:nth-child(4) { animation-delay: 0.15s; }
+.notif-section:nth-child(5) { animation-delay: 0.2s; }

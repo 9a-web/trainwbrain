@@ -1,0 +1,154 @@
+/* =========================================================================
+   TrainWithBrain — motion layer.
+   Smooth entrance animations + tasteful ambient touches, applied on top of
+   the existing design system (no colors/layout changed). Loaded last.
+   Fully disabled for users who prefer reduced motion (see bottom).
+   ========================================================================= */
+
+/* ---------- Keyframes ---------- */
+@keyframes twb-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes twb-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes twb-scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes twb-glow-breathe {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.95; transform: translateX(-50%) scale(1.1); }
+}
+@keyframes twb-flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25%      { transform: scale(1.1) rotate(-4deg); }
+  50%      { transform: scale(0.95) rotate(3deg); }
+  75%      { transform: scale(1.06) rotate(-2deg); }
+}
+@keyframes twb-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes twb-gradient-pan {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---------- Reusable utilities ---------- */
+.anim-fade-up { animation: twb-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-fade-in { animation: twb-fade-in 0.45s ease both; }
+.anim-scale-in { animation: twb-scale-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ---------- Page-level entrances ---------- */
+.login-page,
+.content-layer,
+.programs-page,
+.profile-page,
+.workout-view {
+  animation: twb-fade-in 0.4s ease both;
+}
+
+/* ---------- Login screen: cascade the card contents ---------- */
+.login-card > * { animation: twb-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.login-card > *:nth-child(1) { animation-delay: 0.04s; }
+.login-card > *:nth-child(2) { animation-delay: 0.10s; }
+.login-card > *:nth-child(3) { animation-delay: 0.16s; }
+.login-card > *:nth-child(4) { animation-delay: 0.22s; }
+.login-card > *:nth-child(5) { animation-delay: 0.28s; }
+.login-card > *:nth-child(6) { animation-delay: 0.34s; }
+.login-card > *:nth-child(7) { animation-delay: 0.40s; }
+.login-card > *:nth-child(8) { animation-delay: 0.46s; }
+
+/* ---------- Home: greeting / streak / selector cascade ---------- */
+.greeting-row      { animation: twb-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.streak-row        { animation: twb-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both; }
+.date-selector     { animation: twb-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both; }
+.no-plan-card      { animation: twb-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+.rest-day-note     { animation: twb-fade-up 0.45s ease 0.1s both; }
+
+/* ---------- Programs: staggered cards ---------- */
+.programs-actions      { animation: twb-fade-up 0.45s ease both; }
+.programs-section-title{ animation: twb-fade-up 0.45s ease 0.06s both; }
+.programs-list .program-card { animation: twb-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.programs-list .program-card:nth-child(1) { animation-delay: 0.04s; }
+.programs-list .program-card:nth-child(2) { animation-delay: 0.10s; }
+.programs-list .program-card:nth-child(3) { animation-delay: 0.16s; }
+.programs-list .program-card:nth-child(4) { animation-delay: 0.22s; }
+.programs-list .program-card:nth-child(5) { animation-delay: 0.28s; }
+.programs-list .program-card:nth-child(6) { animation-delay: 0.34s; }
+.programs-list .program-card:nth-child(n + 7) { animation-delay: 0.4s; }
+
+/* ---------- Profile ---------- */
+.profile-card   { animation: twb-scale-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.profile-meta   { animation: twb-fade-up 0.45s ease 0.1s both; }
+.profile-logout { animation: twb-fade-up 0.45s ease 0.18s both; }
+
+/* ---------- Ambient: header glow breathes ---------- */
+.gradient-background,
+.login-gradient {
+  animation: twb-glow-breathe 7s ease-in-out infinite;
+}
+
+/* ---------- Ambient: the streak flame is alive; sun/moon gently floats ---------- */
+.streak-icon {
+  transform-origin: center bottom;
+  animation: twb-flicker 3.2s ease-in-out infinite;
+}
+.greeting-icon {
+  animation: twb-float 4s ease-in-out infinite;
+}
+
+/* ---------- CTA buttons: subtle living gradient + hover lift ---------- */
+.login-btn-primary,
+.launch-button,
+.no-plan-button,
+.program-card-button,
+.confirm-btn-ok,
+.cfg-btn-save,
+.edit-btn-save {
+  background-size: 200% 200%;
+  animation: twb-gradient-pan 5s ease infinite;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.login-btn-primary:hover,
+.no-plan-button:hover,
+.program-card-button:hover:not(:disabled),
+.confirm-btn-ok:hover,
+.cfg-btn-save:hover,
+.edit-btn-save:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 26px rgba(255, 107, 0, 0.35);
+}
+
+/* Кнопка «Начать» — без свечения при наведении (есть свой мягкий ховер в DateSelector.css) */
+
+/* ---------- Header avatar: inviting hover ---------- */
+.profile-avatar {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.profile-avatar:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.35);
+}
+
+/* ---------- Splash logo: gentle breathing scale on top of the pulse ---------- */
+.app-splash-logo {
+  animation: twb-splash-pulse 1.4s ease-in-out infinite, twb-float 3s ease-in-out infinite;
+}
+
+/* ---------- Respect reduced-motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

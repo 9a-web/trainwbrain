@@ -1,0 +1,131 @@
+.superset-group {
+  border-left: 3px solid #3B82F6;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.05);
+  padding: 12px;
+  margin: 8px 0;
+}
+
+.superset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.superset-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.superset-rest {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+}
+
+.superset-exercise {
+  margin-bottom: 4px;
+}
+
+.superset-ex-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.superset-ex-letter {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #3B82F6;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.superset-ex-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.superset-ex-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+}
+
+.superset-ex-sets {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.superset-ex-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.superset-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.superset-icon:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+.superset-icon-danger {
+  color: #EF4444;
+}
+
+.superset-icon-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #DC2626;
+}
+
+.superset-arrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 6px 14px;
+  position: relative;
+}
+
+.superset-arrow-line {
+  width: 2px;
+  height: 20px;
+  background: #3B82F6;
+}
+
+.superset-arrow-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}

@@ -1,0 +1,37 @@
+# /etc/systemd/system/twb-backend-dev.service
+# Dev-backend с hot-reload на 127.0.0.1:8001.
+# Нужен, чтобы можно было править код и сразу видеть результат, не трогая
+# прод-процесс на 8000.
+#
+# Чтобы эксперименты не портили прод-данные, можно раскомментировать
+# Environment=DB_NAME=... — python-dotenv НЕ переопределяет уже заданные
+# переменные окружения, поэтому systemd-значение выиграет у .env.
+
+[Unit]
+Description=TrainWithBrain backend DEV (uvicorn --reload)
+After=network-online.target mongod.service
+Wants=network-online.target
+Requires=mongod.service
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/trainwbrain/backend
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Environment=DB_NAME=trainwbrain_dev
+ExecStart=/opt/trainwbrain/backend/.venv/bin/uvicorn server:app \
+    --host 127.0.0.1 \
+    --port 8001 \
+    --reload \
+    --reload-dir /opt/trainwbrain/backend \
+    --proxy-headers \
+    --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=3
+TimeoutStopSec=30
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,223 @@
+.onb-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #1c1c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.onb-gradient {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 454px;
+  max-width: 100%;
+  height: 140px;
+  z-index: 0;
+  pointer-events: none;
+}
+.onb-gradient img {
+  width: 100%;
+  height: 100%;
+  filter: blur(100px);
+  opacity: 0.85;
+}
+
+.onb-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(43, 43, 43, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  padding: 30px 22px 26px;
+  backdrop-filter: blur(6px);
+}
+
+.onb-logo {
+  width: 88px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.onb-title {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: #fff;
+  margin: 2px 0 6px;
+}
+
+.onb-subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 20px;
+  max-width: 340px;
+}
+
+.onb-paths {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.onb-path {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  background: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 13px 14px;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+.onb-path:hover {
+  border-color: rgba(255, 138, 36, 0.35);
+  transform: translateY(-1px);
+}
+.onb-path-ic {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.onb-ic-managed {
+  background: rgba(54, 197, 240, 0.15);
+  color: #36c5f0;
+}
+.onb-ic-standalone {
+  background: rgba(255, 138, 36, 0.16);
+  color: #ff8a24;
+}
+.onb-path b {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 3px;
+}
+.onb-path span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.onb-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onb-input-wrap {
+  position: relative;
+  width: 100%;
+}
+.onb-input-ic {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+.onb-input {
+  width: 100%;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  border-radius: 14px;
+  padding: 15px 16px 15px 44px;
+  color: #fff;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.onb-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 1px;
+}
+.onb-input:focus {
+  border-color: #ff8a24;
+}
+
+.onb-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #ff8a8a;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(255, 90, 90, 0.1);
+  border: 1px solid rgba(255, 90, 90, 0.32);
+  border-radius: 12px;
+}
+
+.onb-submit {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 15px 16px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c1c1c;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  box-shadow: 0 8px 24px rgba(255, 107, 0, 0.3);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+}
+.onb-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.onb-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.onb-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.onb-hint {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 18px 0 0;
+  line-height: 1.5;
+}
+
+.spin {
+  animation: twb-spin 0.9s linear infinite;
+}
+@keyframes twb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,201 @@
+/* CoachLiveSession — экран наблюдения тренера за тренировкой подопечного */
+
+.coach-live-page .coach-header {
+  position: relative;
+}
+
+/* индикатор real-time соединения в шапке */
+.rt-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.rt-chip.rt-on {
+  color: #59E08A;
+  background: rgba(59, 209, 111, 0.14);
+}
+.rt-chip.rt-off {
+  color: #ffae5b;
+  background: rgba(255, 138, 36, 0.14);
+}
+
+/* карточка спортсмена */
+.cl-athlete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 4px 0 14px;
+}
+.cl-ava-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.cl-ava {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #FF6B00;
+  display: block;
+}
+.cl-presence {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #6b6b6b;
+  border: 2px solid #2a2a2a;
+}
+.cl-presence.is-online {
+  background: #3BD16F;
+}
+.cl-athlete-main {
+  min-width: 0;
+  flex: 1;
+}
+.cl-athlete-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+.cl-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+.cl-status.live {
+  color: #ff6b6b;
+}
+.cl-status-sub {
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+}
+.cl-status .live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7);
+  animation: live-pulse 1.6s infinite;
+}
+
+/* пустое состояние «тренировка не идёт» */
+.cl-empty {
+  text-align: center;
+  padding: 40px 24px;
+  background: #242424;
+  border-radius: 18px;
+  margin-top: 8px;
+}
+.cl-empty-ico {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 138, 36, 0.12);
+  color: #FF8A24;
+}
+.cl-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+}
+.cl-empty-sub {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+/* панель подтверждения тренировки */
+.cl-confirm-bar {
+  margin: 0 0 12px;
+}
+.cl-confirmed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #59E08A;
+  background: rgba(59, 209, 111, 0.12);
+  border: 1px solid rgba(59, 209, 111, 0.3);
+  border-radius: 14px;
+  padding: 12px;
+}
+.cl-finished-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Панель управления live (тренер) */
+.cl-live-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Phase 3: старт тренировки «под диктовку тренера» */
+.cl-start-box {
+  margin-top: 18px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cl-start-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a8a8a;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.cl-start-days {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.cl-day-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 74px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid #3a3a3a;
+  background: #262626;
+  color: #cacaca;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.cl-day-chip.active {
+  border-color: transparent;
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+}
+.cl-day-chip-dow { font-size: 14px; font-weight: 800; }
+.cl-day-chip-title { font-size: 11px; font-weight: 600; opacity: 0.85; }
+.cl-start-btn { margin-top: 4px; }

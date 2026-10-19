@@ -1,0 +1,31 @@
+# ~/.config/systemd/user/dsh-web.service   (пользовательский юнит, НЕ /etc/systemd/system)
+#
+# Установка:
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/systemd/dsh-web.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now dsh-web
+#   sudo loginctl enable-linger deploy     # чтобы юнит стартовал после ребута
+#
+# Ключ DeepSeek лежит в ~/.config/dsh/env (chmod 600), формат: DEEPSEEK_API_KEY=sk-...
+# Логи: journalctl --user -u dsh-web -f   (там же печатается URL с токеном)
+
+[Unit]
+Description=DeepSeek Harness Web UI (dsh web)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/trainwbrain
+EnvironmentFile=%h/.config/dsh/env
+Environment=NODE_ENV=production
+# --trusted-host нужен ТОЛЬКО при доступе через nginx (dsh.trainwbrain.ru).
+# Для SSH-туннеля флаг можно убрать.
+ExecStart=/usr/bin/dsh web --port 3080 --no-open --trusted-host dsh.trainwbrain.ru
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,121 @@
+{
+  "theme": {
+    "mode": "dark",
+    "archetype": "2 (The Performance Pro)",
+    "description": "High-end fitness analytics dashboard reminiscent of Whoop/Strava with tactical minimalism and deep data storytelling. The UI feels like a command center, balancing stark data clarity with energetic accents."
+  },
+  "colors": {
+    "background": {
+      "app": "#1C1C1C",
+      "card": "#242424",
+      "card_hover": "#2A2A2A",
+      "card_glass": "rgba(36, 36, 36, 0.8)"
+    },
+    "accent": {
+      "primary": "#FF6B00",
+      "secondary": "#FFDA24",
+      "gradient": "linear-gradient(-34deg, #FF8A24, #FFDA24)",
+      "glow": "rgba(255, 107, 0, 0.15)",
+      "success": "#22C55E",
+      "danger": "#EF4444"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "rgba(255, 255, 255, 0.7)",
+      "muted": "#959595"
+    },
+    "borders": {
+      "subtle": "rgba(255, 255, 255, 0.08)",
+      "medium": "rgba(255, 255, 255, 0.15)",
+      "focus": "rgba(255, 107, 0, 0.5)"
+    },
+    "chart": {
+      "grid": "rgba(255, 255, 255, 0.05)",
+      "tooltip_bg": "#1C1C1C",
+      "tooltip_border": "rgba(255, 255, 255, 0.1)",
+      "series": {
+        "primary": "#FF6B00",
+        "secondary": "#FFDA24",
+        "tertiary": "#4A4A4A",
+        "quaternary": "#959595"
+      },
+      "heatmap": {
+        "level_0": "#2a2a2a",
+        "level_1": "rgba(255, 107, 0, 0.3)",
+        "level_2": "rgba(255, 107, 0, 0.6)",
+        "level_3": "#FF6B00"
+      }
+    }
+  },
+  "typography": {
+    "fonts": {
+      "heading": "GG Zaglav, sans-serif",
+      "body": "Plus Jakarta Sans, sans-serif"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl font-black tracking-tighter text-white",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight text-white",
+      "h3": "text-xl font-bold tracking-tight text-white",
+      "metric_value": "text-3xl sm:text-4xl font-black tracking-tighter text-white",
+      "metric_label": "text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#959595]",
+      "body": "text-sm text-white/70",
+      "small": "text-xs text-[#959595]"
+    }
+  },
+  "layout_and_spacing": {
+    "container": "w-full max-w-[720px] mx-auto px-4 sm:px-6 pb-24 pt-6",
+    "grid": {
+      "bento": "grid grid-cols-2 md:grid-cols-4 gap-4"
+    },
+    "cards": {
+      "base": "rounded-2xl bg-[#242424] border border-white/10 p-5 relative overflow-hidden",
+      "glass": "backdrop-blur-xl bg-[#242424]/80 border border-white/10 p-5 rounded-2xl",
+      "metric_card": "flex flex-col justify-between items-start col-span-1 rounded-2xl bg-[#242424] border border-white/5 hover:border-white/10 p-4 transition-colors"
+    }
+  },
+  "components": {
+    "StatsScreen": {
+      "header": "Flex row, avatar (rounded-full, subtle #FF6B00 glow ring) + greeting + scope toggle (glass pill with active state using accent gradient).",
+      "kpi_grid": "Bento box style: Total Workouts, Streak, Avg/Week, Completion %, Total Tonnage, Time in Gym. Use 'metric_value' + 'metric_label'. Top cards span 2 columns, minor metrics span 1 column.",
+      "1rm_cards": "Horizontal scrolling or 3-column grid for Squat/Bench/Deadlift. Progress bar showing plan vs achieved.",
+      "charts": {
+        "tonnage_bar": "Recharts BarChart. Use 'radius={[4, 4, 0, 0]}' on bars. Fill with accent gradient. Add a 1px subtle grid line. Hide axis lines.",
+        "exercise_line": "Recharts LineChart for 1RM progress. Use monotone curve. Area under curve using SVG linearGradient from #FF6B00 at 50% opacity to 0%. strokeWidth={3}.",
+        "muscle_donut": "Recharts PieChart (donut). Inner radius 60%, outer 80%. Stroke #242424 (card bg) with strokeWidth={4} to create visual gaps between slices.",
+        "plan_adherence": "Stacked Bar chart or multi-progress bar indicating volume/schedule deviation.",
+        "tooltips": "Recharts Tooltip MUST have contentStyle={{ backgroundColor: '#1C1C1C', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', padding: '8px 12px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}."
+      },
+      "recent_sessions": "List view. Each item is a glass card. Includes a mini circular progress ring (SVG or Recharts RadialBar) for volume completion."
+    },
+    "StreakScreen": {
+      "hero": "Massive flame/streak number display. Use GG Zaglav font, text-6xl+ to text-8xl. Center aligned. The flame icon should have a CSS-only subtle pulse/drop-shadow glow.",
+      "this_week": "Row of 7 circles. Active days filled with gradient, upcoming empty with white/10 border. Current day has subtle glow and slightly larger scale.",
+      "heatmap": "GitHub-style, 12 columns (weeks) x 7 rows (days). Cells rounded-sm (2px to 4px). Utilize CSS Grid. Colors mapped from chart.heatmap tokens."
+    }
+  },
+  "motion": {
+    "hover": "transition-all duration-300 ease-out hover:border-[#FF6B00]/50 hover:bg-[#2A2A2A] hover:shadow-[0_4px_24px_rgba(255,107,0,0.08)]",
+    "active": "active:scale-[0.98]",
+    "chart_animation": "Use Recharts built-in 'isAnimationActive={true}' with 'animationDuration={1200}' and 'animationEasing=\"ease-out\"'.",
+    "pulse": "animate-[pulse_3s_ease-in-out_infinite]"
+  },
+  "media": {
+    "athlete_avatar": {
+      "url": "https://images.pexels.com/photos/7673591/pexels-photo-7673591.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Athlete portrait avatar for header. Fallback if user avatar is null."
+    }
+  },
+  "testing": {
+    "attributes": "All interactive elements, metric cards, chart wrappers, and list items MUST use data-testid attributes (e.g., data-testid='scope-toggle-plan', data-testid='streak-metric-card', data-testid='kpi-total-workouts')."
+  },
+  "instructions_to_main_agent": [
+    "Ensure all Recharts charts are fully responsive using ResponsiveContainer with a defined aspect ratio or min-height (e.g., h-[300px] or aspect={2.5}).",
+    "Implement the 'Selected Day' gradient (linear-gradient(-34deg, #FF8A24, #FFDA24)) for active elements, but use it sparingly to maintain high contrast and premium feel.",
+    "Do NOT use pure black (#000000) - strictly use the #1C1C1C background and #242424 for cards to prevent OLED smearing and maintain the tactical aesthetic.",
+    "Use SVG <linearGradient> within Recharts <defs> for smooth area charts and glowing bar fills.",
+    "For the Heatmap, implement a pure CSS Grid (grid-cols-12 grid-rows-7) with gaps (gap-1 or gap-2). Avoid heavy charting libraries for the heatmap to ensure mobile performance.",
+    "Add 'data-testid' to all buttons, tabs, chart wrappers, and list items for automated testing.",
+    "Since framer-motion is prohibited, rely on Tailwind's native transition utilities (transition-all, duration-300, ease-out) for micro-interactions.",
+    "Files to be modified/created should be standard React .js and .jsx files. Do not use TypeScript (.tsx)."
+  ]
+}

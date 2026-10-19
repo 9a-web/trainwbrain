@@ -1,0 +1,5758 @@
+{
+ "slug": "pl-autumn-3m",
+ "name": "3 мес Подготовка на осень",
+ "description": "Периодизированная программа пауэрлифтинга на 12 недель (3 тренировки/нед). Веса масштабируются под ваши максимумы в приседе, жиме и тяге. С подводящими волнами и проходками.",
+ "author": "Импорт (Excel)",
+ "level": "advanced",
+ "goal": "powerlifting",
+ "days_per_week": 3,
+ "weeks_count": 12,
+ "requires_maxes": true,
+ "base_maxes": {
+  "squat": 200,
+  "bench": 131,
+  "deadlift": 230
+ },
+ "default_one_rep_max": {
+  "squat-competition": 200.0,
+  "bench-no-legs": 117.9,
+  "squat-highbar": 164.0,
+  "pull-up": 131.0,
+  "deadlift-competition": 230.0,
+  "bench-medium-grip": 117.9,
+  "barbell-row": 131.0,
+  "seated-db-press": 45.85,
+  "squat-paused": 175.0,
+  "bench-competition": 131.0,
+  "deadlift-classic": 207.0,
+  "vertical-pulldown": 131.0
+ },
+ "tags": [
+  "пауэрлифтинг",
+  "1ПМ",
+  "пик",
+  "импорт"
+ ],
+ "weeks": [
+  {
+   "week_index": 1,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 160.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 167.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 135.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 102.5,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 122.5,
+         "sets": 4,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 92.5,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 100.0,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 110.0,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 190.0,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 195.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 200.0,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 105.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 65.0,
+         "sets": 5,
+         "reps": 10
+        },
+        {
+         "weight": 77.5,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 22.5,
+         "sets": 5,
+         "reps": 10
+        },
+        {
+         "weight": 27.5,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 147.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 122.5,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 120.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 117.5,
+         "sets": 3,
+         "reps": 2
+        },
+        {
+         "weight": 107.5,
+         "sets": 5,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 155.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 145.0,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 80.0,
+         "sets": 5,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 2,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 170.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 185.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 142.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 110.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 100.0,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 132.5,
+         "sets": 3,
+         "reps": 4
+        },
+        {
+         "weight": 125.0,
+         "sets": 2,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 175.0,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 190.0,
+         "sets": 2,
+         "reps": 2
+        },
+        {
+         "weight": 202.5,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 95.0,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 90.0,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 87.5,
+         "sets": 5,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 30.0,
+         "sets": 5,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 150.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 125.0,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 125.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 122.5,
+         "sets": 2,
+         "reps": 1
+        },
+        {
+         "weight": 107.5,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 162.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 150.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 87.5,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 3,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 167.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 177.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 147.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 105.0,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "5",
+       "sets_scheme": [
+        {
+         "weight": 137.5,
+         "sets": 3,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 97.5,
+         "sets": 5,
+         "reps": 6
+        },
+        {
+         "weight": 110.0,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 192.5,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 200.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 212.5,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 100.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 92.5,
+         "sets": 5,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 67.5,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 97.5,
+         "sets": 3,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 22.5,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 35.0,
+         "sets": 3,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 145.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 155.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 11,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 127.5,
+         "sets": 2,
+         "reps": 1
+        },
+        {
+         "weight": 117.5,
+         "sets": 3,
+         "reps": 2
+        },
+        {
+         "weight": 112.5,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 175.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 160.0,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "12",
+       "sets_scheme": [
+        {
+         "weight": 67.5,
+         "sets": 2,
+         "reps": 12
+        },
+        {
+         "weight": 92.5,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 4,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 185.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 192.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 155.0,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 110.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 102.5,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 142.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 85.0,
+         "sets": 1,
+         "reps": 6
+        },
+        {
+         "weight": 97.5,
+         "sets": 1,
+         "reps": 5
+        },
+        {
+         "weight": 107.5,
+         "sets": 3,
+         "reps": 3
+        },
+        {
+         "weight": 120.0,
+         "sets": 2,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 197.5,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 205.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 210.0,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 107.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 97.5,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 82.5,
+         "sets": 2,
+         "reps": 8
+        },
+        {
+         "weight": 102.5,
+         "sets": 4,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 27.5,
+         "sets": 2,
+         "reps": 8
+        },
+        {
+         "weight": 35.0,
+         "sets": 4,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 165.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 140.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 11,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 127.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 122.5,
+         "sets": 4,
+         "reps": 2
+        },
+        {
+         "weight": 110.0,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 182.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 165.0,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 82.5,
+         "sets": 2,
+         "reps": 8
+        },
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 5,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 2,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 192.5,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 202.5,
+         "sets": 1,
+         "reps": 1
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 112.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 105.0,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 155.0,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 145.0,
+         "sets": 2,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 85.0,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 97.5,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 117.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 210.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 220.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 227.5,
+         "sets": 1,
+         "reps": 1
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 112.5,
+         "sets": 2,
+         "reps": 2
+        },
+        {
+         "weight": 105.0,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 87.5,
+         "sets": 5,
+         "reps": 10
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 30.0,
+         "sets": 5,
+         "reps": 10
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 172.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 140.0,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 2,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 135.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 132.5,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 192.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 172.5,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 5,
+         "reps": 10
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 6,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 157.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "5",
+       "sets_scheme": [
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "5",
+       "sets_scheme": [
+        {
+         "weight": 127.5,
+         "sets": 3,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 87.5,
+         "sets": 4,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 185.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 62.5,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 82.5,
+         "sets": 3,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 22.5,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 30.0,
+         "sets": 3,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 140.0,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 112.5,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 155.0,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 77.5,
+         "sets": 6,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 7,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 175.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 180.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 155.0,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 110.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 100.0,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 145.0,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 132.5,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 87.5,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 100.0,
+         "sets": 1,
+         "reps": 6
+        },
+        {
+         "weight": 115.0,
+         "sets": 5,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 192.5,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 205.0,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 215.0,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 102.5,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 95.0,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 80.0,
+         "sets": 1,
+         "reps": 10
+        },
+        {
+         "weight": 100.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 27.5,
+         "sets": 1,
+         "reps": 10
+        },
+        {
+         "weight": 35.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 180.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 155.0,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 127.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 122.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 115.0,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 180.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 170.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 72.5,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 92.5,
+         "sets": 4,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 8,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 182.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 195.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 170.0,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 110.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 102.5,
+         "sets": 8,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 152.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 140.0,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 100.0,
+         "sets": 2,
+         "reps": 5
+        },
+        {
+         "weight": 112.5,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 127.5,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 207.5,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 220.0,
+         "sets": 2,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 105.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 72.5,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 107.5,
+         "sets": 4,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 25.0,
+         "sets": 3,
+         "reps": 10
+        },
+        {
+         "weight": 37.5,
+         "sets": 4,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 172.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 147.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 135.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 130.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 120.0,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 187.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 167.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 82.5,
+         "sets": 2,
+         "reps": 8
+        },
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 9,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 190.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 200.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 157.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 117.5,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 107.5,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 155.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 145.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 10,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 102.5,
+         "sets": 3,
+         "reps": 5
+        },
+        {
+         "weight": 117.5,
+         "sets": 5,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 207.5,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 217.5,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 222.5,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "4",
+       "sets_scheme": [
+        {
+         "weight": 112.5,
+         "sets": 1,
+         "reps": 4
+        },
+        {
+         "weight": 102.5,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 6
+        },
+        {
+         "weight": 110.0,
+         "sets": 4,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 32.5,
+         "sets": 4,
+         "reps": 6
+        },
+        {
+         "weight": 37.5,
+         "sets": 4,
+         "reps": 5
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 175.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 142.5,
+         "sets": 5,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 140.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 132.5,
+         "sets": 2,
+         "reps": 2
+        },
+        {
+         "weight": 122.5,
+         "sets": 6,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 190.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 172.5,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "8",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 3,
+         "reps": 8
+        },
+        {
+         "weight": 95.0,
+         "sets": 4,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 10,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 197.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 207.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 167.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 120.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 107.5,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 167.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 155.0,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 10,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 105.0,
+         "sets": 2,
+         "reps": 5
+        },
+        {
+         "weight": 117.5,
+         "sets": 2,
+         "reps": 4
+        },
+        {
+         "weight": 125.0,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 132.5,
+         "sets": 2,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 220.0,
+         "sets": 2,
+         "reps": 3
+        },
+        {
+         "weight": 230.0,
+         "sets": 2,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 112.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 102.5,
+         "sets": 5,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 82.5,
+         "sets": 2,
+         "reps": 10
+        },
+        {
+         "weight": 112.5,
+         "sets": 5,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 30.0,
+         "sets": 2,
+         "reps": 10
+        },
+        {
+         "weight": 40.0,
+         "sets": 5,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 192.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 157.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 142.5,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 137.5,
+         "sets": 2,
+         "reps": 2
+        },
+        {
+         "weight": 127.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 195.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 180.0,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 85.0,
+         "sets": 2,
+         "reps": 10
+        },
+        {
+         "weight": 95.0,
+         "sets": 3,
+         "reps": 10
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 11,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 210.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 217.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 180.0,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 122.5,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 110.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 177.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 157.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 9,
+       "target_reps": "6",
+       "sets_scheme": [
+        {
+         "weight": 92.5,
+         "sets": 2,
+         "reps": 6
+        },
+        {
+         "weight": 107.5,
+         "sets": 3,
+         "reps": 4
+        },
+        {
+         "weight": 120.0,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 222.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 232.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 240.0,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "3",
+       "sets_scheme": [
+        {
+         "weight": 115.0,
+         "sets": 1,
+         "reps": 3
+        },
+        {
+         "weight": 102.5,
+         "sets": 4,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 87.5,
+         "sets": 1,
+         "reps": 10
+        },
+        {
+         "weight": 102.5,
+         "sets": 5,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 30.0,
+         "sets": 1,
+         "reps": 10
+        },
+        {
+         "weight": 35.0,
+         "sets": 5,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 190.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 160.0,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 145.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 137.5,
+         "sets": 3,
+         "reps": 2
+        },
+        {
+         "weight": 127.5,
+         "sets": 3,
+         "reps": 4
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 202.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 187.5,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Легко",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 90.0,
+         "sets": 2,
+         "reps": 10
+        },
+        {
+         "weight": 105.0,
+         "sets": 3,
+         "reps": 8
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week_index": 12,
+   "days": [
+    {
+     "day_index": 2,
+     "title": "День 1 · Присед",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-competition",
+       "exercise_name": "Присед (соревновательный)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Тяжело",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 217.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 225.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 177.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-no-legs",
+       "exercise_name": "Жим лежа (без ног)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Легко",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 120.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 107.5,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "squat-highbar",
+       "exercise_name": "Присед (с высокой штангой)",
+       "order": 2,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 177.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 135.0,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "pull-up",
+       "exercise_name": "Подтягивания",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 105.0,
+         "sets": 5,
+         "reps": 10
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Молотки/ПШНБ",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Лицевая тага",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 4,
+     "title": "День 2 · Тяга",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "deadlift-competition",
+       "exercise_name": "Становая тяга (соревновательная)",
+       "order": 0,
+       "muscle_group": "back",
+       "difficulty": "Тяжело",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 3,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 215.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 235.0,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 250.0,
+         "sets": 1,
+         "reps": 2
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-medium-grip",
+       "exercise_name": "Жим лежа (средним хватом)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 7,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 117.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 102.5,
+         "sets": 6,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "barbell-row",
+       "exercise_name": "Тяга штанги в наклоне",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 97.5,
+         "sets": 1,
+         "reps": 10
+        },
+        {
+         "weight": 115.0,
+         "sets": 5,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "seated-db-press",
+       "exercise_name": "Жим гантель сидя",
+       "order": 3,
+       "muscle_group": "shoulders",
+       "difficulty": "Средне",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 6,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 35.0,
+         "sets": 1,
+         "reps": 10
+        },
+        {
+         "weight": 40.0,
+         "sets": 5,
+         "reps": 6
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Присед на 1 ноге(пистолет)",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Сгибание бедра лежа",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Махи с гантелями",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Ягодичный мостик по 1 ноге на фитболе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка",
+       "order": 8,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    },
+    {
+     "day_index": 6,
+     "title": "День 3 · Жим",
+     "is_rest": false,
+     "exercises": [
+      {
+       "exercise_slug": "squat-paused",
+       "exercise_name": "Присед (с паузой в нижней точке)",
+       "order": 0,
+       "muscle_group": "legs",
+       "difficulty": "Средне",
+       "lift_group": "squat",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "2",
+       "sets_scheme": [
+        {
+         "weight": 182.5,
+         "sets": 1,
+         "reps": 2
+        },
+        {
+         "weight": 152.5,
+         "sets": 4,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "bench-competition",
+       "exercise_name": "Жим лежа (соревновательный)",
+       "order": 1,
+       "muscle_group": "chest",
+       "difficulty": "Тяжело",
+       "lift_group": "bench",
+       "weight_type": "kg",
+       "target_sets": 8,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 150.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 140.0,
+         "sets": 4,
+         "reps": 2
+        },
+        {
+         "weight": 132.5,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "deadlift-classic",
+       "exercise_name": "Становая тяга (классика)",
+       "order": 2,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 4,
+       "target_reps": "1",
+       "sets_scheme": [
+        {
+         "weight": 215.0,
+         "sets": 1,
+         "reps": 1
+        },
+        {
+         "weight": 192.5,
+         "sets": 3,
+         "reps": 3
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": "vertical-pulldown",
+       "exercise_name": "Вертикальная тяга паралл/обр хватом",
+       "order": 3,
+       "muscle_group": "back",
+       "difficulty": "Средне",
+       "lift_group": "deadlift",
+       "weight_type": "kg",
+       "target_sets": 5,
+       "target_reps": "10",
+       "sets_scheme": [
+        {
+         "weight": 105.0,
+         "sets": 5,
+         "reps": 10
+        }
+       ],
+       "is_accessory": false
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем гант перед собой",
+       "order": 4,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Разгибания на трицепс",
+       "order": 5,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Планка на фитболе",
+       "order": 6,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      },
+      {
+       "exercise_slug": null,
+       "exercise_name": "Подъем ног в висе",
+       "order": 7,
+       "muscle_group": null,
+       "difficulty": "Легко",
+       "lift_group": null,
+       "weight_type": "bodyweight",
+       "target_sets": 0,
+       "target_reps": "",
+       "sets_scheme": [],
+       "is_accessory": true
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

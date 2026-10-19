@@ -1,0 +1,73 @@
+/* =========================================================================
+   Cross-platform layout — website-first, Telegram Web App + PWA.
+   Loaded LAST so its desktop/centering rules win over per-screen CSS.
+   Mobile (<= 767px) is intentionally left untouched to preserve the
+   carefully tuned Telegram-mobile design.
+   ========================================================================= */
+
+:root {
+  --twb-max-width: 720px;
+}
+
+/* Robust full-height across mobile browsers and Telegram fullscreen */
+html,
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Respect device safe areas (iOS notch, Telegram fullscreen).
+   Falls back to 0 where env() is unsupported. */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Center the app column on tablets / desktop / Telegram Desktop so the UI
+   does not stretch across very wide windows. */
+@media (min-width: 768px) {
+  .content-layer,
+  .programs-page,
+  .workout-view {
+    max-width: var(--twb-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+
+  /* Neutralize the mobile edge negative margins inside the centered column */
+  .header-logo {
+    margin-left: 0;
+  }
+  .header-right {
+    margin-right: 0;
+  }
+
+  /* The week selector uses a full-bleed (width: 100% + 40px) for mobile edges.
+     Inside the centered desktop column that bleed gets clipped, so reset it. */
+  .date-selector {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Auth splash while the session is being resolved */
+.app-splash {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1c1c;
+}
+.app-splash-logo {
+  width: 120px;
+  height: auto;
+  animation: twb-splash-pulse 1.4s ease-in-out infinite;
+}
+@keyframes twb-splash-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}

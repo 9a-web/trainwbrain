@@ -1,0 +1,890 @@
+/* ===== Workout View (Phase 2) ===== */
+.workout-view {
+  margin-top: 4px;
+  padding-bottom: 96px; /* место под нижний бар */
+}
+
+/* ---- Статистика дня ---- */
+.wv-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  flex-wrap: nowrap;
+}
+.wv-status-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wv-status-img {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+.wv-status-spin {
+  animation: wv-spin 2s linear infinite;
+}
+@keyframes wv-spin { to { transform: rotate(360deg); } }
+.wv-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  min-width: 0;
+}
+.wv-stat-val {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+.wv-stat-label {
+  font-size: 12px;
+  color: #959595;
+}
+/* Пауза: время заморожено и выделено янтарным */
+.wv-stat-paused .wv-stat-val {
+  color: #FFB020;
+}
+.wv-stat-paused .wv-stat-label {
+  color: #FFB020;
+  font-weight: 600;
+}
+
+/* ---- Карточки упражнений ---- */
+.wv-exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---- Суперсеты ---- */
+.wv-superset {
+  border-left: 3px solid #3B82F6;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.08);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wv-superset-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.wv-superset-arrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 4px 12px;
+  margin: -4px 0;
+}
+
+.wv-superset-arrow-line {
+  width: 2px;
+  height: 16px;
+  background: #3B82F6;
+  border-radius: 1px;
+}
+
+.wv-superset-arrow-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.wv-superset-rest {
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* ---- Папка «Подсобные упражнения» ---- */
+.wv-accessory {
+  margin-top: 14px;
+}
+.wv-accessory-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #242424;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-radius 0.15s ease;
+}
+.wv-accessory-head.open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+.wv-accessory-head:active { transform: scale(0.995); }
+.wv-accessory-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #efefef;
+}
+.wv-accessory-ico { color: #FF8A24; flex-shrink: 0; }
+.wv-accessory-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 138, 36, 0.18);
+  color: #FFB36B;
+  font-size: 12px;
+  font-weight: 700;
+}
+.wv-accessory-chevron {
+  color: #8a8a8a;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.wv-accessory-chevron.open { transform: rotate(180deg); }
+.wv-accessory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+}
+
+/* тело подсобной карточки — только рекомендация */
+.ex-acc-body {
+  padding: 0 18px 16px;
+}
+.ex-acc-rec {
+  font-size: 14px;
+  color: #b9b9b9;
+}
+.ex-acc-rec b { color: #FFB36B; font-weight: 700; }
+.ex-card {
+  background: #2c2c2c;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.ex-card-active {
+  background: #313131;
+  border-color: rgba(255, 138, 36, 0.25);
+}
+.ex-head {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 16px 18px;
+  text-align: left;
+}
+.ex-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ex-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.ex-status {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ex-status-plan {
+  color: #959595;
+}
+.ex-status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ex-comment-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFB36B;
+  background: rgba(255, 138, 36, 0.14);
+  border: 1px solid rgba(255, 138, 36, 0.3);
+  border-radius: 999px;
+  padding: 3px;
+}
+.ex-edited-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #BDBDBD;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 3px;
+}
+/* Карандаш-кнопка: открывает редактирование упражнения (в т.ч. в истории) */
+.ex-edited-flag-btn {
+  position: relative;
+  cursor: pointer;
+  padding: 5px;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+/* Расширенная зона нажатия (не влияет на вёрстку) */
+.ex-edited-flag-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.ex-edited-flag-btn:hover {
+  color: #fff;
+  background: rgba(255, 138, 36, 0.22);
+  border-color: rgba(255, 138, 36, 0.45);
+}
+.ex-edited-flag-btn:active { transform: scale(0.92); }
+.ex-edited-flag-btn:focus-visible {
+  outline: 2px solid #FF8A24;
+  outline-offset: 2px;
+}
+.ex-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ex-chevron {
+  color: #8a8a8a;
+  transition: transform 0.2s ease;
+}
+.ex-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* кнопки действий активного упражнения */
+.ex-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.ex-btn:active { transform: scale(0.94); }
+.ex-btn-done {
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 7px 13px;
+  border-radius: 999px;
+}
+.ex-btn-magic,
+.ex-btn-skip,
+.ex-btn-magic-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+.ex-btn-magic, .ex-btn-magic-sm {
+  background: #4a4a4a;
+  color: #fff;
+}
+.ex-btn-skip {
+  background: #FF5A5A;
+  color: #fff;
+}
+
+/* строка действий активного упражнения (отдельно от названия) */
+.ex-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px 16px;
+}
+.ex-actions .ex-btn-done {
+  flex: 1 1 auto;
+  padding: 9px 14px;
+  font-size: 13px;
+}
+.ex-actions .ex-btn-magic,
+.ex-actions .ex-btn-skip {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+}
+
+/* тело карточки */
+.ex-body {
+  display: flex;
+  gap: 12px;
+  padding: 0 18px 14px;
+  align-items: flex-end;
+}
+.ex-plan {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ex-plan-label {
+  color: #cfcfcf;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.ex-plan-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #efefef;
+  margin-bottom: 4px;
+}
+.ex-plan-weight { text-align: left; }
+.ex-plan-bw { color: #bdbdbd; font-weight: 500; }
+.ex-plan-tbd { color: rgba(255, 255, 255, 0.35); font-weight: 500; }
+.ex-plan-dash { color: #6f6f6f; }
+.ex-plan-scheme { text-align: left; }
+/* удалённый из плана подход — зачёркнут и тусклый */
+.ex-plan-deleted {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.55);
+}
+/* иконка карандаша у добавленного/изменённого подхода */
+.ex-plan-edit-ico {
+  color: #FFB36B;
+  flex-shrink: 0;
+}
+.ex-plan-pctwrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.ex-plan-bar {
+  width: 2px;
+  height: 16px;
+  background: #6f6f6f;
+  border-radius: 2px;
+}
+.ex-plan-pct { color: #efefef; }
+.ex-meta {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ex-meta-row {
+  font-size: 14px;
+  color: #9a9a9a;
+}
+.ex-meta-row b {
+  color: #efefef;
+  font-weight: 600;
+}
+
+/* комментарий тренеру (отображение в раскрытой карточке) */
+.ex-comment {
+  margin: 0 18px 16px;
+  background: rgba(255, 138, 36, 0.08);
+  border: 1px solid rgba(255, 138, 36, 0.22);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.ex-comment-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFB36B;
+  margin-bottom: 5px;
+}
+.ex-comment-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #e8e8e8;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* мини-график прогноза */
+.ex-forecast {
+  flex: 0 0 172px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.forecast-svg {
+  width: 172px;
+  height: 68px;
+}
+.ex-forecast-caption {
+  font-size: 11px;
+  color: #8a8a8a;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ---- Нижний прогресс-бар ---- */
+.wv-footer {
+  position: sticky;
+  bottom: 0;
+  margin: 22px -20px 0;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: rgba(20, 20, 20, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.wv-footer-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.wv-footer-check { color: #3BD16F; }
+.wv-footer-count {
+  font-size: 15px;
+  font-weight: 600;
+  color: #dcdcdc;
+}
+.wv-segments {
+  display: flex;
+  gap: 6px;
+}
+.wv-seg {
+  flex: 1 1 0;
+  height: 7px;
+  border-radius: 4px;
+  background: #3a3a3a;
+}
+.wv-seg-done { background: #3BD16F; }
+.wv-seg-skipped { background: #FF5A5A; }
+.wv-footer-status {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 13px;
+  color: #8a8a8a;
+}
+
+/* ---- Модалка редактирования ---- */
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+.edit-modal {
+  width: 100%;
+  max-width: 420px;
+  background: #262626;
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.edit-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 16px;
+}
+.edit-label {
+  display: block;
+  font-size: 13px;
+  color: #959595;
+  margin-bottom: 6px;
+}
+.edit-input,
+.edit-input-sm {
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+.edit-input { width: 100%; margin-bottom: 16px; }
+.edit-input:focus,
+.edit-input-sm:focus { border-color: #FF8A24; }
+.edit-sets-head,
+.edit-set-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 36px;
+  gap: 8px;
+  align-items: center;
+}
+.edit-sets-head {
+  font-size: 12px;
+  color: #959595;
+  margin-bottom: 6px;
+}
+.edit-set-row { margin-bottom: 8px; }
+.edit-input-sm { width: 100%; }
+
+/* удаление подхода */
+.edit-set-del {
+  width: 36px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #3a2222;
+  color: #FF7A7A;
+  border: 1px solid rgba(255, 90, 90, 0.25);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.edit-set-del:active { transform: scale(0.92); }
+.edit-set-del:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* добавление подхода */
+.edit-add-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 9px 14px;
+  background: rgba(255, 138, 36, 0.12);
+  color: #FFB36B;
+  border: 1px dashed rgba(255, 138, 36, 0.45);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.edit-add-set:active { transform: scale(0.97); }
+.edit-add-set:hover { background: rgba(255, 138, 36, 0.18); }
+
+/* блок комментария тренеру */
+.edit-comment-block { margin-top: 16px; }
+.edit-comment-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cfcfcf;
+}
+.edit-textarea {
+  width: 100%;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  resize: vertical;
+  min-height: 64px;
+  font-family: inherit;
+}
+.edit-textarea:focus { border-color: #FF8A24; }
+.edit-textarea::placeholder { color: #6f6f6f; }
+.edit-comment-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.edit-comment-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #3BD16F;
+}
+.edit-comment-count {
+  font-size: 12px;
+  color: #8a8a8a;
+}
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.edit-btn-cancel,
+.edit-btn-save {
+  flex: 1 1 0;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.edit-btn-cancel {
+  background: #3a3a3a;
+  color: #fff;
+}
+.edit-btn-save {
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+}
+
+/* адаптив: на узких экранах график прогноза скрываем */
+@media (max-width: 520px) {
+  .ex-forecast { flex-basis: 130px; }
+  .forecast-svg { width: 130px; height: 58px; }
+  .wv-stats { gap: 12px; }
+}
+
+/* фикс: кнопки подтверждения/отмены подхода не съезжают на мобильных.
+   Поля веса/повторов сжимаются, действия остаются закреплёнными справа,
+   а лишний процент (set-pct) не рвёт строку. */
+@media (max-width: 380px) {
+  .setrow { gap: 6px; padding: 8px; }
+  .set-num { width: 18px; font-size: 12px; }
+  .set-fields { gap: 4px; }
+  .set-input { min-width: 40px; padding: 7px 6px; font-size: 14px; }
+  .set-input-reps { min-width: 36px; }
+  .set-ops { gap: 5px; }
+  .set-op { width: 32px; height: 32px; }
+  .set-pct { display: none; }
+}
+
+/* ===================== P4: режим тренера (co-scribe) ===================== */
+/* Бейдж «заполнил тренер» */
+.ex-by-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ED0FF;
+  background: rgba(80, 150, 255, 0.14);
+  border: 1px solid rgba(80, 150, 255, 0.32);
+  border-radius: 999px;
+  padding: 2px 7px 2px 5px;
+}
+/* Зелёная полоска слева у выполненного упражнения (кем бы ни было отмечено) */
+.ex-card-done {
+  box-shadow: inset 4px 0 0 0 #3BD16F;
+}
+
+/* Панель действий тренера */
+.ex-actions-coach {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ex-actions-coach .ex-btn-done {
+  flex: 0 1 auto;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+.ex-actions-coach .ex-btn-skip,
+.ex-actions-coach .ex-btn-magic {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+}
+.ex-btn-reset {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #3a3a3a;
+  color: #cfcfcf;
+  flex: 0 0 auto;
+}
+/* Кнопка подтверждения упражнения тренером */
+.ex-btn-confirm {
+  margin-left: auto;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(59, 209, 111, 0.14);
+  border: 1px solid rgba(59, 209, 111, 0.4);
+  color: #59E08A;
+}
+.ex-btn-confirm.is-on {
+  background: linear-gradient(-20deg, #2FBF66, #3BD16F);
+  border-color: transparent;
+  color: #0f2417;
+}
+
+
+/* ============ Phase 1: по-подходный чек-лист ============ */
+.setlist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.setlist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px 2px;
+}
+.setlist-title {
+  font-size: 12px;
+  color: #8a8a8a;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.setlist-count {
+  font-size: 12px;
+  color: #FFB36B;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.setrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.setrow-done {
+  background: rgba(59, 209, 111, 0.09);
+  border-color: rgba(59, 209, 111, 0.28);
+}
+.setrow-skipped {
+  background: rgba(255, 90, 90, 0.06);
+  border-color: rgba(255, 90, 90, 0.20);
+}
+.set-num {
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7f7f7f;
+  font-variant-numeric: tabular-nums;
+}
+.setrow-done .set-num { color: #3BD16F; }
+.setrow-skipped .set-num { color: #d97a7a; }
+.set-fields {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.setrow-skipped .set-fields { opacity: 0.55; }
+.set-input {
+  width: 58px;
+  min-width: 42px;
+  padding: 7px 8px;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  border-radius: 9px;
+  color: #efefef;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+.set-input::-webkit-outer-spin-button,
+.set-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.set-input:focus { border-color: #FF8A24; }
+.set-input:disabled { opacity: 0.6; }
+.set-input-reps { width: 46px; min-width: 40px; }
+.set-unit { font-size: 12px; color: #8a8a8a; white-space: nowrap; flex-shrink: 0; }
+.set-x { font-size: 13px; color: #6f6f6f; white-space: nowrap; flex-shrink: 0; }
+.set-pct {
+  font-size: 12px;
+  color: #FFB36B;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+/* блок действий подхода (выполнить/пропустить/состояние) */
+.set-ops {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.set-op {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #3a3a3a;
+  background: #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.set-op:disabled { opacity: 0.5; cursor: default; }
+.set-op-done {
+  border-color: rgba(59, 209, 111, 0.4);
+  background: rgba(59, 209, 111, 0.12);
+  color: #3BD16F;
+}
+.set-op-done:active { background: rgba(59, 209, 111, 0.24); }
+.set-op-skip {
+  border-color: rgba(255, 90, 90, 0.32);
+  background: rgba(255, 90, 90, 0.08);
+  color: #FF8A8A;
+}
+.set-op-skip:active { background: rgba(255, 90, 90, 0.2); }
+/* состояние (выполнен/пропущен) — нажатие отменяет */
+.set-op-state.set-op-done {
+  background: #3BD16F;
+  border-color: #3BD16F;
+  color: #10240f;
+}
+.set-op-state.set-op-skipped {
+  background: #4a4a4a;
+  border-color: #565656;
+  color: #d9d9d9;
+}
+

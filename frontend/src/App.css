@@ -1,0 +1,435 @@
+/* Main App Container */
+.app-container {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #1C1C1C;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient Background Effect */
+.gradient-background {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 454px;
+  height: 86px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gradient-background img {
+  width: 100%;
+  height: 100%;
+  filter: blur(100px);
+  opacity: 0.8;
+}
+
+/* Content Layer */
+.content-layer {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 40px;
+  padding-top: 40px;
+  width: 100%;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: -20px;
+}
+
+.header-logo img {
+  width: 90px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: -20px;
+}
+
+.mode-toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+.mode-toggle-btn:hover { opacity: 0.85; }
+.mode-toggle-btn:active { transform: scale(0.92); }
+
+.menu-button {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-button:hover {
+  opacity: 0.8;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #FF6B00;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.profile-avatar:hover {
+  opacity: 0.9;
+}
+
+/* Main Content */
+.main-content {
+  padding: 15px 40px;
+}
+
+/* Greeting Row */
+.greeting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: -20px;
+}
+
+/* Greeting Text */
+.greeting-text {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.3;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+/* Greeting Icon */
+.greeting-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Training Streak */
+.streak-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  margin-left: -20px;
+}
+
+.streak-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.streak-text {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: #959595;
+}
+
+/* Streak row as a button/link to the stats screen */
+.streak-row-link {
+  background: none;
+  border: none;
+  padding: 4px 6px 4px 20px;
+  margin-left: -20px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.streak-row-link:hover { background: rgba(255, 255, 255, 0.04); }
+.streak-row-link:active { transform: scale(0.99); }
+.streak-chevron {
+  color: #6b6b6b;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.streak-row-link:hover .streak-chevron { color: #FF8A24; transform: translateX(2px); }
+
+/* Виджет кардио на главном экране (Фаза 3) */
+.cardio-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% + 20px);
+  margin: 10px 0 0 -20px;
+  padding: 10px 12px 10px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.cardio-widget:hover { background: rgba(255, 255, 255, 0.06); }
+.cardio-widget:active { transform: scale(0.99); }
+.cardio-widget-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #FF8A24;
+  background: rgba(255, 107, 0, 0.14);
+}
+.cardio-widget-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.cardio-widget-top { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.cardio-widget-top b {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+}
+.cardio-widget-sub { font-size: 12.5px; color: #8a8a8a; }
+.cardio-widget-track {
+  display: block;
+  height: 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.cardio-widget-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #FF8A24, #FF6B00);
+  transition: width 0.4s ease;
+}
+.cardio-widget:hover .streak-chevron { color: #FF8A24; transform: translateX(2px); }
+
+/* Typography */
+.text-jakarta-bold {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+}
+
+.text-jakarta-medium {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+}
+
+.text-sf {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+
+/* Large screens (Desktop) */
+@media (min-width: 1024px) {
+  .header {
+    padding: 40px 60px;
+    padding-top: 50px;
+  }
+  
+  .header-logo img {
+    width: 110px;
+    height: 68px;
+  }
+  
+  .header-right {
+    gap: 20px;
+  }
+  
+  .menu-button img {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .profile-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .main-content {
+    padding: 40px 60px;
+  }
+  
+  .greeting-text {
+    font-size: 28px;
+  }
+  
+  .greeting-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .streak-row {
+    margin-top: 12px;
+    gap: 8px;
+  }
+  
+  .streak-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .streak-text {
+    font-size: 16px;
+  }
+}
+
+/* Medium screens (Tablets) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .header {
+    padding: 30px 40px;
+    padding-top: 45px;
+  }
+  
+  .header-logo img {
+    width: 100px;
+    height: 62px;
+  }
+  
+  .header-right {
+    gap: 18px;
+  }
+  
+  .menu-button img {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .profile-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .main-content {
+    padding: 36px 40px;
+  }
+  
+  .greeting-text {
+    font-size: 24px;
+  }
+  
+  .greeting-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .streak-row {
+    margin-top: 10px;
+  }
+  
+  .streak-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .streak-text {
+    font-size: 15px;
+  }
+}
+
+/* Small screens (Mobile - default styles already set for ~430px) */
+@media (max-width: 767px) {
+  .header {
+    padding: 16px 40px;
+    padding-top: 40px;
+  }
+  
+  .main-content {
+    padding: 15px 40px;
+  }
+}
+
+/* Extra small screens (Small phones) */
+@media (max-width: 374px) {
+  .header {
+    padding: 12px 16px;
+    padding-top: 32px;
+  }
+  
+  .header-logo img {
+    width: 70px;
+    height: 44px;
+  }
+  
+  .header-right {
+    gap: 10px;
+  }
+  
+  .menu-button {
+    padding: 4px;
+  }
+  
+  .menu-button img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .main-content {
+    padding: 15px 16px;
+  }
+  
+  .greeting-text {
+    font-size: 18px;
+  }
+  
+  .greeting-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .streak-row {
+    margin-top: 6px;
+    gap: 4px;
+  }
+  
+  .streak-icon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .streak-text {
+    font-size: 12px;
+  }
+}
+
+/* Gradient background responsive */
+@media (max-width: 500px) {
+  .gradient-background {
+    width: 100%;
+    max-width: 454px;
+  }
+}

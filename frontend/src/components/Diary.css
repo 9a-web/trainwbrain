@@ -1,0 +1,621 @@
+/* --- Diary (Дневник) styles --- */
+.diary-wrap { margin-top: 8px; }
+
+/* Toggle План/Дневник */
+.home-mode-toggle {
+  display: flex;
+  gap: 4px;
+  background: #2a2a2a;
+  border-radius: 999px;
+  padding: 4px;
+  margin: 0 0 18px 0;
+  width: fit-content;
+}
+.home-mode-toggle button {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.home-mode-toggle button.active {
+  background: #FF6B00;
+  color: #fff;
+}
+
+/* Date strip (переиспользует .day-card из DateSelector.css) */
+.diary-week-wrap { margin: 10px 0 6px; }
+.diary-entry-block { margin-bottom: 18px; }
+.diary-entry-block .diary-btn-row { margin-top: 8px; }
+/* Запись дневника — read-only предпросмотр (в отличие от живой тренировки) */
+.diary-entry-preview-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 138, 36, 0.12);
+  border: 1px solid rgba(255, 138, 36, 0.28);
+  color: #FFB36B;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.diary-entry-preview-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FF8A24;
+}
+.diary-entry-block .workout-view { padding-bottom: 0; }
+
+/* Entry card */
+.diary-entry {
+  background: #333;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.diary-entry-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.diary-entry-title { font-size: 17px; font-weight: 700; color: #fff; }
+.diary-entry-meta { color: rgba(255, 255, 255, 0.55); font-size: 13px; margin-top: 2px; }
+.diary-ex-list { margin: 12px 0 0; padding: 0; list-style: none; }
+.diary-ex-list li { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.07); font-size: 14px; color: rgba(255,255,255,0.85); }
+.diary-ex-list li .ex-sets { color: rgba(255,255,255,0.55); }
+
+/* Difficulty badge */
+.diff-badge { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.diff-легко { background: rgba(59,178,115,0.18); color: #4dd08a; }
+.diff-средне { background: rgba(255,176,32,0.18); color: #ffc24d; }
+.diff-тяжело { background: rgba(255,107,0,0.2); color: #ff8a3d; }
+.diff-очень.тяжело, .diff-очень-тяжело { background: rgba(229,72,77,0.2); color: #ff6b6f; }
+
+/* Buttons */
+.diary-btn {
+  border: none; border-radius: 12px; cursor: pointer; font-weight: 600;
+  transition: all 0.16s ease; font-size: 15px;
+}
+.diary-btn-primary { background: #FF6B00; color: #fff; padding: 15px; width: 100%; }
+.diary-btn-primary:active { transform: scale(0.99); }
+.diary-btn-ghost { background: #333; color: #fff; padding: 12px 14px; }
+.diary-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.diary-btn-sm { font-size: 13px; padding: 9px 14px; border-radius: 10px; background: #2a2a2a; color: rgba(255,255,255,0.85); border: none; cursor: pointer; }
+.diary-btn-danger { color: #ff6b6f; }
+
+/* Empty state */
+.diary-empty { text-align: center; padding: 28px 10px; color: rgba(255,255,255,0.55); }
+.diary-empty p { margin: 0 0 16px; }
+
+/* Agent panel */
+.diary-agent { background: linear-gradient(135deg, rgba(255,107,0,0.12), rgba(255,218,36,0.06)); border: 1px solid rgba(255,107,0,0.25); border-radius: 16px; padding: 16px; margin-top: 18px; }
+.diary-agent h3 { margin: 0 0 4px; font-size: 16px; color: #fff; }
+.diary-agent p.hint { margin: 0 0 12px; color: rgba(255,255,255,0.6); font-size: 13px; }
+.agent-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.agent-actions button { background: rgba(255,255,255,0.08); color: #fff; border: none; border-radius: 12px; padding: 12px 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.agent-actions button:active { transform: scale(0.98); }
+
+/* AI feedback block */
+.ai-feedback { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; }
+.ai-feedback .fb-summary { font-size: 14px; color: #fff; }
+.ai-feedback .fb-section { margin-top: 10px; }
+.ai-feedback .fb-section h5 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(255,255,255,0.5); }
+.ai-feedback ul { margin: 0; padding-left: 18px; }
+.ai-feedback li { font-size: 13px; color: rgba(255,255,255,0.85); margin: 2px 0; }
+.ai-feedback .fb-prog { font-size: 13px; color: #ffc24d; margin-top: 8px; }
+
+/* Modal */
+.diary-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
+.diary-modal { background: #222; width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 20px; }
+.diary-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.diary-modal-head h3 { margin: 0; font-size: 18px; color: #fff; }
+.diary-modal-close { background: #333; border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+
+/* Tabs */
+.diary-tabs { display: flex; gap: 6px; background: #2a2a2a; border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+.diary-tabs button { flex: 1; border: none; background: transparent; color: rgba(255,255,255,0.6); padding: 9px; border-radius: 9px; font-weight: 600; cursor: pointer; }
+.diary-tabs button.active { background: #FF6B00; color: #fff; }
+
+/* Quick editor rows */
+.qx-row { background: #2c2c2c; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.qx-row-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.qx-row .qx-name { flex: 1; background: #1f1f1f; border: 1px solid #3a3a3a; color: #fff; border-radius: 9px; padding: 10px; font-size: 15px; }
+.qx-row-remove { background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; padding: 4px; display: flex; }
+.qx-row-remove:hover { color: #ff6b6f; }
+.qx-group { margin-bottom: 8px; }
+.qx-nums { display: flex; gap: 8px; align-items: flex-end; }
+.qx-nums label { font-size: 11px; color: rgba(255,255,255,0.5); display: block; margin-bottom: 3px; }
+.qx-nums input { width: 100%; background: #1f1f1f; border: 1px solid #3a3a3a; color: #fff; border-radius: 9px; padding: 9px; font-size: 15px; text-align: center; }
+.qx-num { flex: 1; }
+.qx-group-remove { background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; padding: 9px 2px; display: flex; align-items: center; }
+.qx-group-remove:hover { color: #ff6b6f; }
+.qx-add-group { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px dashed #4a4a4a; color: rgba(255,255,255,0.65); border-radius: 9px; padding: 7px 12px; font-size: 12px; cursor: pointer; margin: 2px 0 4px; }
+.qx-add-group:hover { border-color: #FF6B00; color: #FF6B00; }
+.qx-acc { display: flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 8px; }
+.qx-remove { background: transparent; border: none; color: #ff6b6f; font-size: 13px; cursor: pointer; padding: 4px 0; }
+
+/* textarea */
+.diary-textarea { width: 100%; min-height: 120px; background: #1f1f1f; border: 1px solid #3a3a3a; color: #fff; border-radius: 12px; padding: 12px; font-size: 15px; resize: vertical; }
+.diary-hint-txt { color: rgba(255,255,255,0.45); font-size: 12px; margin: 6px 0 14px; }
+
+/* RPE */
+.rpe-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 16px; }
+.rpe-row button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #3a3a3a; background: #2a2a2a; color: rgba(255,255,255,0.7); font-weight: 700; cursor: pointer; }
+.rpe-row button.sel { background: #FF6B00; color: #fff; border-color: #FF6B00; }
+
+/* chips (onboarding / chat) */
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.chip { padding: 9px 14px; border-radius: 999px; background: #2a2a2a; color: rgba(255,255,255,0.7); border: 1px solid #3a3a3a; cursor: pointer; font-size: 13px; }
+.chip.sel { background: #FF6B00; color: #fff; border-color: #FF6B00; }
+.ob-label { font-size: 13px; color: rgba(255,255,255,0.55); margin: 6px 0; font-weight: 600; }
+
+/* chat */
+.chat-msgs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; min-height: 120px; }
+.chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
+.chat-msg.user { align-self: flex-end; background: #FF6B00; color: #fff; border-bottom-right-radius: 4px; }
+.chat-msg.assistant { align-self: flex-start; background: #333; color: #fff; border-bottom-left-radius: 4px; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { flex: 1; background: #1f1f1f; border: 1px solid #3a3a3a; color: #fff; border-radius: 12px; padding: 12px; font-size: 15px; }
+
+/* recommend list */
+.rec-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.rec-list li { background: #2a2a2a; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; font-size: 13px; }
+.rec-list li .rec-name { color: #fff; font-weight: 600; }
+.rec-list li .rec-reason { color: rgba(255,255,255,0.55); }
+.balance-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 4px 0; }
+.balance-dot { width: 9px; height: 9px; border-radius: 50%; }
+.bd-low { background: #ff6b6f; }
+.bd-ok { background: #4dd08a; }
+.bd-high { background: #ffc24d; }
+
+.diary-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: dspin 0.8s linear infinite; vertical-align: middle; }
+@keyframes dspin { to { transform: rotate(360deg); } }
+.busy-note { text-align: center; color: rgba(255,255,255,0.6); font-size: 13px; padding: 12px; }
+
+
+/* =========================================================================
+   DiaryComposer — «Запись тренировки» (bottom-sheet, тёмная тема)
+   Классы .dc-* и .qx-* для components/DiaryComposer.js
+   ========================================================================= */
+
+/* --- Оболочка модалки-шторки -------------------------------------------- */
+.dc-modal.diary-modal {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 0;                 /* внутренние отступы задаются секциями */
+  max-height: 94vh;
+  overflow: hidden;               /* скроллится только .dc-list */
+  background: #1f1f1f;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.55);
+  animation: dc-sheet-in 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes dc-sheet-in {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Ручка-грабер по центру шторки */
+.dc-grabber {
+  width: 46px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  margin: 10px auto 4px;
+  flex-shrink: 0;
+}
+
+/* --- Шапка -------------------------------------------------------------- */
+.dc-head {
+  margin: 0;
+  padding: 8px 20px 14px;
+  align-items: flex-start;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.dc-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dc-title h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.dc-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFB36B;
+  text-transform: capitalize;
+}
+
+/* --- Табы --------------------------------------------------------------- */
+.dc-tabs.diary-tabs {
+  margin: 14px 20px 4px;
+  flex-shrink: 0;
+}
+.dc-tabs.diary-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+/* --- Текстовая вкладка -------------------------------------------------- */
+.dc-text-wrap {
+  padding: 12px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.dc-textarea.diary-textarea {
+  min-height: 150px;
+  line-height: 1.5;
+}
+.dc-textarea:focus { outline: none; border-color: #FF8A24; }
+
+/* --- Список упражнений -------------------------------------------------- */
+.dc-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 20px 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.dc-list::-webkit-scrollbar { width: 6px; }
+.dc-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+}
+
+/* Карточка упражнения */
+.qx-card {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 12px 12px 6px;
+  margin-bottom: 12px;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.qx-card:focus-within {
+  border-color: rgba(255, 138, 36, 0.55);
+  background: #2c2c2c;
+}
+
+.qx-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Номер упражнения */
+.qx-index {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.18s ease;
+}
+.qx-index.filled {
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  border-color: transparent;
+  color: #1c1c1c;
+}
+
+/* Поле названия упражнения с иконкой поиска */
+.qx-name-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.qx-name-icon {
+  position: absolute;
+  left: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+.qx-name {
+  width: 100%;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 11px;
+  padding: 11px 12px 11px 34px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+}
+.qx-name::placeholder { color: rgba(255, 255, 255, 0.3); font-weight: 500; }
+.qx-name:focus { outline: none; border-color: #FF8A24; }
+
+/* Переключатель «Подсобное» */
+.qx-acc {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 0 2px;
+  cursor: pointer;
+  user-select: none;
+}
+.qx-acc input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.qx-acc-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  border-radius: 999px;
+  padding: 6px 12px;
+  transition: all 0.16s ease;
+}
+.qx-acc:hover .qx-acc-pill { border-color: #4a4a4a; }
+.qx-acc.on .qx-acc-pill {
+  background: rgba(255, 138, 36, 0.14);
+  border-color: rgba(255, 138, 36, 0.5);
+  color: #FFB36B;
+}
+
+/* --- Сетка подходов ----------------------------------------------------- */
+.dc-sets { margin-top: 10px; }
+
+.dc-set-head,
+.dc-set-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 30px;
+  gap: 8px;
+  align-items: center;
+}
+.dc-set-head {
+  padding: 0 0 6px;
+}
+.dc-set-head span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  text-align: center;
+}
+.dc-set-row { margin-bottom: 8px; }
+
+.dc-set-cell input {
+  width: 100%;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+}
+.dc-set-cell input:focus { outline: none; border-color: #FF8A24; }
+.dc-set-cell input::-webkit-outer-spin-button,
+.dc-set-cell input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dc-set-cell input[type="number"] { -moz-appearance: textfield; }
+
+.dc-set-del { display: flex; justify-content: center; }
+.dc-set-del button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.dc-set-del button:hover { background: rgba(255, 106, 111, 0.14); color: #ff6b6f; }
+
+/* --- Добавить упражнение ------------------------------------------------ */
+.dc-add-ex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 40px);
+  margin: 4px 20px 16px;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed #4a4a4a;
+  border-radius: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+}
+.dc-add-ex:hover { border-color: #FF6B00; color: #FF6B00; }
+.dc-add-ex:active { transform: scale(0.995); }
+
+/* --- RPE ---------------------------------------------------------------- */
+.dc-rpe {
+  margin: 0 20px 16px;
+  padding: 14px;
+  background: #262626;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+.dc-rpe-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+.dc-rpe-opt {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.dc-rpe-scale.rpe-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  margin: 0;
+}
+.dc-rpe-scale.rpe-row button {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.dc-rpe-desc {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  min-height: 15px;
+}
+
+/* --- Липкий футер: сводка + сохранение ---------------------------------- */
+.dc-footer {
+  flex-shrink: 0;
+  padding: 14px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #1a1a1a;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.dc-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.dc-sum-stat {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  background: #242424;
+  border-radius: 11px;
+}
+.dc-sum-stat b {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.dc-sum-stat span {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.dc-sum-tonnage b { color: #FFB36B; }
+
+.dc-save {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+  font-size: 15.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.16s ease, opacity 0.16s ease;
+}
+.dc-save:active { transform: scale(0.99); }
+.dc-save:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  background: #3a3a3a;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Мобильная адаптация ------------------------------------------------ */
+@media (max-width: 374px) {
+  .dc-rpe-scale.rpe-row { gap: 3px; }
+  .dc-rpe-scale.rpe-row button { height: 30px; font-size: 12px; }
+  .dc-set-head, .dc-set-row { grid-template-columns: 1.15fr 1fr 1fr 26px; gap: 5px; }
+  .dc-set-cell input { padding: 9px 4px; font-size: 14px; }
+}
+@media (min-width: 768px) {
+  .dc-modal.diary-modal { border-radius: 22px; max-height: 88vh; }
+}
+
+/* --- Название тренировки ------------------------------------------------ */
+.dc-title-field { padding: 12px 20px 0; flex-shrink: 0; }
+.dc-title-input {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+}
+.dc-title-input::placeholder { color: rgba(255,255,255,0.3); font-weight: 500; }
+.dc-title-input:focus { outline: none; border-color: #FF8A24; }
+
+/* --- Чип группы мышц на карточке упражнения ----------------------------- */
+.dc-muscle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0 0 38px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 138, 36, 0.12);
+  border: 1px solid rgba(255, 138, 36, 0.3);
+  color: #FFB36B;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* --- Поле заметки ------------------------------------------------------- */
+.dc-notes { padding: 0 20px 14px; flex-shrink: 0; }
+.dc-notes-input {
+  width: 100%;
+  min-height: 56px;
+  background: #262626;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: none;
+  font-family: inherit;
+}
+.dc-notes-input::placeholder { color: rgba(255,255,255,0.3); }
+.dc-notes-input:focus { outline: none; border-color: #FF8A24; }

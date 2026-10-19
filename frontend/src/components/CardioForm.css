@@ -1,0 +1,173 @@
+/* Форма кардио — тёмная тема, акцент #FF6B00 */
+.cf {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: #1c1c1c;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.cf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-title {
+  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-size: 22px;
+  margin: 0;
+  color: #fff;
+}
+
+.cf-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: #cfcfcf;
+  cursor: pointer;
+}
+.cf-close:active { transform: scale(0.94); }
+
+.cf-types {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.cf-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #b9b9b9;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.cf-type-ico { font-size: 20px; line-height: 1; }
+.cf-type.on {
+  border-color: #ff6b00;
+  background: rgba(255, 107, 0, 0.14);
+  color: #fff;
+}
+
+.cf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #9a9a9a;
+  min-width: 0;
+}
+.cf-field > span { padding-left: 2px; }
+
+.cf-field input,
+.cf-field textarea {
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 12px 13px;
+  color: #fff;
+  font-size: 15px;
+  font-family: inherit;
+  width: 100%;
+  min-width: 0;
+}
+.cf-field input:focus,
+.cf-field textarea:focus {
+  outline: none;
+  border-color: #ff8a24;
+}
+.cf-field textarea { resize: vertical; }
+
+.cf-pace {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 0;
+  color: #ff8a24;
+  font-size: 13px;
+}
+
+.cf-intens {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.cf-int {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #b9b9b9;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cf-int.on {
+  border-color: #ff6b00;
+  background: rgba(255, 107, 0, 0.14);
+  color: #fff;
+}
+
+.cf-err {
+  color: #ff5a5a;
+  font-size: 13px;
+  margin: 0;
+}
+
+.cf-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.cf-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+.cf-btn.ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #d0d0d0;
+}
+.cf-btn.primary {
+  background: linear-gradient(135deg, #ff8a24, #ff6b00);
+  color: #1c1c1c;
+}
+.cf-btn.primary:disabled { opacity: 0.6; }
+.cf-btn:active { transform: scale(0.98); }
+
+@media (max-width: 380px) {
+  .cf-row { gap: 8px; }
+  .cf-field input, .cf-field textarea { padding: 11px; font-size: 14px; }
+}

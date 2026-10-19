@@ -1,0 +1,861 @@
+/* Date Selector Container */
+.date-selector {
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-top: 24px;
+}
+
+/* Row: vertical dots column (left) + horizontal scroll of day cards */
+.date-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Кнопка «План» — открыть любую неделю плана (под списком карточек дат) */
+.plan-week-row {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0 0;
+}
+
+.plan-week-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 21px;
+  padding: 0 23px;
+  border: none;
+  border-radius: 999px;
+  background: #333333;
+  color: #959595;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.plan-week-btn:hover {
+  background: #3C3C3C;
+  color: #BFBFBF;
+}
+
+.plan-week-btn:active {
+  transform: scale(0.95);
+}
+
+/* Модалка выбора недели */
+.week-picker .confirm-title {
+  margin-bottom: 4px;
+}
+
+.week-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin: 16px 0 4px;
+}
+
+.week-pick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  border: 1.5px solid #3A3A3A;
+  border-radius: 12px;
+  background: #2A2A2A;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.week-pick:active {
+  transform: scale(0.93);
+}
+
+.week-pick.active {
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+  color: #1C1C1C;
+  border-color: transparent;
+}
+
+.week-pick.is-current {
+  border-color: #FF8A24;
+}
+
+.week-pick-cur {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #FF8A24;
+}
+
+.week-pick.active .week-pick-cur {
+  background: #1C1C1C;
+}
+
+.week-pick.is-locked {
+  background: #232323;
+  border-color: #333333;
+  color: #6A6A6A;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.week-pick.is-locked:active {
+  transform: none;
+}
+
+/* Week dots indicator — vertical column on the LEFT of the cards */
+.week-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.week-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background-color: #3A3A3A;
+  cursor: pointer;
+  transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.3s ease,
+              transform 0.2s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Enlarged invisible touch target for easier tapping */
+.week-dot::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+
+.week-dot:hover {
+  background-color: #5A5A5A;
+  transform: scale(1.15);
+}
+
+.week-dot:active {
+  transform: scale(0.92);
+}
+
+/* Active dot — vertical pill */
+.week-dot-active {
+  height: 26px;
+  background: linear-gradient(160deg, #FFDA24, #FF8A24);
+  box-shadow: 0 2px 8px rgba(255, 138, 36, 0.35);
+}
+
+.week-dot-active:hover {
+  background: linear-gradient(160deg, #FFDA24, #FF8A24);
+  transform: none;
+}
+
+/* Недоступная неделя (вне границ плана) */
+.week-dot-disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Horizontal scroll with day cards — clips content so cards never cover the dots */
+.date-selector-scroll {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Вертикальный padding даёт место для анимации листания по вертикали,
+     отрицательные margin компенсируют его, сохраняя позицию карточек и отступы */
+  padding: 28px 24px 10px 2px;
+  margin-top: -22px;
+  margin-bottom: -18px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  -webkit-overflow-scrolling: touch;
+}
+
+.date-selector-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Date title + launch button row */
+.date-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  column-gap: 16px;
+  row-gap: 8px;
+  margin: 28px 24px 0 0;
+}
+
+/* Selected Date Title */
+.selected-date-title {
+  font-family: 'GG Zaglav', sans-serif;
+  font-weight: 400;
+  font-size: clamp(38px, 12vw, 61px);
+  line-height: 1;
+  color: #FFFFFF;
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* Launch (dark pill) button */
+.launch-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background-color: #333333;
+  color: #24FF7F;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.launch-button-icon {
+  flex-shrink: 0;
+}
+
+.launch-button:hover {
+  background-color: #3C3C3C;
+}
+
+.launch-button:active {
+  transform: scale(0.96);
+}
+
+/* Кнопка перезапуска тренировки (после завершения) */
+.launch-button-restart {
+  color: #FFB36B;
+}
+.launch-button-restart:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Workout stats row (значение сверху + подпись снизу) */
+.workout-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 6px 24px 0;
+  max-width: 380px;
+}
+
+.workout-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.workout-stat-value {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.workout-stat-label {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: #CACACA;
+  white-space: nowrap;
+}
+
+/* Day Card */
+.day-card {
+  flex-shrink: 0;
+  width: 64px;
+  height: 90px;
+  background-color: #333333;
+  border-radius: 22px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+  gap: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.day-card:hover {
+  transform: scale(1.02);
+}
+
+.day-card:active {
+  transform: scale(0.98);
+}
+
+/* Selected Day Card - Gradient */
+.day-card-selected {
+  background: linear-gradient(-34deg, #FF8A24, #FFDA24);
+}
+
+/* ===== Анимация смены недели (карточки листаются по вертикали) ===== */
+@keyframes dayCardInNext {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dayCardInPrev {
+  from {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.day-card.card-anim-next {
+  animation: dayCardInNext 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.day-card.card-anim-prev {
+  animation: dayCardInPrev 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+
+/* Day Name */
+.day-card-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+/* Circle Wrapper */
+.day-card-circle-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+/* Progress Ring SVG */
+.progress-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.progress-ring-bg {
+  stroke: #FFEBD9;
+}
+
+.progress-ring-progress {
+  stroke: #FF8A24;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+/* Day Number */
+.day-card-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #FFFFFF;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+
+/* Large screens (Desktop) */
+@media (min-width: 1024px) {
+  .date-selector {
+    margin-top: 32px;
+  }
+  
+  .date-selector-row {
+    gap: 16px;
+  }
+  
+  .date-selector-scroll {
+    gap: 12px;
+  }
+  
+  .week-dots {
+    gap: 10px;
+  }
+  
+  .week-dot {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .week-dot-active {
+    height: 32px;
+  }
+  
+  .day-card {
+    width: 82px;
+    height: 115px;
+    border-radius: 28px;
+    padding-top: 14px;
+    gap: 10px;
+  }
+  
+  .day-card-name {
+    font-size: 17px;
+  }
+  
+  .day-card-circle-wrapper {
+    width: 58px;
+    height: 58px;
+  }
+  
+  .day-card-number {
+    font-size: 22px;
+  }
+  
+  .selected-date-title {
+    font-size: 72px;
+  }
+  
+  .date-title-row {
+    margin-top: 36px;
+  }
+}
+
+/* Medium screens (Tablets) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .date-selector {
+    margin-top: 28px;
+  }
+  
+  .date-selector-row {
+    gap: 14px;
+  }
+  
+  .date-selector-scroll {
+    gap: 10px;
+  }
+  
+  .week-dots {
+    gap: 9px;
+  }
+  
+  .week-dot {
+    width: 9px;
+    height: 9px;
+  }
+  
+  .week-dot-active {
+    height: 28px;
+  }
+  
+  .day-card {
+    width: 78px;
+    height: 108px;
+    border-radius: 26px;
+    padding-top: 13px;
+    gap: 9px;
+  }
+  
+  .day-card-name {
+    font-size: 16px;
+  }
+  
+  .day-card-circle-wrapper {
+    width: 54px;
+    height: 54px;
+  }
+  
+  .day-card-number {
+    font-size: 20px;
+  }
+  
+  .selected-date-title {
+    font-size: 64px;
+  }
+  
+  .date-title-row {
+    margin-top: 32px;
+  }
+}
+
+/* Extra small screens (Small phones) */
+@media (max-width: 374px) {
+  .date-selector {
+    margin-top: 20px;
+  }
+  
+  .date-selector-row {
+    gap: 8px;
+  }
+  
+  .date-selector-scroll {
+    gap: 6px;
+  }
+  
+  .week-dots {
+    gap: 7px;
+  }
+  
+  .week-dot {
+    width: 7px;
+    height: 7px;
+  }
+  
+  .week-dot-active {
+    height: 22px;
+  }
+  
+  .day-card {
+    width: 58px;
+    height: 82px;
+    border-radius: 18px;
+    padding-top: 10px;
+    gap: 6px;
+  }
+  
+  .day-card-name {
+    font-size: 13px;
+  }
+  
+  .day-card-circle-wrapper {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .day-card-number {
+    font-size: 15px;
+  }
+  
+  .selected-date-title {
+    font-size: 38px;
+  }
+  
+  .date-title-row {
+    margin-top: 20px;
+  }
+}
+
+
+/* ===== Phase 1 additions: real plan data ===== */
+
+/* Точка-индикатор тренировочного дня */
+.day-card-dot {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff8a24;
+}
+.day-card-selected .day-card-dot {
+  background: #1c1c1c;
+}
+
+/* disabled-состояние кнопки "Начать" */
+.launch-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Иконки-действия в строке даты (пауза/стоп/настройки/изменить) */
+.date-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: #333;
+  color: #fff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.icon-btn:active {
+  transform: scale(0.92);
+  background: #3d3d3d;
+}
+
+/* ===== Модалка подтверждения старта ===== */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+}
+.confirm-modal {
+  width: 100%;
+  max-width: 380px;
+  background: #232323;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 22px;
+}
+.confirm-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.confirm-text {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #b9b9b9;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+.confirm-btn-cancel,
+.confirm-btn-ok {
+  flex: 1 1 0;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.confirm-btn-cancel { background: #3a3a3a; color: #fff; }
+.confirm-btn-ok {
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+}
+.confirm-btn-ok:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Info-кнопка + модалка завершённой тренировки */
+.info-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.info-btn:hover { background: rgba(255, 138, 36, 0.14); transform: translateY(-1px); }
+.info-btn:active { transform: translateY(0); }
+.session-info-modal .session-info-day {
+  text-align: center;
+  color: #ffce8a;
+  font-size: 14px;
+  font-weight: 700;
+  margin: -6px 0 14px;
+}
+.session-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 14px;
+}
+.session-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+.session-info-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.session-info-lbl {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: none;
+}
+.session-info-val {
+  font-family: "SF Mono", "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  text-align: right;
+}
+.session-info-val.session-info-strong {
+  color: #ffce8a;
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+/* Карточка "нет программы" */
+.no-plan-card {
+  margin-top: 22px;
+  background: #262626;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  padding: 22px 18px;
+  text-align: center;
+}
+.no-plan-text {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+.no-plan-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 22px;
+  border-radius: 14px;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  color: #1c1c1c;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.no-plan-button:active {
+  transform: scale(0.97);
+}
+
+/* День отдыха */
+.rest-day-note {
+  padding: 18px;
+  text-align: center;
+  color: #959595;
+  font-size: 14px;
+  background: #262626;
+  border-radius: 16px;
+}
+
+/* Список упражнений дня */
+.day-exercises {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.day-exercises-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.exercise-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #333;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.exercise-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.exercise-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+.exercise-scheme {
+  font-size: 13px;
+  color: #ff8a24;
+  font-weight: 600;
+}
+.exercise-rest {
+  font-size: 12px;
+  color: #959595;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+
+/* P4: индикатор «тренер на связи» */
+.coach-watching {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ED0FF;
+  background: rgba(80, 150, 255, 0.1);
+  border: 1px solid rgba(80, 150, 255, 0.28);
+  border-radius: 12px;
+}
+.coach-watching-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5096ff;
+  box-shadow: 0 0 0 0 rgba(80, 150, 255, 0.7);
+  animation: coach-watch-pulse 1.8s infinite;
+}
+@keyframes coach-watch-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(80, 150, 255, 0.6); }
+  70% { box-shadow: 0 0 0 7px rgba(80, 150, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(80, 150, 255, 0); }
+}
+

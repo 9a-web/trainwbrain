@@ -1,0 +1,404 @@
+/* AiProgramPreview — красивый просмотр сгенерированной программы (модалка) */
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: app-fade 0.25s ease both;
+  transition: background 0.35s ease;
+}
+.app-modal.fullscreen { background: rgba(0, 0, 0, 0.92); }
+@keyframes app-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes app-slide-up {
+  from { transform: translateY(28px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.app-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 92vh;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px 24px 0 0;
+  padding: 0 18px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  animation: app-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.5);
+  transition:
+    max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app-sheet.fullscreen {
+  max-width: 100%;
+  max-height: 100vh;
+  max-height: 100dvh;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+}
+@media (min-width: 768px) {
+  .app-modal { align-items: center; }
+  .app-sheet { border-radius: 24px; max-height: 88vh; }
+  .app-sheet.fullscreen {
+    border-radius: 20px;
+    max-height: 96vh;
+    max-width: 760px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Хват (grabber) — плавно исчезает при fullscreen */
+.app-sheet::before {
+  content: "";
+  position: absolute;
+  top: 8px; left: 50%;
+  width: 40px; height: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  opacity: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.app-sheet.fullscreen::before {
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0.4);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0 -18px 10px;
+  padding: 16px 18px 12px;
+  background: linear-gradient(180deg, #1c1c1c 82%, rgba(28, 28, 28, 0) 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  transition: padding 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+.app-sheet.fullscreen .app-header {
+  padding: 14px 18px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(28, 28, 28, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.app-header-info { flex: 1; min-width: 0; }
+.app-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.app-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.app-meta svg { color: #ff8a24; }
+.app-dot { margin: 0 4px; color: rgba(255, 255, 255, 0.25); }
+.app-pct {
+  color: #ffce8a;
+  background: rgba(255, 138, 36, 0.15);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11px;
+}
+.app-close {
+  flex: 0 0 auto;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.app-close:hover { background: rgba(255, 138, 36, 0.15); color: #ff8a24; }
+
+.app-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.5;
+  margin: 6px 0 14px;
+}
+
+/* Week tabs */
+.app-weeks {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin: 0 -18px 6px;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+.app-weeks::-webkit-scrollbar { display: none; }
+.app-week {
+  flex: 0 0 auto;
+  min-width: 76px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.app-week:hover { border-color: rgba(255, 138, 36, 0.35); }
+.app-week.active {
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  border-color: transparent;
+  color: #1c1c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(255, 138, 36, 0.28);
+}
+.app-week-num {
+  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.app-week-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+/* Days */
+.app-days {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.app-day {
+  background: #232323;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 14px;
+  animation: app-slide-up 0.35s ease both;
+}
+.app-day-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.07);
+}
+.app-day-l { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.app-day-badge {
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 138, 36, 0.13);
+  color: #ff8a24;
+  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255, 138, 36, 0.28);
+}
+.app-day-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.app-day-sub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+  display: block;
+}
+.app-day-tonnage {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 138, 36, 0.12);
+  color: #ffce8a;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.app-day-tonnage svg { color: #ff8a24; }
+
+/* Exercise list */
+.app-ex-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.app-ex {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+}
+.app-ex:hover { border-color: rgba(255, 138, 36, 0.22); }
+.app-ex-marker {
+  flex: 0 0 3px;
+  border-radius: 3px;
+  background: #ff8a24;
+}
+.app-ex-body { flex: 1; min-width: 0; }
+.app-ex-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.app-ex-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+}
+.app-ex-lg {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ffce8a;
+  background: rgba(255, 138, 36, 0.14);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.app-ex-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 5px 0 8px;
+}
+.app-ex-mg {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid;
+}
+.app-ex-acc {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+.app-ex-rest {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.app-ex-rest svg { color: rgba(255, 255, 255, 0.55); }
+.app-ex-sets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.app-ex-set {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 4px 10px;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 138, 36, 0.16);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "SF Mono", "JetBrains Mono", monospace;
+}
+.app-ex-set b {
+  color: #fff;
+  font-weight: 700;
+}
+.app-ex-set-w { color: #ffce8a; font-weight: 600; margin-left: 2px; }
+
+.app-footer {
+  position: sticky;
+  bottom: -24px;
+  margin: 16px -18px -24px;
+  padding: 16px 18px 20px;
+  background: linear-gradient(180deg, rgba(28, 28, 28, 0) 0%, #1c1c1c 22%, #1c1c1c 100%);
+  border-top: 1px solid rgba(255, 138, 36, 0.14);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.app-use-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  color: #1c1c1c;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(255, 138, 36, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.app-use-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 36px rgba(255, 138, 36, 0.45); filter: brightness(1.03); }
+.app-use-btn:active { transform: translateY(0); box-shadow: 0 6px 18px rgba(255, 138, 36, 0.3); }
+.app-footer-note {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  padding: 0 6px;
+}
