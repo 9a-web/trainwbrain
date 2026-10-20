@@ -7,6 +7,22 @@
 > Telegram Mini App, ИИ-разбор программ через OpenAI-совместимый API.
 > Всё, что ниже, учитывает реальные особенности этого репозитория (см. пометки «почему так»).
 
+> **Фактически развёрнуто (2026-10-20).** Инструкция проверена на реальном сервере:
+> VPS «Мидл» **2 vCPU / 2 ГБ RAM / 30 ГБ NVMe** (≈900 ₽/мес), **Ubuntu 24.04.5**, IP
+> `193.222.62.91`, хост `box-978693`. Домен и DNS — у регистратора **Jino**
+> (`ns1.jino.ru`, `ns3.jino.ru`). Что работает:
+> - прод — `https://trainwbrain.ru` (nginx + Let's Encrypt, сертификат только на apex);
+> - DeepSeek Harness — `https://dsh.trainwbrain.ru` (nginx Basic Auth + одноразовый
+>   token→cookie на 30 дней), автозапуск через `systemd --user` + `loginctl enable-linger`;
+> - LLM-провайдер — **AnyModel** (`https://anymodel.org/v1`, OpenAI-совместимый), а не
+>   DeepSeek напрямую; ключ в `~/.config/dsh/env` как `ANYMODEL_API_KEY`.
+>
+> Где реальность разошлась с «идеальной» рекомендацией — прямо по тексту есть пометки
+> **«На практике»** и отдельный Troubleshooting (раздел 14). Главные грабли: `htpasswd`
+> в формате `$apr1$` nginx на Ubuntu 24.04 не понимает (нужен `openssl passwd -6`),
+> Let's Encrypt не валидирует поддомены при DNS на Jino (спасает DNS-01 вручную),
+> и `systemctl --user` из-под root не видит bus (нужен `XDG_RUNTIME_DIR`).
+
 ---
 
 ## Содержание
@@ -73,6 +89,11 @@
 проекта: на сервере одновременно живут MongoDB, FastAPI, CRA dev server (webpack),
 сборка фронтенда и DeepSeek Harness.
 
+> **На практике можно и дешевле.** Проект реально развёрнут и работает на **2 vCPU / 2 ГБ /
+> 30 ГБ** (тариф «Мидл», ≈900 ₽/мес) — если собирать фронтенд локально, держать swap 4 ГБ
+> и не запускать CRA dev server одновременно с DSH. 4/8/80 ниже — это «с запасом и без
+> дисциплины», а не обязательный минимум.
+
 | Вариант | vCPU | RAM | Диск | Ориентир по цене* | Кому |
 |---|---|---|---|---|---|
 | Минимум | 2 | 4 ГБ | 60 ГБ | ~600–1000 ₽/мес | сборки медленные, dev server + сборка могут упираться в swap |
@@ -96,6 +117,16 @@
 - MongoDB: ограничить кэш `cacheSizeGB: 0.25` (команда в разделе 6.2.1);
 - прод-сборку фронтенда делать **локально** и загружать `build/` (раздел 7.6);
 - `twb-frontend-dev` и `dsh-web` не держать включёнными одновременно, на время сборки — стоп.
+
+> **На практике (этот сервер).** Взяли именно **2 vCPU / 2 ГБ / 30 ГБ** за ≈900 ₽/мес, и
+> всё уместилось. Реальные цифры после развёртывания:
+> - `free -h`: ~50% памяти занято при `twb-backend` + `dsh-web` (≈300 МБ) без dev-сервера;
+> - диск: ~32% от 28 ГБ — места с большим запасом (прод-сборка фронта загружается с ноутбука);
+> - `dsh web` на 2 ГБ стартует **~40 секунд** (много плагинов) — это нормально, не пугайтесь
+>   транзиентного `502` сразу после ребута, подождите минуту;
+> - **CRA dev server (3000) и DSH одновременно не поднять** — webpack съест всю RAM. Для
+>   разработки используйте либо SSH-туннель + локальный `yarn start`, либо `twb-backend-dev`
+>   (лёгкий, ~350 МБ) без CRA.
 
 ### 1.3 Почему именно столько (реальный расход)
 
@@ -172,7 +203,13 @@
 | `trainwbrain.ru` | nginx: статика + `/api/` | да |
 | `www.trainwbrain.ru` | редирект на без-www | желательно |
 | `dev.trainwbrain.ru` | dev-фронтенд (3000) | опционально (можно SSH-туннель) |
-| `dsh.trainwbrain.ru` | DeepSeek Harness (3080) | опционально (можно SSH-туннель) |
+| `dsh.trainwbrain.ru` | DeepSeek Harness (3080) | **развёрнут** (Basic Auth + token→cookie) |
+
+> **На практике.** `dsh.trainwbrain.ru` поднят и работает публично — это самый удобный вход
+> в DSH с любого устройства (ноутбук, телефон) без SSH-туннеля. `www` пока не сертифицирован
+> (см. раздел 3.4 про Jino): Let's Encrypt не выдаёт сертификат на `www` и поддомены при
+> DNS на Jino, поэтому в боевом конфиге `www`-блок убран, а `dsh` получил сертификат через
+> **DNS-01 вручную** (см. 8.6). SSH-туннель (раздел 10.1) остаётся резервным способом.
 
 Все внутренние сервисы слушают только `127.0.0.1`. Наружу смотрит только nginx.
 Это главный принцип безопасности этой схемы.
@@ -214,6 +251,31 @@ nslookup www.trainwbrain.ru 8.8.8.8
 - WebSocket/HMR потребуют отдельной настройки.
 
 После настройки можно включить прокси, но тогда проверьте, что WebSocket работает.
+
+### 3.4 Если DNS на Jino (как у нас) — важные грабли
+
+Наш домен обслуживается **Jino** (`ns1.jino.ru` / `ns3.jino.ru`). С ним есть два подводных
+камня, на которые мы реально наткнулись:
+
+1. **Let's Encrypt плохо валидирует поддомены.** `certbot` на `dsh.`, `dev.`, `www.` падает с
+   `DNS problem: networking error looking up A/AAAA/CAA ... During secondary validation`.
+   Причина — Jino отдаёт зону `*.trainwbrain.ru` (wildcard) нестабильно для распределённых
+   валидаторов LE (с разных точек мира). Apex `trainwbrain.ru` при этом сертифицируется
+   нормально.
+   **Решение:** для поддоменов используйте **DNS-01** (раздел 8.6) или переносите DNS на
+   Cloudflare (ниже).
+2. **Не задавайте одновременно wildcard `*` и явные A-записи без нужды** — путаница в том,
+   что реально отдаётся. Проще: `A @` + `A www` + `A dsh` + `A dev`, все на IP сервера.
+
+**Совет на будущее — перенести DNS на Cloudflare (бесплатно):**
+
+1. Добавить домен в Cloudflare, получить 2 nameserver'а.
+2. В Jino сменить NS на выданные Cloudflare (или сделать «перенос домена»).
+3. В Cloudflare создать `A @`, `A *`, `A www`, `A dsh`, `A dev` → `193.222.62.91`, **Proxy = DNS only**.
+4. Тогда `certbot-dns-cloudflare` с API-токеном выдаст **wildcard** `-d trainwbrain.ru -d '*.trainwbrain.ru'`
+   и автообновление будет работать без ручных TXT.
+
+Пока DNS на Jino — используйте DNS-01 вручную (раздел 8.6), это рабочий и проверенный путь.
 
 ---
 
@@ -328,14 +390,20 @@ Host twb
     User deploy
     IdentityFile ~/.ssh/id_ed25519
     ServerAliveInterval 30
-    LocalForward 3000 127.0.0.1:3000
-    LocalForward 8001 127.0.0.1:8001
-    LocalForward 3080 127.0.0.1:3080
+    LocalForward 13000 127.0.0.1:3000
+    LocalForward 18001 127.0.0.1:8001
+    LocalForward 13080 127.0.0.1:3080
 ```
 
 Теперь `ssh twb` — это shell на сервере, а пока сессия открыта, у вас локально доступны
-`http://localhost:3000` (dev-фронтенд), `http://localhost:8001` (dev-backend) и
-`http://127.0.0.1:3080` (DeepSeek Harness). Ничего из этого не торчит в интернет.
+`http://localhost:13000` (dev-фронтенд), `http://localhost:18001` (dev-backend) и
+`http://127.0.0.1:13080` (DeepSeek Harness). Ничего из этого не торчит в интернет.
+
+> **Почему локальные порты не 3000/8001/3080, а 13000/18001/13080.** Сдвиг на 1xxxx
+> оставляет «родные» порты свободными для локальной разработки на ноутбуке. Особенно это
+> важно для DSH: если на ноутбуке уже запущен свой DSH на `127.0.0.1:3080`, серверный
+> туннель на тот же порт **перебьёт локальную сессию** (общее cookie-хранилище по
+> `127.0.0.1`). Поэтому серверный DSH — только через `13080`.
 
 ### 4.6 Проверка MongoDB
 
@@ -499,9 +567,10 @@ CORS_ORIGINS="https://trainwbrain.ru,https://www.trainwbrain.ru"
 TELEGRAM_BOT_TOKEN="<токен из BotFather>"
 COOKIE_SECURE=true
 TRUST_PROXY_HEADERS=true
-AI_BASE_URL="https://api.deepseek.com/v1"
-AI_API_KEY="<ключ>"
-AI_MODEL="deepseek-chat"
+# LLM для разбора программ/фото — AnyModel (OpenAI-совместимый)
+AI_BASE_URL="https://anymodel.org/v1"
+AI_API_KEY="<ключ AnyModel>"
+AI_MODEL="ds/deepseek-v4-flash"
 ```
 
 Важные нюансы:
@@ -510,11 +579,13 @@ AI_MODEL="deepseek-chat"
   при `allow_credentials=True` браузер такой ответ отвергнет.
 - **`.env.local`** рядом с `.env` загружается с `override=true` и побеждает `.env`.
   Если перенесли `.env.local` — правьте секреты там, либо удалите его и держите всё в `.env`.
-- **ИИ**: код делает `POST {AI_BASE_URL}/chat/completions`. Официальный DeepSeek:
-  `https://api.deepseek.com/v1` + `deepseek-chat`. Если локально вы используете RouterAI —
-  просто перенесите его `AI_BASE_URL`/`AI_MODEL`/`AI_API_KEY`.
+- **ИИ**: код делает `POST {AI_BASE_URL}/chat/completions`. В этом проекте используется
+  **AnyModel**: `https://anymodel.org/v1` + модель `ds/deepseek-v4-flash`. Официальный
+  DeepSeek тоже подойдёт (`https://api.deepseek.com/v1` + `deepseek-chat`). Просто
+  перенесите `AI_BASE_URL`/`AI_MODEL`/`AI_API_KEY` от своего провайдера.
 - **Vision** (фото программ/кардио) — отдельные `AI_VISION_*`. Без них работает всё,
-  кроме распознавания фото (эндпоинт вернёт «ИИ не настроен»).
+  кроме распознавания фото (эндпоинт вернёт «ИИ не настроен»). У AnyModel vision-модель —
+  `ds/deepseek-v4-flash-vision`.
 
 ### 6.2.1 Мало RAM? Урезаем MongoDB
 
@@ -722,6 +793,14 @@ sudo certbot certonly --webroot -w /var/www/certbot \
 > Если certbot ругается на DNS/порт 80 — проверьте `nslookup trainwbrain.ru 8.8.8.8`
 > и `sudo ufw status`. Домен должен уже указывать на сервер.
 
+> **На практике (Jino).** Сертификат на **один apex** `trainwbrain.ru` через webroot
+> выдаётся нормально. А вот добавить `-d www.trainwbrain.ru` при DNS на Jino не удалось
+> (`DNS problem: networking error ... secondary validation`), поэтому:
+> - сертифицируйте только apex: `-d trainwbrain.ru` (без `www`);
+> - в боевом конфиге `trainwbrain.conf` **уберите `www` из `server_name`**, иначе
+>   `nginx -t` пройдёт, но браузер по `www` получит ошибку сертификата;
+> - для поддоменов — DNS-01 (раздел 8.6).
+
 ### 8.3 Боевой конфиг
 
 ```bash
@@ -770,6 +849,49 @@ sudo certbot renew --dry-run
 
 Если dry-run проходит — дальше всё автоматически (systemd timer дважды в сутки).
 
+> **На практике.** Для apex `trainwbrain.ru` автообновление работает (webroot + таймер).
+> Для `dsh.trainwbrain.ru`, выданного через DNS-01 вручную, автоматического обновления
+> **нет** — сертификат живёт до 2027-01-17, и его нужно будет перевыпустить руками (или
+> перейти на Cloudflare + `certbot-dns-cloudflare` для wildcard с автообновлением).
+
+---
+
+### 8.6 Поддомен `dsh.trainwbrain.ru` через DNS-01 (обход Jino)
+
+HTTP-01 для поддомена на Jino не проходит (раздел 3.4), поэтому сертификат берём DNS-01:
+certbot попросит положить TXT-запись, вы добавляете её в панели Jino, жмёте Enter.
+
+```bash
+sudo certbot certonly --manual --preferred-challenges dns \
+  -d dsh.trainwbrain.ru \
+  --agree-tos -m you@example.com --no-eff-email
+```
+
+Certbot выведет примерно:
+
+```
+Please deploy a DNS TXT record under the name:
+_acme-challenge.dsh.trainwbrain.ru
+with the following value:
+Z1ca03tRj0-B7phGNGKWBKjoi1ZfvAhle9RSopY0TJ4
+```
+
+1. В панели Jino → DNS добавьте **TXT** `_acme-challenge.dsh` = это значение, TTL 300.
+2. **Дождитесь**, пока запись реально разойдётся (проверьте в другом окне!):
+   ```bash
+   dig +short TXT _acme-challenge.dsh.trainwbrain.ru @8.8.8.8
+   ```
+   Пока не увидите свой TXT — **не жмите Enter** в certbot (частая ошибка:
+   `NXDOMAIN looking up TXT`). Обычно 1–5 минут.
+3. Только когда `dig` показал значение — нажмите Enter в certbot.
+4. Успех: файлы в `/etc/letsencrypt/live/dsh.trainwbrain.ru/`.
+5. После выпуска TXT-запись можно удалить.
+
+> Сертификат на `dsh` — **отдельный** от `trainwbrain.ru`, у него свой каталог
+> `live/dsh.trainwbrain.ru/`. В `deploy/nginx/dsh-trainwbrain.conf` пути к сертификату
+> должны указывать именно туда (в репозитории по умолчанию стоят пути apex — на сервере
+> их надо заменить на `live/dsh.trainwbrain.ru/`).
+
 ---
 
 ## 9. Telegram Mini App
@@ -816,9 +938,9 @@ ssh twb
 
 Пока сессия открыта, локально доступны:
 
-- `http://localhost:3000` — dev-фронтенд (hot reload);
-- `http://localhost:8001` — dev-backend (`--reload`);
-- `http://127.0.0.1:3080` — DeepSeek Harness.
+- `http://localhost:13000` — dev-фронтенд (hot reload);
+- `http://localhost:18001` — dev-backend (`--reload`);
+- `http://127.0.0.1:13080` — DeepSeek Harness.
 
 Без shell, только туннели:
 
@@ -931,24 +1053,48 @@ sudo npm install -g @deepseek-ai/dsh@0.2.1-rc.2
 dsh --version
 ```
 
-### 11.2 Ключ DeepSeek
+### 11.2 Ключ LLM-провайдера (AnyModel)
+
+DSH сам по себе не содержит модели — он ходит к OpenAI-совместимому API. В этом проекте
+используется **AnyModel** (`https://anymodel.org/v1`), ключ хранится не в git, а в
+`~/.config/dsh/env` пользователя `deploy`:
 
 ```bash
+sudo -iu deploy
 mkdir -p ~/.config/dsh
 cat > ~/.config/dsh/env <<'EOF'
-DEEPSEEK_API_KEY=sk-...
+ANYMODEL_API_KEY=sk-...
 EOF
 chmod 600 ~/.config/dsh/env
 ```
 
-Ключ — в [platform.deepseek.com](https://platform.deepseek.com). Если используете
-совместимый шлюз, добавьте `DEEPSEEK_BASE_URL=...`.
+Провайдер и модель задаются в профиле DSH
+(`~/.dsh/profiles/web/cordis.patch.yml`):
+
+```yaml
+# фрагмент cordis.patch.yml — провайдер AnyModel + модель по умолчанию
+- id: llm-anymodel
+  name: '@deepseek-ai/dsh-llm-pi-ai'
+  config:
+    baseURL: https://anymodel.org/v1
+    api: openai-completions
+    apiKeyEnv: ANYMODEL_API_KEY
+    models:
+      - ds/deepseek-v4-flash
+      - ds/deepseek-v4-pro
+      - ds/deepseek-v4-flash-vision
+      - glm/glm-5.3-flash
+      - glm/glm-5.3
+```
+
+> Ключ в `platform.deepseek.com` тоже подойдёт (тогда `DEEPSEEK_API_KEY` и
+> `DEEPSEEK_BASE_URL`), но аккаунт и баланс — отдельные. Для этого проекта выбран AnyModel.
 
 ### 11.3 Первый запуск (вручную)
 
 ```bash
 cd /opt/trainwbrain
-dsh web --port 3080 --no-open
+dsh web --port 3080 --no-open --trusted-host dsh.trainwbrain.ru
 ```
 
 В консоли появится строка вида:
@@ -959,6 +1105,15 @@ dsh web: http://127.0.0.1:3080/?token=<одноразовый-токен>
 
 Скопируйте её. **Не закрывайте процесс** — откройте URL на своей машине (через туннель,
 раздел 11.5). После обмена токена на cookie приложение работает без токена в URL.
+
+> **Важно понять про авторизацию DSH.** У `dsh web` **нет флага «отключить пароль»**. При
+> старте он генерирует одноразовый **launch-token** и на **любой** запрос без cookie отвечает
+> `401`. Токен из строки лога обменивается на подписанную cookie (живёт `cookieMaxAgeDays`,
+> по умолчанию **30 дней**, и **переживает рестарты** — секрет подписи хранится на диске).
+> Поэтому «постоянный» вход = один раз открыть ссылку с токеном, дальше — просто URL.
+>
+> `--trusted-host dsh.trainwbrain.ru` нужен, чтобы `/api`-фенс DSH принимал этот Host
+> (защита от DNS-rebinding). Без него страница откроется, но API будет отвечать `403`.
 
 > DSH принципиально не биндится на `0.0.0.0` — это защита от случайного выставления
 > shell-доступа в интернет. Поэтому наружу его отдаём только через туннель или nginx
@@ -986,73 +1141,166 @@ journalctl --user -u dsh-web -n 30
 > Токен в URL одноразовый и меняется при каждом рестарте сервиса. Если потеряли —
 > `journalctl --user -u dsh-web -n 50` и скопируйте заново.
 
-### 11.5 Доступ через SSH-туннель (рекомендую)
+**Главная ловушка: `systemctl --user` из-под root.** Если вы зашли как `root` и делаете
+`sudo -iu deploy systemctl --user ...`, получите `Failed to connect to bus: No medium found`
+— root не видит user-bus. Нужно передать `XDG_RUNTIME_DIR`:
 
-На Windows (в отдельном окне, туннель уже настроен в `~/.ssh/config`):
+```bash
+export XDG_RUNTIME_DIR=/run/user/1001
+sudo -iu deploy env XDG_RUNTIME_DIR=/run/user/1001 systemctl --user status dsh-web --no-pager
+sudo -iu deploy env XDG_RUNTIME_DIR=/run/user/1001 journalctl --user -u dsh-web -n 50 --no-pager
+```
+
+Или просто зайти под `deploy` (`sudo -iu deploy`) — там `XDG_RUNTIME_DIR` выставляется сам.
+
+> **Проверка автозапуска после ребута.** `enable` + `loginctl enable-linger deploy` достаточно,
+> чтобы DSH поднялся без логина. Учтите: на 2 ГБ он стартует **~40 секунд** (грузятся все
+> плагины). Сразу после `reboot` `curl https://dsh.trainwbrain.ru` может отдать `502` — это
+> не поломка, подождите минуту. Проверка:
+> ```bash
+> sudo ss -ltnp | grep 3080        # должен быть LISTEN на 127.0.0.1:3080
+> ```
+
+### 11.5 Доступ через SSH-туннель (резервный способ)
+
+На Windows (в отдельном окне; туннель настроен в `~/.ssh/config` как `Host twb`):
 
 ```powershell
 ssh -N twb
 ```
 
-Откройте в браузере `http://127.0.0.1:3080/?token=<токен из логов>`.
+> ⚠️ **Не пробрасывайте серверный 3080 в локальный 3080.** Если на ноутбуке уже запущен
+> свой DSH на `127.0.0.1:3080`, их cookie-хранилища совпадут по `127.0.0.1` и «перебьют»
+> друг друга — вы потеряете текущую локальную сессию. Используйте **другой локальный порт**,
+> например `13080`:
+>
+> ```
+> # ~/.ssh/config (Windows)
+> Host twb
+>     HostName 193.222.62.91
+>     User deploy
+>     LocalForward 13080 127.0.0.1:3080
+>     LocalForward 18001 127.0.0.1:8001
+> ```
+
+Откройте в браузере `http://127.0.0.1:13080/?token=<токен из логов>`.
 
 Всё: DSH работает как будто локально, наружу не выставлен вообще.
 
-### 11.6 Доступ через `dsh.trainwbrain.ru` (опционально)
+### 11.6 Публичный вход `https://dsh.trainwbrain.ru` (развёрнуто, рабочий рецепт)
 
-Нужен, если хотите заходить с любого устройства без SSH. Обязательно с паролем:
+Самый удобный способ — заходить с любого устройства без SSH. Снаружи стоит **Basic Auth**,
+внутри — штатная token→cookie авторизация DSH. Проверено на этом сервере.
+
+**1. A-запись `dsh` → IP** (в панели Jino) и сертификат через **DNS-01** (раздел 8.6) —
+HTTP-01 для поддомена на Jino не проходит.
+
+**2. Пароль Basic Auth — ВАЖНО: не `htpasswd`, а `openssl passwd -6`.**
+
+> ⚠️ `htpasswd` создаёт хэш `$apr1$` (MD5-apache), а **nginx 1.24 на Ubuntu 24.04 его НЕ
+> понимает** (системная `libxcrypt` не читает `$apr1$`). Итог — `401` на любой пароль и в
+> `error.log` строка `user "deploy": password mismatch`. Это самая коварная ловушка, мы на
+> неё попались. Лечится хэшем **SHA-512 (`$6$`)**:
 
 ```bash
-sudo apt install -y apache2-utils
-sudo htpasswd -c /etc/nginx/.htpasswd-dsh deploy   # задайте длинный пароль
+HASH="$(openssl passwd -6 'ВАШ_ДЛИННЫЙ_ПАРОЛЬ')"
+echo "deploy:$HASH" | sudo tee /etc/nginx/.htpasswd-dsh
+sudo chown root:www-data /etc/nginx/.htpasswd-dsh
+sudo chmod 640 /etc/nginx/.htpasswd-dsh
+# в файле должно быть: deploy:$6$.... (начинается с $6$, НЕ $apr1$)
+sudo cat /etc/nginx/.htpasswd-dsh
 ```
 
-1. A-запись `dsh` → IP.
-2. `sudo certbot certonly --webroot -w /var/www/certbot -d dsh.trainwbrain.ru`
-3. Скопируйте [`deploy/nginx/dsh-trainwbrain.conf`](deploy/nginx/dsh-trainwbrain.conf),
-   включите, `nginx -t && systemctl reload nginx`.
-4. Убедитесь, что в юните есть `--trusted-host dsh.trainwbrain.ru`, перезапустите:
+**3. Конфиг nginx** [`deploy/nginx/dsh-trainwbrain.conf`](deploy/nginx/dsh-trainwbrain.conf):
 
 ```bash
-systemctl --user restart dsh-web
-journalctl --user -u dsh-web -n 20
+sudo cp /opt/trainwbrain/deploy/nginx/dsh-trainwbrain.conf /etc/nginx/sites-available/
+# на сервере пути к сертификату должны быть live/dsh.trainwbrain.ru/ :
+sudo sed -i 's#/etc/letsencrypt/live/trainwbrain.ru/#/etc/letsencrypt/live/dsh.trainwbrain.ru/#g' \
+  /etc/nginx/sites-available/dsh-trainwbrain.conf
+sudo ln -sf /etc/nginx/sites-available/dsh-trainwbrain.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-5. Откройте `https://dsh.trainwbrain.ru/?token=<токен>` — сначала спросит Basic Auth,
-   потом пустит в DSH. В строке из логов замените `127.0.0.1:3080` на
-   `dsh.trainwbrain.ru`, токен оставьте прежним.
+**4. Юнит DSH** уже содержит `--trusted-host dsh.trainwbrain.ru` (см. `dsh-web.service`).
+Перезапустите и возьмите свежий токен:
 
-Дополнительно закройте доступ по IP (в конфиге есть закомментированные `allow`/`deny`)
-и включите fail2ban для nginx-логинов.
+```bash
+export XDG_RUNTIME_DIR=/run/user/1001
+sudo -iu deploy env XDG_RUNTIME_DIR=/run/user/1001 systemctl --user restart dsh-web
+sleep 45   # на 2 ГБ старт ~40 секунд
+sudo -iu deploy env XDG_RUNTIME_DIR=/run/user/1001 journalctl --user -u dsh-web --no-pager \
+  | grep -o 'http://127.0.0.1:3080/?token=[^ ]*' | tail -1
+```
+
+**5. Обмен токена на cookie (один раз).** Откройте в браузере
+`https://dsh.trainwbrain.ru/?token=<токен из шага 4>` → введите логин `deploy` и пароль из
+шага 2 → попадёте в UI (токен из адреса уберётся). Cookie живёт 30 дней и переживает
+рестарты, дальше заходите просто по `https://dsh.trainwbrain.ru`.
+
+Проверка «из терминала» (эмуляция браузера):
+
+```bash
+TOKEN=<токен из шага 4>
+curl -s -c /tmp/dsh_cookies.txt -o /dev/null -w "token: %{http_code}\n" \
+  -u 'deploy:ВАШ_ПАРОЛЬ' "https://dsh.trainwbrain.ru/?token=$TOKEN"   # 303
+curl -s -b /tmp/dsh_cookies.txt -o /dev/null -w "cookie: %{http_code}\n" \
+  -u 'deploy:ВАШ_ПАРОЛЬ' https://dsh.trainwbrain.ru/                  # 200
+```
+
+> Если `без пароля → 401` и `с паролем+token → 303` — всё правильно. Если `с паролем → 401`
+> и в `error.log` `password mismatch` — вернитесь к шагу 2 (хэш не `$6$`). Если `502` —
+> DSH ещё не догрузился (подождите) или упал (`journalctl`).
+
+**Получить свежий токен в любой момент** (если cookie истекла):
+
+```bash
+sudo -iu deploy env XDG_RUNTIME_DIR=/run/user/1001 journalctl --user -u dsh-web --no-pager \
+  | grep -o 'http://127.0.0.1:3080/?token=[^ ]*' | tail -1
+```
+
+> Хардненинг (по желанию): в конфиге есть закомментированные `allow`/`deny` — можно
+> ограничить по IP, плюс fail2ban для nginx-логинов.
 
 ### 11.7 Как им пользоваться для этого проекта
 
 - Workspace = `/opt/trainwbrain` (задан в юните `WorkingDirectory`).
+- Если в UI не выбирается папка `/opt/...` — сделайте симлинк из домашней папки, чтобы
+  пикер рабочей папки DSH её видел (он ходит по домашним каталогам):
+  ```bash
+  sudo -iu deploy ln -s /opt/trainwbrain ~/trainwbrain
+  ```
+  Тогда в списке появится `trainwbrain` → `/opt/trainwbrain`.
 - Агент видит весь репозиторий, `git`, `yarn`, `python`, тесты.
 - Dev-сервисы (`8001`, `3000`) подхватывают правки автоматически; прод обновится только
   после `deploy.sh` — то есть «сломал прод» случайно не получится.
-- Полезные запросы:
-  - «посмотри `backend/server.py`, найди эндпоинты без авторизации»;
-  - «прогони `pytest backend/tests -q` и почини падения»;
-  - «добавь в дневник экспорт в CSV, покрой тестом, закоммить».
 
 Ограничения и советы:
 
 - DSH — RC-версия (`0.2.x`), фиксируйте версию при установке;
-- агент тратит токены DeepSeek: длинные сессии и большие репозитории — дороже;
+- агент тратит токены провайдера: длинные сессии и большие репозитории — дороже;
 - не запускайте два экземпляра на одном `DSH_HOME` одновременно;
 - состояние сессий — в `~/.dsh` (не в репозитории);
 - обновление: `sudo npm i -g @deepseek-ai/dsh@latest && systemctl --user restart dsh-web`;
 - одноразовые задачи без GUI: `cd /opt/trainwbrain && dsh headless "прогони pytest -q"`.
+
+> **Плагины с ноутбука.** Если вы переносите свои плагины в профиль `~/.dsh/profiles/web`,
+> держите их **вне git** и следите за совместимостью: при несовпадении версий DSH пишет
+> `disabling profile plugin row "..." : ... incompatible with dsh 0.2.1-rc.2`. Тогда либо
+> `dsh plugin --profile web allow-version '<pkg>@<ver>' --dsh-version 0.2.1-rc.2 --accept-risk`,
+> либо уберите пакет из `dsh.profile.bundles` в `~/.dsh/profiles/web/package.json`
+> (оставив в `dependencies`). Пример: локальный `@local/dsh-ios-remote` при форс-биндинге
+> webserver на `0.0.0.0` несовместим с нашей схемой (`127.0.0.1`), его безопаснее не включать.
 
 ### 11.8 Безопасность DSH (важно)
 
 DSH-агент выполняет команды shell от `deploy`. Кто получил доступ к UI — получил сервер.
 Поэтому:
 
-- только SSH-туннель или nginx + Basic Auth + (лучше) IP-allowlist;
-- пароль длинный, уникальный;
-- не ставьте DSH на тот же домен, что и приложение;
+- только SSH-туннель или nginx + Basic Auth (у нас оба варианта);
+- пароль длинный, уникальный (Basic Auth + отдельно DSH-cookie);
+- не ставьте DSH на тот же домен, что и приложение (у нас `dsh.` vs `trainwbrain.ru`);
+- `--trusted-host dsh.trainwbrain.ru` обязателен, иначе `/api` вернёт `403`;
 - периодически проверяйте `journalctl --user -u dsh-web` на подозрительные команды.
 
 ---
@@ -1277,7 +1525,44 @@ grep -o 'https://trainwbrain.ru' /opt/trainwbrain/frontend/build/static/js/main.
 
 - DSH слушает только `127.0.0.1` — нужен туннель или nginx;
 - токен из URL одноразовый и меняется после рестарта — берите свежий из логов;
-- при доступе через домен — флаг `--trusted-host` и Host-заголовок от nginx.
+- при доступе через домен — флаг `--trusted-host` и Host-заголовок от nginx;
+- `401` **от самого DSH** (нет `www-authenticate` в ответе) — это не Basic Auth, а его
+  token-гейт: откройте `/?token=<свежий>` один раз, дальше cookie.
+
+### `https://dsh.trainwbrain.ru` отдаёт `401` даже с правильным паролем
+
+Почти всегда — хэш в формате `$apr1$` от `htpasswd`, который nginx на Ubuntu 24.04 не
+понимает. Признак — в логе `user "deploy": password mismatch`:
+
+```bash
+sudo tail -5 /var/log/nginx/error.log
+sudo cat /etc/nginx/.htpasswd-dsh   # если начинается с deploy:$apr1$ — это оно
+```
+
+Лечение — пересоздать хэш через `openssl passwd -6` (раздел 11.6, шаг 2). Затем
+`sudo systemctl reload nginx`. Ещё проверьте, что файл читаем `www-data`
+(`sudo -u www-data head -c1 /etc/nginx/.htpasswd-dsh`).
+
+### `502 Bad Gateway` на `https://dsh.trainwbrain.ru`
+
+DSH ещё не догрузился (на 2 ГБ старт ~40 с) или упал:
+
+```bash
+export XDG_RUNTIME_DIR=/run/user/1001
+sudo -iu deploy env XDG_RUNTIME_DIR=/run/user/1001 systemctl --user status dsh-web --no-pager
+sudo ss -ltnp | grep 3080
+```
+
+### `dsh` не стартует после ребута / `systemctl --user` из-под root
+
+`Failed to connect to bus: No medium found` — root не видит user-bus. Нужен
+`XDG_RUNTIME_DIR=/run/user/1001` (раздел 11.4) и `loginctl enable-linger deploy`.
+
+### DSH: `skipping profile bundle "@local/..."` / `disabling profile plugin row`
+
+Плагин несовместим с версией DSH или битый `link:`-путь в `~/.dsh/profiles/web/package.json`.
+Либо `dsh plugin --profile web allow-version ... --accept-risk`, либо убрать из
+`dsh.profile.bundles` (раздел 11.7).
 
 ### «Старая версия» после деплоя
 
@@ -1292,43 +1577,48 @@ Application → Service Workers → Unregister.
 
 | Статья | Стоимость |
 |---|---|
-| VPS 4 vCPU / 8 ГБ / 80 ГБ NVMe | 1200–2000 ₽ |
+| VPS **2 vCPU / 2 ГБ / 30 ГБ NVMe** (тариф «Мидл», реально используется) | **≈ 900 ₽** |
+| (альтернатива с запасом: 4 vCPU / 8 ГБ / 80 ГБ) | 1200–2000 ₽ |
 | Снапшоты/бэкапы провайдера (опц.) | 100–300 ₽ |
-| Домен `.ru` | ~200–900 ₽/год (≈ 20–75 ₽/мес) |
+| Домен `.ru` (Jino) | ~200–900 ₽/год (≈ 20–75 ₽/мес) |
 | Let's Encrypt | 0 ₽ |
 | Telegram Bot API | 0 ₽ |
-| DeepSeek API (разработка + прод) | 300–2000 ₽ (зависит от интенсивности) |
-| **Итого** | **≈ 1700–4300 ₽/мес** |
+| LLM API (AnyModel/DeepSeek, разработка + прод) | 300–2000 ₽ (зависит от интенсивности) |
+| **Итого (на 2/2/30)** | **≈ 1200–3300 ₽/мес** |
 
 Экономия:
 
-- 2 vCPU / 4 ГБ / 60 ГБ — на 500–900 ₽/мес дешевле, но сборки медленнее и нужен swap;
+- взятый тариф **2 vCPU / 2 ГБ / 30 ГБ** уже на ~500–900 ₽/мес дешевле 4/8/80 — но требует
+  дисциплины (swap 4 ГБ, сборка фронта локально, не держать CRA dev + DSH одновременно);
 - не держать dev-сервисы включёнными круглосуточно
   (`systemctl stop twb-frontend-dev twb-backend-dev`), когда не разрабатываете;
-- DeepSeek-агент — самая «плавающая» статья: следите за расходом в кабинете.
+- LLM-агент — самая «плавающая» статья: следите за расходом в кабинете провайдера.
 
-Что НЕ стоит экономить: NVMe (иначе MongoDB и сборки будут тормозить) и 8 ГБ RAM,
-если планируете реально разрабатывать на сервере, а не только хостить прод.
+Что НЕ стоит экономить: NVMe (иначе MongoDB и сборки будут тормозить). RAM 2 ГБ хватает
+только при локальной сборке фронта и без одновременного CRA dev + DSH; если начнёте
+разрабатывать интенсивно с двумя окружениями — апгрейд до 4 ГБ стоит своих денег.
 
 ---
 
 ## 16. Финальный чек-лист
 
 ```
-[ ] VPS 4/8/80 Ubuntu 24.04, DNS A-записи указывают на IP
+[ ] VPS 2/2/30 (или 4/8/80) Ubuntu 24.04, DNS A-записи указывают на IP
 [ ] deploy создан, ключ работает, root/password по SSH отключены
-[ ] bootstrap.sh выполнен: node 24, yarn, dsh, mongod, nginx, ufw, swap
+[ ] bootstrap.sh выполнен: node 24, yarn, dsh, mongod, nginx, ufw, swap 4 ГБ
 [ ] код в /opt/trainwbrain, backend/.env заполнен, chmod 600
 [ ] backend venv + requirements.server.txt, twb-backend active
 [ ] curl http://127.0.0.1:8000/api/ -> {"message":"Hello World"}
-[ ] frontend/.env.production, yarn build -> build/index.html
+[ ] frontend/.env.production, yarn build (локально) -> build/index.html
 [ ] nginx: map + боевой конфиг, nginx -t ок
-[ ] certbot: сертификат на trainwbrain.ru + www, renew --dry-run ок
+[ ] certbot: сертификат на trainwbrain.ru (apex), renew --dry-run ок
 [ ] https://trainwbrain.ru открывается, https://trainwbrain.ru/api/ отвечает
 [ ] BotFather: menu button / Mini App на https://trainwbrain.ru
 [ ] приложение открывается в Telegram, имя пользователя подтягивается
-[ ] dev: twb-backend-dev (8001) + twb-frontend-dev (3000), доступ по SSH-туннелю
-[ ] DSH: ключ в ~/.config/dsh/env, dsh-web active, доступ по туннелю
+[ ] MongoDB cacheSizeGB 0.25 (для 2 ГБ RAM)
+[ ] DSH: ANYMODEL_API_KEY в ~/.config/dsh/env, dsh-web active + enabled + linger
+[ ] https://dsh.trainwbrain.ru: Basic Auth ($6$ хэш) + token→cookie, вход работает
+[ ] DSH автозапуск пережил reboot (ss -ltnp | grep 3080)
 [ ] бэкап MongoDB в cron, копия вне сервера
 [ ] мониторинг /api/ снаружи, журналы ограничены по размеру
 ```
@@ -1345,7 +1635,7 @@ Application → Service Workers → Unregister.
 | [`deploy/nginx/00-upgrade-map.conf`](deploy/nginx/00-upgrade-map.conf) | map для WebSocket |
 | [`deploy/nginx/trainwbrain.conf`](deploy/nginx/trainwbrain.conf) | основной сайт + API + WS |
 | [`deploy/nginx/dev-trainwbrain.conf`](deploy/nginx/dev-trainwbrain.conf) | dev-поддомен (опц.) |
-| [`deploy/nginx/dsh-trainwbrain.conf`](deploy/nginx/dsh-trainwbrain.conf) | DSH-поддомен (опц., с паролем) |
+| [`deploy/nginx/dsh-trainwbrain.conf`](deploy/nginx/dsh-trainwbrain.conf) | DSH-поддомен (Basic Auth + token→cookie) |
 | [`deploy/systemd/twb-backend.service`](deploy/systemd/twb-backend.service) | прод-backend |
 | [`deploy/systemd/twb-backend-dev.service`](deploy/systemd/twb-backend-dev.service) | dev-backend с reload |
 | [`deploy/systemd/twb-frontend-dev.service`](deploy/systemd/twb-frontend-dev.service) | dev-фронтенд |
