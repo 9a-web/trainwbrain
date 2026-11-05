@@ -1,0 +1,664 @@
+/* ===== Coach Diary — Дневник тренера ===== */
+
+.coach-diary-page {
+  min-height: 100vh;
+  background: #1C1C1C;
+  color: #fff;
+  padding: 40px 20px 60px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* --- Header --- */
+.cd-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cd-back {
+  background: #2a2a2a;
+  border: none;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.cd-back:active { transform: scale(0.94); }
+
+.cd-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cd-header-date {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.02em;
+}
+
+/* --- Client selector (avatar scroll) --- */
+.cd-client-select {
+  margin-top: 8px;
+}
+
+.cd-client-select-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+
+.cd-avatar-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 4px 14px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+.cd-avatar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.cd-avatar-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  min-width: 76px;
+  scroll-snap-align: start;
+  transition: transform 0.15s ease;
+}
+.cd-avatar-card:active {
+  transform: scale(0.95);
+}
+
+.cd-avatar-ring {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 3px;
+  background: transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cd-avatar-card.active .cd-avatar-ring {
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.3), 0 0 20px rgba(255, 107, 0, 0.2);
+}
+.cd-avatar-card:hover .cd-avatar-ring {
+  background: rgba(255, 138, 36, 0.2);
+}
+
+.cd-avatar-img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid transparent;
+}
+.cd-avatar-card.active .cd-avatar-img {
+  border-color: #1c1c1c;
+}
+
+.cd-avatar-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cd-avatar-plan {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* --- Athlete banner --- */
+.cd-athlete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+}
+.cd-ava {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #FF6B00;
+  display: block;
+}
+.cd-athlete-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+.cd-athlete-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+/* --- Control bar: date, actions --- */
+.cd-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.cd-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 6px 12px;
+  flex-shrink: 0;
+}
+.cd-date-nav button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cd-date-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFB36B;
+  text-transform: capitalize;
+  min-width: 120px;
+  text-align: center;
+}
+
+.cd-save-status {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+.cd-save-status.saved {
+  background: rgba(59, 209, 111, 0.12);
+  color: #59E08A;
+}
+.cd-save-status.unsaved {
+  background: rgba(255, 176, 32, 0.12);
+  color: #FFB020;
+}
+
+/* --- Empty state --- */
+.cd-empty {
+  text-align: center;
+  padding: 40px 24px;
+  background: #242424;
+  border-radius: 18px;
+  margin-top: 8px;
+}
+.cd-empty-ico {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 138, 36, 0.12);
+  color: #FF8A24;
+}
+.cd-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+}
+.cd-empty-sub {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+/* --- Exercise list --- */
+.cd-ex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/* --- Exercise card --- */
+.cd-ex-card {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 14px;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.cd-ex-card:focus-within {
+  border-color: rgba(255, 138, 36, 0.55);
+}
+
+/* Card head: exercise name (or +) + drag handle + remove */
+.cd-ex-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.cd-ex-order {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #1f1f1f;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 700;
+}
+.cd-ex-order.filled {
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+}
+
+/* The "+" button (shown when no exercise selected) */
+.cd-ex-picker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 138, 36, 0.08);
+  border: 2px dashed rgba(255, 138, 36, 0.35);
+  border-radius: 14px;
+  color: #FF8A24;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  min-height: 48px;
+}
+.cd-ex-picker-btn:hover {
+  background: rgba(255, 138, 36, 0.15);
+  border-color: #FF8A24;
+}
+.cd-ex-picker-btn:active {
+  transform: scale(0.98);
+}
+
+/* Exercise name (when selected) */
+.cd-ex-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cd-ex-name:hover {
+  color: #FF8A24;
+}
+.cd-ex-name .cd-ex-muscle {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 138, 36, 0.1);
+  border: 1px solid rgba(255, 138, 36, 0.2);
+  border-radius: 999px;
+  padding: 2px 9px;
+  margin-left: 6px;
+}
+
+.cd-ex-remove {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: 8px;
+  transition: all 0.15s;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+}
+.cd-ex-remove:hover {
+  background: rgba(255, 106, 111, 0.14);
+  color: #ff6b6f;
+}
+
+/* --- Sets grid --- */
+.cd-sets {
+  margin-top: 8px;
+}
+.cd-set-head,
+.cd-set-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 30px;
+  gap: 8px;
+  align-items: center;
+}
+.cd-set-head {
+  padding: 0 0 6px;
+}
+.cd-set-head span {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  text-align: center;
+}
+.cd-set-row {
+  margin-bottom: 8px;
+}
+.cd-set-cell input {
+  width: 100%;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+}
+.cd-set-cell input:focus {
+  outline: none;
+  border-color: #FF8A24;
+}
+.cd-set-cell input::-webkit-outer-spin-button,
+.cd-set-cell input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.cd-set-cell input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.cd-set-del {
+  display: flex;
+  justify-content: center;
+}
+.cd-set-del button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.cd-set-del button:hover {
+  background: rgba(255, 106, 111, 0.14);
+  color: #ff6b6f;
+}
+
+/* Add set button */
+.cd-add-set {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px dashed #4a4a4a;
+  color: rgba(255, 255, 255, 0.55);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 2px;
+}
+.cd-add-set:hover {
+  border-color: #FF6B00;
+  color: #FF8A24;
+}
+
+/* --- Notes area per card --- */
+.cd-ex-notes {
+  margin-top: 8px;
+}
+.cd-ex-notes textarea {
+  width: 100%;
+  background: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  min-height: 32px;
+}
+.cd-ex-notes textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+.cd-ex-notes textarea:focus {
+  outline: none;
+  border-color: #FF8A24;
+}
+
+/* --- Add exercise button (between cards) --- */
+.cd-add-ex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px dashed #4a4a4a;
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  margin-bottom: 12px;
+}
+.cd-add-ex:hover {
+  border-color: #FF6B00;
+  color: #FF8A24;
+}
+.cd-add-ex:active {
+  transform: scale(0.995);
+}
+
+/* --- Session notes --- */
+.cd-session-notes {
+  margin-bottom: 14px;
+}
+.cd-session-notes textarea {
+  width: 100%;
+  min-height: 60px;
+  background: #262626;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: none;
+  font-family: inherit;
+}
+.cd-session-notes textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+.cd-session-notes textarea:focus {
+  outline: none;
+  border-color: #FF8A24;
+}
+
+/* --- Footer: summary + save --- */
+.cd-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 14px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #1a1a1a;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.cd-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cd-sum-stat {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  background: #242424;
+  border-radius: 11px;
+}
+.cd-sum-stat b {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.cd-sum-stat span {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cd-sum-tonnage b {
+  color: #FFB36B;
+}
+
+.cd-save-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(-20deg, #FF8A24, #FFD24A);
+  color: #1c1c1c;
+  font-size: 15.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.16s ease, opacity 0.16s ease;
+}
+.cd-save-btn:active {
+  transform: scale(0.99);
+}
+.cd-save-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  background: #3a3a3a;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Weight suggestion chip --- */
+.cd-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px 0 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(59, 209, 111, 0.1);
+  border: 1px solid rgba(59, 209, 111, 0.25);
+  color: #59E08A;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cd-suggestion:hover {
+  background: rgba(59, 209, 111, 0.18);
+}
+.cd-suggestion:active {
+  transform: scale(0.96);
+}
+
+/* --- History-based progression --- */
+.cd-progression-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 4px 0;
+  font-style: italic;
+}
+
+/* --- Responsive --- */
+@media (max-width: 374px) {
+  .cd-set-head,
+  .cd-set-row {
+    grid-template-columns: 1.15fr 1fr 1fr 26px;
+    gap: 5px;
+  }
+  .cd-set-cell input {
+    padding: 9px 4px;
+    font-size: 14px;
+  }
+}

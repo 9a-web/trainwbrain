@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, X, Zap } from "lucide-react";
+import { Activity, X, Zap, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import "./CardioForm.css";
 
 const TYPES = [
@@ -23,7 +23,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
  * Форма кардио-сессии. Используется для создания и правки.
  * initial — существующая сессия (или черновик из фото).
  */
-export default function CardioForm({ initial, onSave, onCancel, saving = false, title = "Кардио" }) {
+export default function CardioForm({ initial, onSave, onCancel, saving = false, title = "Кардио", aiConfidence = null }) {
   const base = initial || {};
   const [type, setType] = useState(base.type || "treadmill");
   const [date, setDate] = useState(base.date || todayIso());
@@ -42,21 +42,24 @@ export default function CardioForm({ initial, onSave, onCancel, saving = false, 
     base.incline_percent != null ? String(base.incline_percent) : ""
   );
   const [notes, setNotes] = useState(base.notes || "");
+  const [source, setSource] = useState(base.source || null);
   const [err, setErr] = useState("");
 
   // Сброс при смене initial (черновик из фото)
   useEffect(() => {
     if (!initial) return;
     setType(initial.type || "treadmill");
-    if (initial.duration_sec) setMinutes(String(Math.round(initial.duration_sec / 60)));
-    if (initial.distance_km != null) setDistance(String(initial.distance_km));
-    if (initial.avg_hr != null) setAvgHr(String(initial.avg_hr));
-    if (initial.max_hr != null) setMaxHr(String(initial.max_hr));
-    if (initial.calories != null) setCalories(String(initial.calories));
-    if (initial.intensity) setIntensity(initial.intensity);
-    if (initial.rpe != null) setRpe(String(initial.rpe));
-    if (initial.incline_percent != null) setIncline(String(initial.incline_percent));
-    if (initial.notes) setNotes(initial.notes);
+    setDate(initial.date || todayIso());
+    setMinutes(initial.duration_sec ? String(Math.round(initial.duration_sec / 60)) : "");
+    setDistance(initial.distance_km != null ? String(initial.distance_km) : "");
+    setAvgHr(initial.avg_hr != null ? String(initial.avg_hr) : "");
+    setMaxHr(initial.max_hr != null ? String(initial.max_hr) : "");
+    setCalories(initial.calories != null ? String(initial.calories) : "");
+    setIntensity(initial.intensity || "moderate");
+    setRpe(initial.rpe != null ? String(initial.rpe) : "");
+    setIncline(initial.incline_percent != null ? String(initial.incline_percent) : "");
+    setNotes(initial.notes || "");
+    setSource(initial.source || null);
   }, [initial]);
 
   const isTreadmill = type === "treadmill" || type === "walk";
@@ -91,6 +94,7 @@ export default function CardioForm({ initial, onSave, onCancel, saving = false, 
       rpe: num(rpe),
       incline_percent: isTreadmill ? num(incline) : null,
       notes: notes.trim() || null,
+      ...(source ? { source } : {}),
     };
     if (body.avg_hr != null && (body.avg_hr < 30 || body.avg_hr > 230)) {
       setErr("Пульс должен быть от 30 до 230");
@@ -102,11 +106,21 @@ export default function CardioForm({ initial, onSave, onCancel, saving = false, 
   return (
     <form className="cf" onSubmit={submit} data-testid="cardio-form">
       <div className="cf-head">
-        <h2 className="cf-title">{title}</h2>
+        <div>
+          <div className="cf-eyebrow">{aiConfidence ? <><Sparkles size={13} /> AI-ЧЕРНОВИК</> : "ТРЕНИРОВКА"}</div>
+          <h2 className="cf-title">{title}</h2>
+        </div>
         <button type="button" className="cf-close" onClick={onCancel} aria-label="Закрыть" data-testid="cardio-form-close">
           <X size={20} />
         </button>
       </div>
+
+      {aiConfidence ? (
+        <div className={`cf-ai-note ${aiConfidence === "low" ? "is-low" : ""}`}>
+          {aiConfidence === "low" ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+          <span>{aiConfidence === "low" ? "AI не уверен в показателях. Проверьте каждое поле." : "Показатели распознаны. Проверьте их перед сохранением."}</span>
+        </div>
+      ) : null}
 
       <div className="cf-types" role="group" aria-label="Тип кардио">
         {TYPES.map((t) => (

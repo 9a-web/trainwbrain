@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, Users, Dumbbell, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { redeemInvite } from "@/api";
+import { redeemInvite, checkInvite } from "@/api";
+import { useAuth } from "@/context/AuthContext";
 import { haptic, hapticNotify } from "@/lib/platform";
 import "@/pages/Onboarding.css";
+
+const PENDING_INVITE_KEY = "twb_pending_invite";
 
 const errText = (err) => {
   const status = err && err.response && err.response.status;
@@ -22,6 +25,7 @@ const errText = (err) => {
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -34,18 +38,32 @@ export default function Onboarding() {
     setBusy(true);
     haptic("medium");
     try {
-      const res = await redeemInvite(value);
-      try {
-        window.localStorage.setItem(
-          "twb_capabilities",
-          JSON.stringify(res || {})
-        );
-      } catch (err) {
-        /* no-op */
+      if (isAuthenticated) {
+        // Уже вошли — сразу применяем код (получаем доступ).
+        const res = await redeemInvite(value);
+        try {
+          window.localStorage.setItem(
+            "twb_capabilities",
+            JSON.stringify(res || {})
+          );
+        } catch (err) {
+          /* no-op */
+        }
+        hapticNotify("success");
+        toast.success("Код применён. Добро пожаловать!");
+        navigate("/", { replace: true });
+      } else {
+        // Гость: проверяем код без авторизации, запоминаем и ведём на вход.
+        await checkInvite(value);
+        try {
+          window.localStorage.setItem(PENDING_INVITE_KEY, value);
+        } catch (err) {
+          /* no-op */
+        }
+        hapticNotify("success");
+        toast.success("Код верный. Войдите или зарегистрируйтесь.");
+        navigate("/login", { replace: true });
       }
-      hapticNotify("success");
-      toast.success("Код применён. Добро пожаловать!");
-      navigate("/", { replace: true });
     } catch (err) {
       setError(errText(err));
       hapticNotify("error");

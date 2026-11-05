@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff, Dumbbell, Check, RefreshCw, Pencil, Radio, ChevronRight, BarChart3, Share2, Download, Activity, Flame, Route } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Dumbbell, Check, RefreshCw, Pencil, Radio, ChevronRight, BarChart3, Share2, Download, Activity, Flame, Route, PenLine } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import {
@@ -11,6 +11,7 @@ import {
 import { useRealtime } from "@/hooks/useRealtime";
 import Portal from "@/components/Portal";
 import { haptic, hapticNotify } from "@/lib/platform";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { useBackButton } from "@/hooks/useTelegramUI";
 import "./Coach.css";
 
@@ -94,6 +95,12 @@ export default function CoachClient() {
   const coachId = user?.telegram_id;
   const navigate = useNavigate();
   useBackButton(true, () => navigate("/coach"));
+  // Страховка: тренерские экраны доступны только в режиме тренера.
+  const { loading: capsLoading, coachMode } = useCapabilities();
+  useEffect(() => {
+    if (!capsLoading && !coachMode) navigate("/", { replace: true });
+  }, [capsLoading, coachMode, navigate]);
+
 
   const [athlete, setAthlete] = useState(null);
   const [plan, setPlan] = useState(null);
@@ -368,6 +375,25 @@ export default function CoachClient() {
               </button>
             );
           })()}
+
+          {/* Дневник тренера: запись тренировок в реальном времени */}
+          <button
+            className="cl-live-entry"
+            onClick={() => { haptic("medium"); navigate(`/coach/diary`); }}
+            data-testid="open-diary-btn"
+            style={{ borderColor: "rgba(255, 138, 36, 0.3)" }}
+          >
+            <span className="cl-live-entry-left">
+              <PenLine size={18} style={{ color: "#FF8A24" }} />
+              <span className="cl-live-entry-text">
+                <span className="cl-live-entry-title">Дневник тренера</span>
+                <span className="cl-live-entry-sub">
+                  Записывать тренировку в реальном времени с прогрессией
+                </span>
+              </span>
+            </span>
+            <ChevronRight size={20} className="client-chevron" />
+          </button>
 
           {/* Подробная статистика подопечного */}
           <button

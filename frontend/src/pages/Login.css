@@ -4,17 +4,25 @@
   min-height: 100dvh;
   background-color: #1c1c1c;
   display: flex;
+  /* Вертикальный центр, но с возможностью скролла: когда на телефоне
+     открывается клавиатура, dvh уменьшается и форма перестаёт помещаться.
+     Раньше здесь был overflow: hidden + жёсткое центрирование — форма
+     обрезалась, поле «прыгало» из-под пальца и тап по нему не срабатывал. */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
-  overflow: hidden;
+  padding: 24px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .login-gradient {
   position: fixed;
   top: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
   width: 454px;
   max-width: 100%;
   height: 120px;
@@ -24,7 +32,9 @@
 .login-gradient img {
   width: 100%;
   height: 100%;
-  filter: blur(100px);
+  /* Картинка уже размытый градиент — 100px blur заставлял слой
+     перерисовываться на каждом кадре и заметно тормозил ввод. */
+  filter: blur(40px);
   opacity: 0.8;
 }
 
@@ -37,6 +47,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  /* auto-поля центрируют карточку, пока она помещается, и не обрезают её,
+     когда места мало (клавиатура открыта). */
+  margin: auto 0;
 }
 
 .login-logo {

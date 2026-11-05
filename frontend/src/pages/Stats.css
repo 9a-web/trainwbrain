@@ -3,6 +3,10 @@
    Premium dark analytics: bento-грид, градиентные графики, glow-акценты.
    ========================================================================= */
 .stats-page {
+  --stats-surface: #242424;
+  --stats-surface-raised: #2a2a2a;
+  --stats-muted: rgba(255, 255, 255, 0.62);
+  --stats-focus: #7dd3fc;
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
@@ -122,6 +126,10 @@
   background: linear-gradient(-34deg, #ff8a24, #ffda24);
   color: #1c1c1c;
   box-shadow: 0 4px 16px rgba(255, 138, 36, 0.3);
+}
+.stats-page button:focus-visible, .stats-page select:focus-visible {
+  outline: 2px solid var(--stats-focus);
+  outline-offset: 3px;
 }
 
 /* ---------- Skeleton loading ---------- */
@@ -573,6 +581,7 @@
 .stats-dev b { font-size: 14px; font-weight: 700; }
 .stats-dev b.up { color: #34d399; }
 .stats-dev b.down { color: #fb7185; }
+.stats-dev b.muted { color: rgba(255, 255, 255, 0.45); }
 
 /* ---------- Skip chips ---------- */
 .stats-chips {
@@ -608,6 +617,8 @@
   transition: background 0.2s ease;
 }
 .stats-recent-row:hover { background: rgba(255, 255, 255, 0.03); }
+.stats-recent-row-clickable { cursor: pointer; }
+.stats-recent-row-clickable:focus-visible { outline: 2px solid #ff8a24; outline-offset: -2px; }
 .stats-recent-row:last-child { border-bottom: none; }
 .stats-recent-ring {
   --p: 0%;
@@ -735,8 +746,12 @@
 .cardio-sum-type-name { flex: 1; color: rgba(255, 255, 255, 0.85); }
 .cardio-sum-type-val { color: #ff8a24; font-weight: 700; }
 
-@media (max-width: 374px) {
+@media (max-width: 480px) {
   .stats-mini-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-orm-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-recent-row { align-items: flex-start; }
+  .stats-recent-meta { flex-wrap: wrap; }
+  .stats-recent-date { margin-left: 56px; margin-top: -8px; }
 }
 
 /* ---------- Узкие экраны ---------- */

@@ -487,6 +487,7 @@
   overflow-x: auto;
   padding: 4px 2px 10px;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 .ed-weeks::-webkit-scrollbar { display: none; }
 .ed-week-pill {

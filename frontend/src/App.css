@@ -112,6 +112,72 @@
   padding: 15px 40px;
 }
 
+/* Плашка сверху главного экрана (например, предпросмотр клиента) */
+.home-screen-notice {
+  margin: 0 0 12px -20px;
+}
+
+/* Background Jobs Bar — фоновые ИИ-задачи */
+.bg-jobs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  margin-left: -20px;
+  padding: 6px 10px;
+  background: rgba(255, 138, 36, 0.08);
+  border-radius: 10px;
+}
+.bg-job-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.85);
+}
+.bg-job-chip.running {
+  background: rgba(255, 138, 36, 0.18);
+  color: #FFC107;
+}
+.bg-job-chip.done {
+  background: rgba(72, 199, 142, 0.15);
+  color: #48C78E;
+}
+.bg-job-chip.error {
+  background: rgba(255, 82, 82, 0.15);
+  color: #FF5252;
+}
+.bg-job-chip:hover {
+  transform: scale(1.02);
+  filter: brightness(1.15);
+}
+.bg-job-chip:active {
+  transform: scale(0.98);
+}
+.bg-job-label {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bg-job-status {
+  font-weight: 700;
+  font-size: 13px;
+}
+.bg-jobs-count {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 2px;
+}
+
 /* Greeting Row */
 .greeting-row {
   display: flex;
@@ -184,15 +250,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  width: calc(100% + 20px);
+  width: calc(100% + 40px);
   margin: 10px 0 0 -20px;
-  padding: 10px 12px 10px 20px;
+  padding: 10px 20px 10px 20px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   cursor: pointer;
   text-align: left;
   transition: background 0.15s ease;
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 .cardio-widget:hover { background: rgba(255, 255, 255, 0.06); }
@@ -231,6 +298,121 @@
   transition: width 0.4s ease;
 }
 .cardio-widget:hover .streak-chevron { color: #FF8A24; transform: translateX(2px); }
+
+/* --- Coach clients widget on home screen --- */
+.home-coach-clients {
+  margin: 14px 0 0 -20px;
+  padding: 14px 20px 12px 20px;
+  background: rgba(255, 107, 0, 0.04);
+  border: 1px solid rgba(255, 107, 0, 0.12);
+  border-radius: 18px;
+  width: calc(100% + 40px);
+  box-sizing: border-box;
+}
+.home-coach-clients-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FF8A24;
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.home-coach-clients-loading,
+.home-coach-avatar-card.is-active .home-coach-avatar-ring {
+  background: rgba(255, 138, 36, 0.25);
+}
+.home-coach-avatar-card.is-active .home-coach-avatar-img {
+  border-color: #FF8A24;
+}
+.home-coach-avatar-card.is-active .home-coach-avatar-name {
+  color: #fff;
+}
+.home-coach-clients-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 6px 0;
+}
+.home-coach-avatar-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 4px 8px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+.home-coach-avatar-scroll::-webkit-scrollbar {
+  display: none;
+}
+.home-coach-avatar-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  min-width: 68px;
+  scroll-snap-align: start;
+  transition: transform 0.15s ease;
+}
+.home-coach-avatar-card:active {
+  transform: scale(0.93);
+}
+.home-coach-avatar-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.home-coach-avatar-card:hover .home-coach-avatar-ring {
+  background: rgba(255, 138, 36, 0.25);
+}
+.home-coach-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid rgba(255, 107, 0, 0.5);
+  transition: border-color 0.2s ease;
+}
+.home-coach-avatar-card:hover .home-coach-avatar-img {
+  border-color: #FF8A24;
+}
+.home-coach-avatar-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-coach-avatar-plan {
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
 
 /* Typography */
 .text-jakarta-bold {
@@ -426,10 +608,83 @@
   }
 }
 
+/* Очень узкие экраны: .main-content даёт 16px отступов, поэтому «вылет»
+   виджетов главного экрана тоже должен быть 16px, иначе правый край обрезается. */
+@media (max-width: 374px) {
+  .streak-row,
+  .streak-row-link,
+  .cardio-widget,
+  .home-coach-clients {
+    margin-left: -16px;
+  }
+  .streak-row,
+  .streak-row-link {
+    padding-left: 16px;
+  }
+  .cardio-widget {
+    width: calc(100% + 32px);
+    padding: 10px 16px;
+  }
+  .home-coach-clients {
+    width: calc(100% + 32px);
+    padding: 14px 16px 12px 16px;
+  }
+}
+
 /* Gradient background responsive */
 @media (max-width: 500px) {
   .gradient-background {
     width: 100%;
     max-width: 454px;
+  }
+}
+
+/* =========================================================================
+   Главный экран в режиме тренера: список клиентов. Сама тренировка клиента
+   показывается ниже тем же компонентом, что и своя (DateSelector) — единый
+   дизайн для обоих режимов.
+   ========================================================================= */
+.home-coach-clients {
+  margin: 14px 0 0 -20px;
+  padding: 14px 20px 12px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  width: calc(100% + 40px);
+  box-sizing: border-box;
+}
+.home-coach-clients-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.home-coach-avatar-card.is-active .home-coach-avatar-ring {
+  background: rgba(255, 138, 36, 0.25);
+}
+.home-coach-avatar-card.is-active .home-coach-avatar-img {
+  border-color: #FF8A24;
+}
+.home-coach-avatar-card.is-active .home-coach-avatar-name {
+  color: #fff;
+}
+.home-coach-clients-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 6px 0 4px;
+}
+
+@media (max-width: 374px) {
+  .home-coach-clients {
+    margin-left: -16px;
+    width: calc(100% + 32px);
+    padding: 14px 16px 12px 16px;
   }
 }

@@ -635,12 +635,31 @@
   font-size: 15.5px; font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  max-width: 480px;
+  word-break: break-word;
+}
+.ai-busy-text {
+  position: relative; z-index: 1;
+  font-size: 14px; font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  max-width: 440px;
+  line-height: 1.45;
+  text-align: left;
+  padding: 0 16px;
+  word-break: break-word;
+  animation: twb-fade-in 0.3s ease both;
 }
 .ai-busy-sub {
   position: relative; z-index: 1;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.75);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+.ai-busy-sub.model {
+  font-size: 11.5px;
+  color: rgba(255, 138, 36, 0.7);
+  font-style: italic;
 }
 
 /* Result */
@@ -793,6 +812,7 @@
 .ai-charts-chips {
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px;
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
 }
 .ai-charts-chips::-webkit-scrollbar { display: none; }
 .ai-chip.sm {

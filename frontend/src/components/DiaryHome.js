@@ -12,6 +12,7 @@ import {
   pollDiaryJob,
   deleteDiarySession,
 } from "@/api";
+import { addBgJob, removeBgJob } from "@/hooks/useBackgroundJobs";
 import DiaryComposer from "@/components/DiaryComposer";
 import DiaryChat from "@/components/DiaryChat";
 import WorkoutView from "@/components/WorkoutView";
@@ -136,7 +137,9 @@ const DiaryHome = () => {
     setAnalyzing(session.id);
     try {
       const { job_id } = await diaryAnalyze(session.id);
+      addBgJob({ id: job_id, kind: "diary_analyze", preview: "Разбор тренировки" });
       const job = await pollDiaryJob(job_id);
+      removeBgJob(job_id);
       if (job.status === "done" && job.template) {
         setSessions((ss) => ss.map((s) => (s.id === session.id ? { ...s, ai_feedback: job.template } : s)));
         toast.success("Разбор готов");
@@ -164,9 +167,16 @@ const DiaryHome = () => {
   const handleWeekly = async () => {
     setBusyAgent("weekly");
     try {
-      const res = await diaryWeekly();
-      setWeekly(res);
-      setWeeklyOpen(true);
+      const { job_id } = await diaryWeekly();
+      addBgJob({ id: job_id, kind: "diary_weekly", preview: "Разбор недели" });
+      const job = await pollDiaryJob(job_id);
+      removeBgJob(job_id);
+      if (job.status === "done" && job.template) {
+        setWeekly(job.template);
+        setWeeklyOpen(true);
+      } else {
+        toast.error(job.error || "Не удалось получить разбор недели");
+      }
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Не удалось получить разбор недели");
     } finally {
@@ -178,7 +188,9 @@ const DiaryHome = () => {
     setBusyAgent("next");
     try {
       const { job_id } = await diaryNext("");
+      addBgJob({ id: job_id, kind: "diary_next", preview: "Генерация тренировки" });
       const job = await pollDiaryJob(job_id);
+      removeBgJob(job_id);
       if (job.status === "done" && job.template) {
         setPrefill(job.template.exercises || []);
         setComposerOpen(true);

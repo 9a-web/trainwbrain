@@ -7,6 +7,7 @@ import requests
 import time
 import random
 import json
+import pytest
 from datetime import datetime, date, timedelta
 
 # Backend URL - use actual preview endpoint
@@ -384,8 +385,8 @@ def test_ai_analyze(user, session):
     return None
 
 def test_ai_weekly(user):
-    """Test AI weekly (sync): GET /api/diary/agent/weekly."""
-    print("\n=== TEST 8: AI Weekly (Sync) ===")
+    """Test AI weekly (async job): POST /api/diary/agent/weekly → poll job."""
+    print("\n=== TEST 8: AI Weekly (Async Job) ===")
     headers = {"Authorization": f"Bearer {user['token']}"}
     
     # Check AI status
@@ -395,10 +396,32 @@ def test_ai_weekly(user):
         print(f"⚠️ AI not enabled, skipping")
         return None
     
-    # Get weekly advice
-    resp = requests.get(f"{BASE_URL}/diary/agent/weekly", headers=headers)
-    assert resp.status_code == 200, f"Weekly failed: {resp.status_code} {resp.text}"
-    weekly = resp.json()
+    # Start the weekly analysis job
+    resp = requests.post(f"{BASE_URL}/diary/agent/weekly", headers=headers)
+    assert resp.status_code == 200, f"Weekly start failed: {resp.status_code} {resp.text}"
+    job_data = resp.json()
+    job_id = job_data.get("job_id")
+    assert job_id, "Should return job_id"
+    
+    # Poll for completion
+    deadline = time.time() + 90
+    last_status = None
+    while time.time() < deadline:
+        resp = requests.get(f"{BASE_URL}/ai/program/jobs/{job_id}", headers=headers)
+        assert resp.status_code == 200, f"Job poll failed: {resp.status_code}"
+        job = resp.json()
+        last_status = job.get("status")
+        if last_status == "done":
+            break
+        if last_status == "error":
+            pytest.fail(f"Weekly job error: {job.get('error')}")
+        time.sleep(2)
+    
+    if last_status != "done":
+        pytest.fail(f"Weekly job did not complete (last_status={last_status})")
+    
+    weekly = job.get("template")
+    assert weekly, "Should have template with result"
     
     assert "volume" in weekly, "Should have volume"
     assert "assessment" in weekly, "Should have assessment"
@@ -406,7 +429,7 @@ def test_ai_weekly(user):
     assert "recommend_exercises" in weekly, "Should have recommend_exercises"
     assert "advice" in weekly, "Should have advice"
     
-    print(f"✅ GET /diary/agent/weekly: returned successfully")
+    print(f"✅ POST /diary/agent/weekly (job {job_id}): returned successfully")
     print(f"   Assessment: {weekly['assessment'][:100]}...")
     print(f"   Recommended exercises: {len(weekly['recommend_exercises'])}")
     print(f"   Advice: {weekly['advice'][:100]}...")

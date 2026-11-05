@@ -5,6 +5,16 @@
   margin-top: 24px;
 }
 
+/* На очень узких экранах у .main-content боковые отступы 16px (а не 40px),
+   поэтому прежний «вылет» на 20px делал карточку тренировки шире экрана
+   на 8px — правый край с кнопками подхода обрезался. */
+@media (max-width: 374px) {
+  .date-selector {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+  }
+}
+
 /* Row: vertical dots column (left) + horizontal scroll of day cards */
 .date-selector-row {
   display: flex;
@@ -192,6 +202,8 @@
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   -webkit-overflow-scrolling: touch;
+  /* Свайп по карточкам не «доскролливает» страницу вбок */
+  overscroll-behavior-x: contain;
 }
 
 .date-selector-scroll::-webkit-scrollbar {
@@ -859,3 +871,25 @@
   100% { box-shadow: 0 0 0 0 rgba(80, 150, 255, 0); }
 }
 
+
+/* Режим тренера: клиент не выбран — данных для заполнения нет */
+.coach-no-client {
+  margin-top: 22px;
+  padding: 20px 18px;
+  border: 1px dashed rgba(255, 107, 0, 0.28);
+  border-radius: 18px;
+  background: rgba(255, 107, 0, 0.04);
+  text-align: center;
+}
+.coach-no-client-text {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+.coach-no-client-sub {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.45);
+}

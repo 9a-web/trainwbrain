@@ -71,3 +71,94 @@ body {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 1; }
 }
+
+/* Лёгкий фолбэк для догружаемого чанка маршрута: спиннер по центру,
+   без полноэкранного логотипа, чтобы переходы не «мигали». */
+.route-fallback {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1c1c;
+}
+.route-fallback-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.14);
+  border-top-color: #FF8A24;
+  animation: twb-route-spin 0.8s linear infinite;
+}
+@keyframes twb-route-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-fallback-spinner { animation-duration: 1.6s; }
+}
+
+/* Экран ошибки рендера (ErrorBoundary) — вместо белого экрана. */
+.app-error {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  background: #1c1c1c;
+  color: #fff;
+}
+.app-error-card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  background: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 26px 20px 22px;
+}
+.app-error-emoji {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.app-error-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.app-error-text {
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0 0 14px;
+}
+.app-error-detail {
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  max-height: 110px;
+  overflow: auto;
+}
+.app-error-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1c1c;
+  background: linear-gradient(-34deg, #ff8a24, #ffda24);
+  cursor: pointer;
+}
+.app-error-btn:active {
+  transform: scale(0.985);
+}

@@ -3,7 +3,7 @@
    dev HMR keeps working), with an offline app-shell fallback from cache.
    Never intercepts API, cross-origin, or dev-socket requests. */
 
-const CACHE = "twb-cache-v1";
+const CACHE = "twb-cache-v3";
 const SHELL = [
   "/",
   "/index.html",
@@ -12,6 +12,15 @@ const SHELL = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
 ];
+
+/** Навигация и HTML — это «точка входа» в приложение: в index.html лежат
+ *  имена хэшированных бандлов, и если отдать его из HTTP-кэша после деплоя,
+ *  browser попросит уже удалённый main.<oldhash>.js и получит 404 — белый
+ *  экран. Поэтому запрашиваем HTML мимо кэша (cache: "no-store"). */
+const isDocument = (req, url) =>
+  req.mode === "navigate" ||
+  url.pathname === "/" ||
+  url.pathname.endsWith(".html");
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -52,20 +61,24 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const doc = isDocument(req, url);
+
   event.respondWith(
     (async () => {
       try {
-        const fresh = await fetch(req);
+        const fresh = await fetch(req, doc ? { cache: "no-store" } : undefined);
+        // Хэшированные ассеты (/static/, /fonts/) неизменяемы — их кэшируем
+        // на диск, а вот HTML каждый раз свежий, копию держим только для офлайна.
         const cache = await caches.open(CACHE);
         cache.put(req, fresh.clone()).catch(() => {});
         return fresh;
       } catch (err) {
-        const cached = await caches.match(req);
-        if (cached) return cached;
-        if (req.mode === "navigate") {
-          const shell = await caches.match("/");
+        if (doc) {
+          const shell = await caches.match("/index.html") || await caches.match("/");
           if (shell) return shell;
         }
+        const cached = await caches.match(req);
+        if (cached) return cached;
         throw err;
       }
     })()

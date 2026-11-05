@@ -1,0 +1,31 @@
+{
+  "appId": "com.trainwbrain.app",
+  "appName": "TrainWithBrain",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "ios": {
+    "scheme": "TrainWithBrain",
+    "contentInset": "always",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1C1C1C"
+    }
+  },
+  "cloud": {
+    "ios": {
+      "teamId": "YOUR_APPLE_TEAM_ID",
+      "bundleId": "com.trainwbrain.app",
+      "exportMethod": "app-store",
+      "provisioningProfile": "YOUR_PROFILE_NAME",
+      "developmentTeam": "YOUR_APPLE_TEAM_ID",
+      "configuration": "Release"
+    }
+  }
+}

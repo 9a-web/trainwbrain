@@ -1,6 +1,7 @@
-/* Форма кардио — тёмная тема, акцент #FF6B00 */
+/* Форма кардио — focus-first editor с прозрачным AI-подтверждением */
 .cf {
   display: flex;
+  position: relative;
   flex-direction: column;
   gap: 14px;
   padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
@@ -18,11 +19,13 @@
   justify-content: space-between;
 }
 
+.cf-eyebrow { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; color: #ffab5c; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .cf-title {
-  font-family: "GG Zaglav", "Plus Jakarta Sans", sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 22px;
   margin: 0;
   color: #fff;
+  font-weight: 700;
 }
 
 .cf-close {
@@ -38,6 +41,10 @@
 }
 .cf-close:active { transform: scale(0.94); }
 
+.cf-ai-note { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid rgba(134, 244, 180, .22); border-radius: 12px; background: rgba(134, 244, 180, .07); color: #a9d6bb; font-size: 12px; line-height: 1.4; }
+.cf-ai-note svg { flex: 0 0 auto; color: #86f4b4; }
+.cf-ai-note.is-low { border-color: rgba(255, 174, 92, .25); background: rgba(255, 174, 92, .07); color: #ffd09a; }
+.cf-ai-note.is-low svg { color: #ffad5b; }
 .cf-types {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -61,10 +68,12 @@
 }
 .cf-type-ico { font-size: 20px; line-height: 1; }
 .cf-type.on {
-  border-color: #ff6b00;
-  background: rgba(255, 107, 0, 0.14);
+  border-color: #ff8a24;
+  background: linear-gradient(145deg, rgba(255, 138, 36, .2), rgba(255, 107, 0, .08));
   color: #fff;
+  box-shadow: 0 8px 18px rgba(255, 107, 0, .12);
 }
+.cf-type:hover, .cf-int:hover { border-color: rgba(255, 177, 103, .55); color: #fff; transform: translateY(-1px); }
 
 .cf-row {
   display: grid;
@@ -98,6 +107,7 @@
 .cf-field textarea:focus {
   outline: none;
   border-color: #ff8a24;
+  box-shadow: 0 0 0 3px rgba(255, 138, 36, .12);
 }
 .cf-field textarea { resize: vertical; }
 

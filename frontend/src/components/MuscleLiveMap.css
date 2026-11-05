@@ -1,0 +1,199 @@
+/* Живая карта мышц внизу тренировки: та же тёмная палитра, что и остальные
+   карточки, акцент #FF6B00 → #FFDA24. */
+
+.wvm-card {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+/* Идущая тренировка — карта «живая», рамка с тёплым акцентом. */
+.wvm-card.is-live {
+  border-color: rgba(255, 138, 36, 0.22);
+  background: rgba(255, 107, 0, 0.04);
+}
+/* Новые засчитанные подходы — короткая вспышка акцента. */
+.wvm-card.is-flash {
+  border-color: rgba(255, 218, 36, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 218, 36, 0.18), 0 0 22px rgba(255, 138, 36, 0.16);
+}
+
+.wvm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.wvm-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+}
+.wvm-title svg { color: #ff8a24; }
+.wvm-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ff8a24;
+  background: rgba(255, 138, 36, 0.13);
+  text-transform: lowercase;
+}
+.wvm-live::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff6b00;
+  box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.6);
+  animation: wvm-pulse 1.8s ease-out infinite;
+}
+@keyframes wvm-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.55); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 107, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0); }
+}
+
+.wvm-tabs {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.wvm-tab {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.wvm-tab.active {
+  background: linear-gradient(135deg, #ff8a24, #ffda24);
+  color: #1c1c1c;
+}
+
+/* 3D-модель анатомии (та же сцена, что в «Статистике»), но компактнее */
+.wvm-figure {
+  width: 100%;
+  margin-bottom: 10px;
+}
+.wvm-figure .mb3d-stage {
+  max-width: 100%;
+  aspect-ratio: 1 / 1.02;
+  max-height: 300px;
+  min-height: 230px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(255, 170, 90, 0.12), transparent 62%),
+    radial-gradient(90% 60% at 50% 108%, rgba(255, 138, 36, 0.14), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    rgba(10, 10, 13, 0.4);
+}
+.wvm-figure .mb3d-hint {
+  display: none;
+}
+/* Запасной 2D-силуэт, если 3D недоступен */
+.wvm-figure .mm-svg {
+  display: block;
+  width: 150px;
+  margin: 0 auto;
+  filter: drop-shadow(0 6px 20px rgba(255, 107, 0, 0.14));
+}
+.wvm-figure .mb3d-loading {
+  min-height: 230px;
+}
+
+.wvm-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wvm-hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.42);
+}
+/* Нагруженные группы — компактная сетка в две колонки */
+.wvm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+}
+.wvm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  min-width: 0;
+}
+.wvm-item i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.4s ease;
+}
+.wvm-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wvm-item-sets {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+}
+.wvm-info {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffda24;
+}
+
+.wvm-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.wvm-legend-bar {
+  height: 5px;
+  flex: 1;
+  max-width: 120px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), #ff6b00, #ffda24);
+}
+.wvm-legend-txt {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 374px) {
+  .wvm-figure .mm-svg { width: 130px; }
+  .wvm-figure .mb3d-stage { min-height: 210px; }
+  .wvm-card { padding: 12px; }
+  .wvm-list { grid-template-columns: 1fr; }
+}

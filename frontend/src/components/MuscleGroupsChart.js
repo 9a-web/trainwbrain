@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { getMuscleGroupsStats, getCoachClientMuscleGroups } from "@/api";
 
@@ -52,10 +52,16 @@ function ChartTooltip({ active, payload }) {
   );
 }
 
-export default function MuscleGroupsChart({ telegramId, coachId, period = "week" }) {
+export default function MuscleGroupsChart({ telegramId, coachId, period, onPeriodChange }) {
+  const resolvedPeriod = period || "week";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState(period);
+  const [selectedPeriod, setSelectedPeriod] = useState(resolvedPeriod);
+
+  // Sync from parent when provided
+  useEffect(() => {
+    if (period) setSelectedPeriod(period);
+  }, [period]);
 
   useEffect(() => {
     let alive = true;
@@ -70,10 +76,14 @@ export default function MuscleGroupsChart({ telegramId, coachId, period = "week"
         if (!alive) return;
 
         // Преобразуем данные для RadarChart
-        const chartData = Object.entries(response.muscle_groups || {}).map(([key, stats]) => ({
-          muscle: MUSCLE_NAMES[key] || key,
-          volume: stats.volume,
-          sessions: stats.sessions,
+        const source = response.groups?.length ? Object.fromEntries(
+          response.groups.map((item) => [item.key, item])
+        ) : (response.muscle_groups || {});
+        const chartData = Object.entries(source).map(([key, stats]) => ({
+          muscle: stats.label || MUSCLE_NAMES[key] || key,
+          volume: Number(stats.volume) || 0,
+          sets: Number(stats.sets) || 0,
+          sessions: Number(stats.sessions) || 0,
           key: key
         }));
 
@@ -121,7 +131,7 @@ export default function MuscleGroupsChart({ telegramId, coachId, period = "week"
     );
   }
 
-  const maxVolume = Math.max(...data.chartData.map(d => d.volume));
+  const maxVolume = Math.max(1, ...data.chartData.map(d => d.volume));
 
   return (
     <div className="stats-card" data-testid="muscle-groups-chart">
@@ -130,21 +140,21 @@ export default function MuscleGroupsChart({ telegramId, coachId, period = "week"
         <div className="stats-chips-row">
           <button
             className={`stats-tab-chip ${selectedPeriod === "week" ? "active" : ""}`}
-            onClick={() => setSelectedPeriod("week")}
+            onClick={() => { if (onPeriodChange) onPeriodChange("week"); setSelectedPeriod("week"); }}
             data-testid="period-week"
           >
             Неделя
           </button>
           <button
             className={`stats-tab-chip ${selectedPeriod === "month" ? "active" : ""}`}
-            onClick={() => setSelectedPeriod("month")}
+            onClick={() => { if (onPeriodChange) onPeriodChange("month"); setSelectedPeriod("month"); }}
             data-testid="period-month"
           >
             Месяц
           </button>
           <button
             className={`stats-tab-chip ${selectedPeriod === "all" ? "active" : ""}`}
-            onClick={() => setSelectedPeriod("all")}
+            onClick={() => { if (onPeriodChange) onPeriodChange("all"); setSelectedPeriod("all"); }}
             data-testid="period-all"
           >
             Всё время

@@ -50,6 +50,10 @@
   gap: 8px;
 }
 
+.mm-figures-3d {
+  width: 100%;
+}
+
 .mm-svg {
   width: min(240px, 70vw);
   height: auto;
@@ -202,4 +206,55 @@
 @keyframes mm-skel {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
+}
+
+/* скелетон 3D-сцены и бейдж (нужны до загрузки чанка three.js) */
+/* скелетон, пока грузится чанк three.js */
+.mb3d-loading {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1.16;
+  max-height: min(430px, 60vh);
+  min-height: 236px;
+  border-radius: 20px;
+  background:
+    radial-gradient(60% 40% at 50% 45%, rgba(255, 255, 255, 0.06), transparent 70%),
+    rgba(255, 255, 255, 0.03);
+  animation: mb3d-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mb3d-pulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb3d-loading { animation: none; }
+}
+
+/* переключатель 3D/2D в шапке карты */
+.mm-view-3d {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.34);
+}
+
+/* источник разбора нагрузки (ИИ / правила) */
+.mm-engine {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0b0b0d;
+  background: linear-gradient(135deg, #ffd60a, #ff8a24);
 }

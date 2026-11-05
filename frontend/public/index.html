@@ -2,7 +2,13 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <!-- user-scalable=no / maximum-scale: приложение не зумится жестами.
+             В iOS этот тег игнорируется — там работает touch-action из index.css
+             плюс страховка в src/lib/lockZoom.js. -->
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        />
         <meta name="theme-color" content="#1C1C1C" />
         <meta name="description" content="TrainWithBrain — трекер силовых тренировок: программы, прогресс и тренер в реальном времени." />
 
@@ -16,8 +22,9 @@
         <meta name="apple-mobile-web-app-title" content="TrainWithBrain" />
         <meta name="application-name" content="TrainWithBrain" />
 
-        <!-- Telegram Web App SDK: enables window.Telegram.WebApp when opened inside Telegram -->
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        <!-- Telegram Web App SDK: enables window.Telegram.WebApp when opened inside Telegram.
+             Loaded async so a slow/unreachable telegram.org never blocks first paint. -->
+        <script src="https://telegram.org/js/telegram-web-app.js" async></script>
         <!--
         manifest.json provides metadata used when your web app is installed on a
         user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/

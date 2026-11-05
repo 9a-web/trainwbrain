@@ -4,17 +4,23 @@
   min-height: 100dvh;
   background-color: #1c1c1c;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
-  overflow: hidden;
+  /* Как и на экране входа: не обрезаем контент, когда клавиатура
+     уменьшает вьюпорт, иначе тап по полю «не прожимается». */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .onb-gradient {
   position: fixed;
   top: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
   width: 454px;
   max-width: 100%;
   height: 140px;
@@ -24,7 +30,7 @@
 .onb-gradient img {
   width: 100%;
   height: 100%;
-  filter: blur(100px);
+  filter: blur(40px);
   opacity: 0.85;
 }
 
@@ -37,11 +43,14 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: rgba(43, 43, 43, 0.55);
+  /* backdrop-filter убран: карточка содержит текстовые поля, а размытие
+     фона заставляло перерисовывать слой на каждый символ — ввод «лагал».
+     Фон градиента статичный, визуально разница минимальна. */
+  background: rgba(38, 38, 38, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 24px;
   padding: 30px 22px 26px;
-  backdrop-filter: blur(6px);
+  margin: auto 0;
 }
 
 .onb-logo {

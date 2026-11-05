@@ -11,6 +11,7 @@ import { useCapabilities } from "@/hooks/useCapabilities";
 import InviteManager from "@/components/InviteManager";
 import api from "@/api";
 import "./Coach.css";
+import "@/pages/Admin.css"; // InviteManager использует .adm-* / .inv-* классы
 
 const fmtDate = (iso) => {
   if (!iso) return null;
@@ -34,13 +35,19 @@ export default function Coach() {
   const { subscribe } = useRealtime();
   useBackButton(true, () => navigate("/"));
   const coachId = user?.telegram_id;
+  const { capabilities, loading: capsLoading, coachMode, isCoachRole } = useCapabilities();
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState(null);
   const [liveStatuses, setLiveStatuses] = useState({});
-  const { capabilities, loading: capsLoading } = useCapabilities();
-  const isCoach = capabilities && (capabilities.roles || []).includes("coach");
+
+  // Страховка: кабинет тренера открывается только в режиме тренера. Прямой
+  // переход по ссылке (/coach, /coach/:id/diary) в режиме спортсмена вернёт
+  // на главный экран, а не покажет чужие данные.
+  useEffect(() => {
+    if (!capsLoading && !coachMode) navigate("/", { replace: true });
+  }, [capsLoading, coachMode, navigate]);
 
   const loadLiveStatuses = useCallback(async () => {
     if (!coachId) return;
@@ -137,7 +144,7 @@ export default function Coach() {
       </div>
 
       {/* Приглашения (клиентские коды) */}
-      {(capsLoading || capabilities === null || isCoach) ? (
+      {(capsLoading || capabilities === null || isCoachRole) ? (
         <section className="invite-section" data-testid="coach-invites">
           <h2 className="coach-section-title">Приглашения</h2>
           <InviteManager presetKind="coach_client" />

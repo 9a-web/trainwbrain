@@ -37,6 +37,7 @@ from models import (
     CardioSession, CardioCreateReq, CardioPhotoReq,
     CARDIO_TYPES, CARDIO_INTENSITIES, CARDIO_SOURCES,
 )
+import muscle_engine
 from seed import (
     seed_builtins, ensure_indexes, ensure_phase1_backfill,
     group_letters, muscle_letter, percent_of, scheme_tonnage,
@@ -247,7 +248,7 @@ async def get_user(telegram_id: int, current: dict = Depends(get_current_user)):
 
 
 # ===========================================================================
-# P3 — Режим пользователя (athlete/coach), приглашения, подопечные, видимость плана
+# P3 — Режим пользователя (athlete/coach/client), приглашения, подопечные, видимость плана
 # ===========================================================================
 import secrets as _secrets
 
@@ -255,7 +256,7 @@ _BOT_USERNAME_CACHE = {"value": None}
 
 
 class ModeReq(BaseModel):
-    mode: str  # athlete | coach
+    mode: str  # athlete | coach | client
 
 
 class CoachInviteReq(BaseModel):
@@ -331,14 +332,18 @@ def _user_brief(u: Optional[dict]) -> Optional[dict]:
 
 @api_router.patch("/users/{telegram_id}/mode")
 async def switch_user_mode(telegram_id: int, payload: ModeReq, current: dict = Depends(get_current_user)):
-    """Переключить активный режим UI (athlete/coach). При первом переходе в coach —
-    добавляет роль coach и генерирует invite_code."""
+    """Переключить активный режим UI (athlete/coach/client).
+
+    Режим coach доступен только аккаунтам с ролью coach/admin — роль выдаёт
+    администратор, самоприсвоения больше нет. При первом включении режима
+    тренера генерируется invite_code.
+    """
     # IDOR-защита: менять режим можно только себе.
     if telegram_id != current["telegram_id"]:
         raise HTTPException(status_code=403, detail="Not your account")
     mode = (payload.mode or "").strip().lower()
-    if mode not in ("athlete", "coach"):
-        raise HTTPException(status_code=400, detail="mode должен быть athlete или coach")
+    if mode not in ("athlete", "coach", "client"):
+        raise HTTPException(status_code=400, detail="mode должен быть athlete, coach или client")
     user = await db.users.find_one({"telegram_id": telegram_id}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -347,7 +352,14 @@ async def switch_user_mode(telegram_id: int, payload: ModeReq, current: dict = D
     roles.add("athlete")
     set_fields = {"active_mode": mode, "updated_at": datetime.now(timezone.utc).isoformat()}
     if mode == "coach":
-        roles.add("coach")
+        # Режим тренера доступен только тем, у кого уже есть роль coach/admin:
+        # самоприсвоение роли через переключатель открывало тренерский кабинет
+        # любому спортсмену, и разделы оставались в интерфейсе навсегда.
+        if "coach" not in roles and "admin" not in roles:
+            raise HTTPException(
+                status_code=403,
+                detail="Кабинет тренера недоступен. Запросите права тренера у администратора.",
+            )
         if not user.get("invite_code"):
             set_fields["invite_code"] = await _unique_invite_code()
     set_fields["roles"] = sorted(roles)
@@ -1440,8 +1452,16 @@ async def coach_invite(payload: CoachInviteReq, current: dict = Depends(get_curr
     user = await db.users.find_one({"telegram_id": payload.coach_telegram_id}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    # Роль coach НЕ выдаём автоматически: раньше любой спортсмен, единожды
+    # открывший кабинет тренера, получал её навсегда, и тренерские разделы
+    # оставались в его интерфейсе. Права выдаёт администратор (или код тренера).
+    if "coach" not in (user.get("roles") or []) and "admin" not in (user.get("roles") or []):
+        raise HTTPException(
+            status_code=403,
+            detail="Кабинет тренера недоступен. Запросите права тренера у администратора.",
+        )
     roles = set(user.get("roles") or ["athlete"])
-    roles.update(["athlete", "coach"])
+    roles.add("athlete")
     set_fields = {"roles": sorted(roles), "updated_at": datetime.now(timezone.utc).isoformat()}
     code = user.get("invite_code")
     if not code:
@@ -1556,6 +1576,8 @@ async def coach_clients(telegram_id: int, current: dict = Depends(get_current_us
     # IDOR-защита: список подопечных отдаём только самому тренеру.
     if current["telegram_id"] != telegram_id:
         raise HTTPException(status_code=403, detail="Forbidden")
+    # Только режим тренера: роль coach остаётся навсегда, режим — нет.
+    _assert_coach_mode(current)
     links = await db.coach_links.find(
         {"coach_telegram_id": telegram_id, "status": "active"}, {"_id": 0}
     ).to_list(500)
@@ -1640,10 +1662,18 @@ async def _is_coach_of(coach_tgid: int, athlete_tgid: int) -> bool:
     return bool(link)
 
 
-async def _assert_can_read_stats(current: dict, athlete_tgid: int):
-    """Статистику видит только сам спортсмен или его активный тренер."""
+async def _assert_can_read_stats(current: dict, athlete_tgid: int, perm_key: Optional[str] = None):
+    """Статистику видит владелец или его активный тренер.
+
+    Для модулей с отдельным read-permission можно передать ``perm_key``;
+    старые потребители без него сохраняют прежнюю ACL-семантику.
+    """
     tgid = current.get("telegram_id")
     if tgid == athlete_tgid:
+        if perm_key:
+            caps = _get_capabilities(current)
+            if caps.get("onboarded") and not caps.get("permissions", {}).get(perm_key, False):
+                raise HTTPException(status_code=403, detail="Просмотр кардио недоступен: обратитесь к администратору")
         return
     if await _is_coach_of(tgid, athlete_tgid):
         return
@@ -1711,6 +1741,7 @@ async def coach_client_plan(telegram_id: int, athlete_id: int,
     # IDOR-защита: смотреть можно только от собственного имени.
     if current["telegram_id"] != telegram_id:
         raise HTTPException(status_code=403, detail="Доступ от имени другого тренера запрещён")
+    _assert_coach_mode(current)
     await _assert_coach_of(telegram_id, athlete_id)
     doc = await db.plans.find_one(
         {"athlete_telegram_id": athlete_id, "status": "draft"}, {"_id": 0},
@@ -1732,6 +1763,7 @@ async def coach_client_session(telegram_id: int, athlete_id: int,
     """
     if current["telegram_id"] != telegram_id:
         raise HTTPException(status_code=403, detail="Доступ от имени другого тренера запрещён")
+    _assert_coach_mode(current)
     await _assert_coach_of(telegram_id, athlete_id)
     s = await db.workout_sessions.find_one(
         {"athlete_telegram_id": athlete_id, "status": "in_progress"},
@@ -1827,18 +1859,43 @@ def _get_capabilities(user: Optional[dict]) -> dict:
     tier = _resolve_access_tier(u)
     perms = _merge_permission_overrides(_default_permissions(tier), u.get("permissions"))
     onboarded = bool(u.get("onboarded_at")) or any(r in ("coach", "admin") for r in roles)
+    active_mode = u.get("active_mode") or "athlete"
+    if active_mode not in ("athlete", "coach", "client"):
+        active_mode = "athlete"
     return {
         "roles": roles,
         "access_tier": tier,
         "permissions": perms,
         "onboarded": onboarded,
         "coach_telegram_id": u.get("coach_telegram_id"),
+        # UI-режим (не влияет на права): client — предпросмотр клиентского экрана.
+        "active_mode": active_mode,
+        "client_preview": active_mode == "client",
     }
 
 
 def _assert_admin(user: Optional[dict]) -> None:
     if "admin" not in ((user or {}).get("roles") or []):
         raise HTTPException(status_code=403, detail="Требуются права администратора")
+
+
+def _assert_coach_mode(user: Optional[dict]) -> None:
+    """Тренерский кабинет: роль coach/admin И активный режим coach.
+
+    Роль ``coach`` остаётся у аккаунта навсегда, поэтому одной проверки роли
+    мало: в режиме спортсмена тренерские эндпоинты должны быть недоступны
+    (фронтенд прячет экраны, а API подтверждает — defense in depth).
+    """
+    u = user or {}
+    roles = u.get("roles") or []
+    if "coach" not in roles and "admin" not in roles:
+        raise HTTPException(status_code=403, detail="Требуются права тренера")
+    mode = u.get("active_mode") or "athlete"
+    if mode != "coach":
+        raise HTTPException(
+            status_code=403,
+            detail="Тренерские функции доступны только в режиме тренера",
+        )
 
 
 def _validate_invite_for_redeem(invite: Optional[dict], now: Optional[datetime] = None) -> dict:
@@ -1890,6 +1947,41 @@ def _invite_public(inv: dict) -> dict:
     inv = dict(inv)
     inv.pop("_id", None)
     return inv
+
+
+async def _lookup_invite_by_code(raw: str) -> Optional[dict]:
+    """Найти инвайт по коду, терпимо к вводу без префикса «TWB-»."""
+    code = (raw or "").strip().upper()
+    if not code or len(code) > 32:
+        return None
+    invite = await db.invite_codes.find_one({"code": code}, {"_id": 0})
+    if not invite and not code.startswith("TWB-"):
+        invite = await db.invite_codes.find_one({"code": f"TWB-{code}"}, {"_id": 0})
+    return invite
+
+
+@api_router.post("/invites/check")
+async def check_invite(payload: InviteRedeemReq):
+    """Публичная проверка инвайт-кода (до регистрации/входа).
+
+    Отличается от /invites/redeem: не требует авторизации и НЕ списывает
+    использование кода — только валидирует и возвращает метаданные (kind,
+    preset, note). Используется экраном /welcome на гостевом шаге «код → вход».
+    """
+    code = (payload.code or "").strip().upper()
+    if not code:
+        raise HTTPException(status_code=400, detail="Код не указан")
+    if len(code) > 32:
+        raise HTTPException(status_code=400, detail="Код неверный. Проверьте написание.")
+    invite = await _lookup_invite_by_code(code)
+    _validate_invite_for_redeem(invite)
+    return {
+        "valid": True,
+        "code": invite.get("code"),
+        "kind": invite.get("kind"),
+        "preset": invite.get("preset"),
+        "note": invite.get("note"),
+    }
 
 
 async def _get_user_or_404(telegram_id: int) -> dict:
@@ -2792,6 +2884,41 @@ def _sets_count(scheme):
     return sum(int(s.get("sets") or 0) for s in (scheme or []))
 
 
+def _performed_sets(exercise):
+    """Count completed sets when per-set logs exist, else use legacy scheme.
+
+    Historical sessions do not always have set_logs, so the fallback preserves
+    compatibility while preventing partial execution from being counted as a
+    full prescription.
+    """
+    logs = exercise.get("set_logs") or []
+    if logs:
+        return sum(1 for item in logs if item.get("done"))
+    return _sets_count(exercise.get("sets_scheme"))
+
+
+def _has_progress_data(scheme):
+    """Есть ли в схеме вес или повторы (для упражнений с весом тела)."""
+    for s in (scheme or []):
+        if s.get("weight"):
+            return True
+        if s.get("reps") or s.get("sets"):
+            return True
+    return False
+
+
+def _best_reps_set(scheme):
+    """Подход с максимальным числом повторов (когда веса нет вообще)."""
+    best = None
+    for s in (scheme or []):
+        r = s.get("reps")
+        if not r:
+            continue
+        if best is None or r > (best.get("reps") or 0):
+            best = s
+    return best
+
+
 def _top_set(scheme):
     """Подход с максимальным весом в схеме (или None)."""
     best = None
@@ -2842,7 +2969,7 @@ def _muscle_sets(exs):
         ltr = e.get("muscle_letter") or muscle_letter(e.get("muscle_group"))
         if not ltr:
             continue
-        n = _sets_count(e.get("sets_scheme")) or 1
+        n = _performed_sets(e) or 1
         dist[ltr] = dist.get(ltr, 0) + n
     return dist
 
@@ -2852,7 +2979,12 @@ def _session_stats(session):
     total = len(exs)
     done = [e for e in exs if e.get("status") == "done"]
     skipped = [e for e in exs if e.get("status") == "skipped"]
-    tonnage = round(sum(e.get("tonnage", 0) or 0 for e in done))
+    tonnage = round(sum(
+        sum(float(item.get("weight") or 0) * float(item.get("reps") or 0)
+            for item in (e.get("set_logs") or []) if item.get("done"))
+        if e.get("set_logs") else float(e.get("tonnage", 0) or 0)
+        for e in done
+    ))
     group = group_letters([e.get("muscle_group") for e in exs])
     diffs = [e.get("difficulty") for e in exs if e.get("difficulty")]
     difficulty = max(diffs, key=lambda d: _DIFF_RANK.get(d, 0)) if diffs else None
@@ -2874,7 +3006,7 @@ def _session_stats(session):
     progress_pct = round(len(done) / total * 100) if total else 0
 
     # --- P7: объём (подходы) план vs факт, тоннаж план vs факт ---
-    sets_done = sum(_sets_count(e.get("sets_scheme")) for e in done)
+    sets_done = sum(_performed_sets(e) for e in done)
     sets_planned = sum(_sets_count(e.get("plan_sets_scheme") or e.get("sets_scheme")) for e in exs)
     tonnage_planned = round(sum(scheme_tonnage(e.get("plan_sets_scheme") or e.get("sets_scheme")) for e in exs))
     volume_pct = round(sets_done / sets_planned * 100) if sets_planned else 0
@@ -3249,6 +3381,9 @@ async def start_session(req: SessionStartReq, current_user: dict = Depends(get_c
             "plan_id": active_other.get("plan_id"),
             "week_index": active_other.get("week_index"),
             "day_index": active_other.get("day_index"),
+            # дата/название нужны клиенту, чтобы предложить «перейти к этой тренировке»
+            "date": active_other.get("date"),
+            "title": active_other.get("title"),
         })
 
     week_obj = next((w for w in (plan.get("weeks") or []) if w.get("week_index") == req.week), None)
@@ -3341,6 +3476,107 @@ async def get_active_session(plan_id: str, week: int, day: int, athlete: int,
     if not s:
         return None
     return _serialize_session(s)
+
+
+def _history_item(session: dict) -> dict:
+    """Минимальная публичная карточка завершённой тренировки.
+
+    История не отдаёт embedded exercises/set_logs: подробные факты доступны только
+    через endpoint конкретной сессии и карту мышц. Это уменьшает объём ответа и
+    не создаёт второй путь обхода приватности данных тренировки.
+    """
+    return {
+        "id": session.get("id"),
+        "session_id": session.get("id"),
+        "athlete_telegram_id": session.get("athlete_telegram_id"),
+        "plan_id": session.get("plan_id"),
+        "coach_telegram_id": session.get("coach_telegram_id"),
+        "mode": session.get("mode", "plan"),
+        "date": session.get("date") or (
+            _session_day(session).isoformat() if _session_day(session) else None
+        ),
+        "title": session.get("title") or "",
+        "week_index": session.get("week_index"),
+        "day_index": session.get("day_index"),
+        "status": session.get("status"),
+        "started_at": session.get("started_at"),
+        "finished_at": session.get("finished_at"),
+        "stats": _get_session_stats(session),
+    }
+
+
+def _completed_sets_session(session: dict) -> dict:
+    """Копия сессии, в которой оставлены только реально выполненные подходы.
+
+    ``muscle_engine.build_evidence`` поддерживает старые сессии без ``set_logs``
+    через плановую схему. Для новых записей наличие set_logs является источником
+    истины: упражнения без выполненных подходов исключаются, даже если их общий
+    статус по ошибке остался ``done``.
+    """
+    normalized = copy.deepcopy(session)
+    exercises = []
+    for exercise in session.get("exercises") or []:
+        logs = exercise.get("set_logs")
+        if isinstance(logs, list) and logs:
+            done_logs = [
+                log for log in logs
+                if bool(log.get("done")) and not bool(log.get("skipped"))
+            ]
+            if not done_logs:
+                continue
+            item = copy.deepcopy(exercise)
+            item["status"] = "done"
+            item["set_logs"] = done_logs
+            exercises.append(item)
+        elif exercise.get("status") == "done":
+            # Legacy session without per-set logs: engine's documented fallback
+            # to sets_scheme remains valid for historical data.
+            exercises.append(copy.deepcopy(exercise))
+    normalized["exercises"] = exercises
+    return normalized
+
+
+@api_router.get("/sessions/history")
+async def sessions_history(
+    athlete_id: Optional[int] = Query(default=None),
+    athlete: Optional[int] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    current_user: dict = Depends(get_current_user),
+):
+    """Постраничная история всех завершённых тренировок.
+
+    Владелец может не передавать athlete_id (берётся текущий пользователь).
+    Активный тренер может передать только ID своего подопечного; проверка
+    выполняется до запроса и не раскрывает чужие сессии.
+    """
+    target = athlete_id if athlete_id is not None else athlete
+    target = current_user["telegram_id"] if target is None else target
+    await _assert_can_read_stats(current_user, target)
+
+    # Только реально состоявшиеся тренировки: как и в статистике, сессия без
+    # единого выполненного упражнения не считается тренировкой.
+    query = {
+        "athlete_telegram_id": target,
+        "status": "finished",
+        "exercises.status": "done",
+    }
+    total = await db.workout_sessions.count_documents(query)
+    skip = (page - 1) * page_size
+    sessions = await db.workout_sessions.find(
+        query, {"_id": 0}
+    ).sort([("finished_at", -1), ("created_at", -1)]).skip(skip).limit(page_size).to_list(page_size)
+    pages = math.ceil(total / page_size) if total else 0
+    return {
+        "items": [_history_item(session) for session in sessions],
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "pages": pages,
+        "has_next": page < pages,
+        "has_prev": page > 1 and total > 0,
+        "athlete_telegram_id": target,
+    }
 
 
 @api_router.get("/sessions/{session_id}")
@@ -3767,6 +4003,13 @@ async def finish_session(session_id: str, current_user: dict = Depends(get_curre
         "athlete_telegram_id": s["athlete_telegram_id"],
     })
     
+    # Фоновый разбор мышц (правила сразу, ИИ — если настроен). Ошибки не влияют
+    # на завершение тренировки: карта мышц посчитается и без него.
+    try:
+        asyncio.create_task(_store_muscle_load(session_id, use_ai=_ai_muscles_enabled()))
+    except Exception:
+        logger.warning("Failed to schedule muscle analysis", exc_info=True)
+
     # Отправить Telegram уведомление тренеру
     try:
         await notify_coach_on_workout_complete(db, session_id, s["athlete_telegram_id"])
@@ -3804,6 +4047,9 @@ async def resume_session(session_id: str, current_user: dict = Depends(get_curre
             "plan_id": active_other.get("plan_id"),
             "week_index": active_other.get("week_index"),
             "day_index": active_other.get("day_index"),
+            # дата/название нужны клиенту, чтобы предложить «перейти к этой тренировке»
+            "date": active_other.get("date"),
+            "title": active_other.get("title"),
         })
 
     now = datetime.now(timezone.utc).isoformat()
@@ -4141,19 +4387,38 @@ async def _finished_sessions(tg, plan_id=None, frm=None, to=None):
 
 
 async def _resolve_stats_plan(tg, plan_id):
+    """Resolve only a plan owned by the athlete.
+
+    An explicit plan_id must never fall back to the active plan: besides making
+    the UI misleading, that used to allow a caller who learned another UUID to
+    read that plan's name/maxes and schedule-derived adherence.
+    """
     if plan_id:
-        p = await db.plans.find_one({"id": plan_id}, {"_id": 0})
-        if p:
-            return p
+        return await db.plans.find_one(
+            {"id": plan_id, "athlete_telegram_id": tg}, {"_id": 0}
+        )
     return await db.plans.find_one(
         {"athlete_telegram_id": tg, "status": "active"}, {"_id": 0}
     )
 
 
-async def _athlete_detailed_stats(tg, frm=None, to=None, plan_id=None):
-    plan = await _resolve_stats_plan(tg, plan_id)
+async def _athlete_detailed_stats(tg, frm=None, to=None, plan_id=None, period=None):
+    # A plan is meaningful only for the explicit “by plan” scope.  Resolving the
+    # active plan for an all-time request used to leak its schedule/maxes into
+    # global analytics and made adherence look valid when it was not.
+    plan = await _resolve_stats_plan(tg, plan_id) if plan_id else None
+    if period:
+        frm, to = (d.isoformat() if d else None for d in _period_range(period, frm, to))
     use_plan_week = bool(plan_id and plan)   # по микроциклам только при явном выборе плана
-    sessions = await _finished_sessions(tg, plan_id if plan_id else None, frm, to)
+    # Верхняя граница по умолчанию — сегодня, иначе в статистику попадают
+    # запланированные (будущие) тренировки и графики уезжают вперёд.
+    frm_d = _parse_date(frm) if frm else None
+    to_d = _parse_date(to) if to else datetime.now(timezone.utc).date()
+    sessions = await _finished_sessions(
+        tg, plan_id if plan_id else None,
+        frm_d.isoformat() if frm_d else None,
+        to_d.isoformat() if to_d else None,
+    )
 
     # Если фильтр по плану ничего не дал, но план есть — оставляем пусто (честно)
     total_tonnage = total_tonnage_planned = 0
@@ -4199,6 +4464,47 @@ async def _athlete_detailed_stats(tg, frm=None, to=None, plan_id=None):
     week_rows = sorted(week_agg.values(), key=lambda x: x["sort"])
     tonnage_by_week = [{"week": r["label"], "tonnage": round(r["tonnage"])} for r in week_rows]
     frequency_by_week = [{"week": r["label"], "count": r["count"]} for r in week_rows]
+
+    # Для «истории изменений» на коротком окне недели слишком грубы: показываем
+    # дни (с нулями в пропусках), чтобы был виден реальный ритм тренировок.
+    span_days = ((to_d - frm_d).days + 1) if (frm_d and to_d) else None
+    if use_plan_week:
+        granularity = "plan_week"
+    elif span_days is not None and span_days <= DAY_GRANULARITY_MAX_DAYS:
+        granularity = "day"
+    else:
+        granularity = "week"
+
+    tonnage_series = []
+    frequency_series = []
+    if granularity == "day":
+        day_ton = {}
+        day_cnt = {}
+        for s2 in sessions:
+            d2 = _session_day(s2)
+            if not d2:
+                continue
+            st2 = _get_session_stats(s2)
+            day_ton[d2] = day_ton.get(d2, 0) + (st2.get("tonnage", 0) or 0)
+            day_cnt[d2] = day_cnt.get(d2, 0) + 1
+        start_day = frm_d
+        if start_day is None and day_ton:
+            start_day = min(day_ton)
+        # окно рисуем от первой тренировки, но не длиннее выбранного периода
+        if start_day and start_day < (to_d - timedelta(days=DAY_GRANULARITY_MAX_DAYS - 1)):
+            start_day = to_d - timedelta(days=DAY_GRANULARITY_MAX_DAYS - 1)
+        cur = start_day
+        while cur and cur <= to_d:
+            tonnage_series.append({"key": cur.isoformat(), "label": cur.strftime("%d.%m"),
+                                   "tonnage": round(day_ton.get(cur, 0))})
+            frequency_series.append({"key": cur.isoformat(), "label": cur.strftime("%d.%m"),
+                                     "count": day_cnt.get(cur, 0)})
+            cur = cur + timedelta(days=1)
+    else:
+        tonnage_series = [{"key": r["label"], "label": r["label"],
+                           "tonnage": round(r["tonnage"])} for r in week_rows]
+        frequency_series = [{"key": r["label"], "label": r["label"],
+                             "count": r["count"]} for r in week_rows]
     muscle_distribution = [
         {"group": ltr, "label": _LETTER_NAMES.get(ltr, ltr), "sets": muscle_agg[ltr]}
         for ltr in _LETTER_ORDER if ltr in muscle_agg
@@ -4238,17 +4544,28 @@ async def _athlete_detailed_stats(tg, frm=None, to=None, plan_id=None):
     ) if total_tonnage_planned else 0
     volume_pct = min(100, round(total_sets_done / total_sets_planned * 100)) if total_sets_planned else 0
 
-    # Частота: по микроциклам выбранного плана или по календарным неделям
+    # Частота: среднее по неделям ПЕРИОДА (а не только по неделям с тренировками —
+    # иначе пропуски не учитываются и показатель завышен).
+    plan_weeks_total = 0
     if use_plan_week:
+        plan_weeks_total = len([w for w in (plan.get("weeks") or []) if w.get("days")])
+    if use_plan_week and plan_weeks_total:
+        avg_per_week = round(n / plan_weeks_total, 1)
+    elif use_plan_week:
         avg_per_week = round(n / len(week_agg), 1) if week_agg else 0
     else:
-        cal_weeks = {}
-        for s in sessions:
-            d = _session_day(s)
-            wk = _iso_week_key(d)
-            if wk:
-                cal_weeks[wk] = cal_weeks.get(wk, 0) + 1
-        avg_per_week = round(sum(cal_weeks.values()) / len(cal_weeks), 1) if cal_weeks else 0
+        if frm_d and to_d:
+            span_weeks = max(1.0, ((to_d - frm_d).days + 1) / 7.0)
+        elif sessions:
+            days_seen = []
+            for s in sessions:
+                d = _session_day(s)
+                if d:
+                    days_seen.append(d)
+            span_weeks = max(1.0, ((max(days_seen) - min(days_seen)).days + 1) / 7.0) if days_seen else 1.0
+        else:
+            span_weeks = 1.0
+        avg_per_week = round(n / span_weeks, 1)
 
     recent = []
     for s in sorted(sessions, key=lambda x: x.get("finished_at") or "", reverse=True)[:10]:
@@ -4285,10 +4602,18 @@ async def _athlete_detailed_stats(tg, frm=None, to=None, plan_id=None):
         "telegram_id": tg,
         "plan_id": plan.get("id") if plan else None,
         "plan_name": plan.get("name") if plan else None,
-        "range": {"from": frm, "to": to},
+        "range": {
+            "from": frm_d.isoformat() if frm_d else None,
+            "to": to_d.isoformat() if to_d else None,
+            "granularity": granularity,
+            "days": span_days,
+        },
+        "granularity": granularity,
         "summary": summary,
         "tonnage_by_week": tonnage_by_week,
         "frequency_by_week": frequency_by_week,
+        "tonnage_series": tonnage_series,
+        "frequency_series": frequency_series,
         "muscle_distribution": muscle_distribution,
         "one_rep_max_est": one_rep_max_est,
         "adherence": adherence,
@@ -4297,11 +4622,19 @@ async def _athlete_detailed_stats(tg, frm=None, to=None, plan_id=None):
     }
 
 
-async def _athlete_exercise_progress(tg, slug=None, plan_id=None):
+async def _athlete_exercise_progress(tg, slug=None, plan_id=None, frm=None, to=None, period=None):
     # B4: без явного plan_id считаем «за всё время» (по всем планам, группировка по датам)
+    if period:
+        frm, to = (d.isoformat() if d else None for d in _period_range(period, frm, to))
     plan = (await _resolve_stats_plan(tg, plan_id)) if plan_id else None
     by_plan = bool(plan)
-    sessions = await _finished_sessions(tg, plan["id"] if plan else None)
+    frm_d = _parse_date(frm) if frm else None
+    to_d = _parse_date(to) if to else datetime.now(timezone.utc).date()
+    sessions = await _finished_sessions(
+        tg, plan["id"] if plan else None,
+        frm_d.isoformat() if frm_d else None,
+        to_d.isoformat() if to_d else None,
+    )
 
     avail = {}
     weighted = set()
@@ -4317,9 +4650,10 @@ async def _athlete_exercise_progress(tg, slug=None, plan_id=None):
                     "name": e.get("exercise_name"),
                     "lift_group": e.get("lift_group"),
                 }
-            if e.get("status") == "done" and _top_set(e.get("sets_scheme")):
+            if e.get("status") == "done" and _has_progress_data(e.get("sets_scheme")):
                 weighted.add(sg)
-    # B5: в выпадающем списке — только упражнения с рабочим весом
+    # B5: в списке — упражнения, по которым есть что показать (вес ИЛИ повторы,
+    # иначе подтягивания и планки выпадали из истории).
     avail = {k: v for k, v in avail.items() if k in weighted}
 
     target = slug
@@ -4350,7 +4684,7 @@ async def _athlete_exercise_progress(tg, slug=None, plan_id=None):
             sg = e.get("exercise_slug") or e.get("exercise_name")
             if sg != target:
                 continue
-            fact_top = _top_set(e.get("sets_scheme"))
+            fact_top = _top_set(e.get("sets_scheme")) or _best_reps_set(e.get("sets_scheme"))
             if not fact_top:
                 continue
             plan_top = _top_set(e.get("plan_sets_scheme")) or fact_top
@@ -4362,19 +4696,30 @@ async def _athlete_exercise_progress(tg, slug=None, plan_id=None):
                 "week_index": s.get("week_index") if by_plan else None,
                 "date": None if by_plan else key,
                 "top_weight": fw, "plan_weight": (plan_top or {}).get("weight"),
+                "plan_percent": pct,
                 "reps": fact_top.get("reps"), "one_rm": one_rm,
+                "sets": _sets_count(e.get("sets_scheme")),
                 "tonnage": e.get("tonnage", 0),
             }
             row = series_map.get(key)
-            if not row or (fw or 0) > (row.get("top_weight") or 0):
+            # Сравниваем по весу, а для упражнений без веса — по повторам
+            if not row or (fw or 0, cand.get("reps") or 0) > (
+                    row.get("top_weight") or 0, row.get("reps") or 0):
                 series_map[key] = cand
     series = sorted(series_map.values(), key=lambda x: x["sort"])
     for r in series:
         r.pop("sort", None)
+    name = (avail.get(target) or {}).get("name") if target else None
+    if target and not name:
+        name = target
     return {
         "telegram_id": tg, "slug": target,
         "scope": "plan" if by_plan else "all",
-        "name": (avail.get(target) or {}).get("name") if target else None,
+        "granularity": "plan_week" if by_plan else "date",
+        "range": {"from": frm_d.isoformat() if frm_d else None,
+                  "to": to_d.isoformat() if to_d else None},
+        "name": name,
+        "has_weight": any((r.get("top_weight") or 0) > 0 for r in series),
         "exercises": list(avail.values()),
         "series": series,
     }
@@ -4535,186 +4880,250 @@ async def get_session_deviation(session_id: str, current_user: dict = Depends(ge
 
 
 @api_router.get("/stats/{telegram_id}/detailed")
-async def stats_detailed(telegram_id: int, from_: Optional[str] = Query(default=None, alias="from"),
+async def stats_detailed(telegram_id: int, period: Optional[str] = None,
+                         from_: Optional[str] = Query(default=None, alias="from"),
                          to: Optional[str] = None, plan_id: Optional[str] = None,
                          current: dict = Depends(get_current_user)):
     await _assert_can_read_stats(current, telegram_id)
-    return await _athlete_detailed_stats(telegram_id, from_, to, plan_id)
+    if period is not None and period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400, detail="period должен быть week, month, quarter, year, all или custom")
+    return await _athlete_detailed_stats(telegram_id, from_, to, plan_id, period)
+
+
+def _resolve_period_query(period, from_, to):
+    if period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400, detail="period должен быть week, month, quarter, year, all или custom")
+    start, end = _period_range(period, from_, to)
+    return start.isoformat() if start else None, end.isoformat() if end else None
 
 
 @api_router.get("/stats/{telegram_id}/exercise-progress")
-async def stats_exercise_progress(telegram_id: int, slug: Optional[str] = None,
+async def stats_exercise_progress(telegram_id: int, period: Optional[str] = None, slug: Optional[str] = None,
                                   plan_id: Optional[str] = None,
+                                  from_: Optional[str] = Query(default=None, alias="from"),
+                                  to: Optional[str] = None,
                                   current: dict = Depends(get_current_user)):
     await _assert_can_read_stats(current, telegram_id)
-    return await _athlete_exercise_progress(telegram_id, slug, plan_id)
+    if period:
+        start, end = _resolve_period_query(period, from_, to)
+        return await _athlete_exercise_progress(telegram_id, slug, plan_id, start, end, period)
+    return await _athlete_exercise_progress(telegram_id, slug, plan_id, from_, to)
 
 
 @api_router.get("/stats/{telegram_id}/muscle-groups")
 async def stats_muscle_groups(telegram_id: int, period: str = "week",
-                               current: dict = Depends(get_current_user)):
-    """Статистика по мышечным группам: объём (вес × повторы × подходы) за период."""
-    await _assert_can_read_stats(current, telegram_id)
-    
-    # Определяем временной диапазон
-    today = datetime.now(timezone.utc).date()
-    if period == "week":
-        start_date = today - timedelta(days=7)
-    elif period == "month":
-        start_date = today - timedelta(days=30)
-    else:  # all
-        start_date = None
-    
-    end_date = today
-    
-    # Получаем завершённые сессии за период
-    query = {"athlete_telegram_id": telegram_id, "status": "finished"}
-    if start_date:
-        query["date"] = {"$gte": start_date.isoformat()}
-    
-    sessions = await db.workout_sessions.find(query, {"_id": 0}).to_list(3000)
-    
-    # Получаем справочник упражнений для маппинга muscle_groups
-    exercises_catalog = await db.exercises.find(
-        {"$or": [{"is_builtin": True}, {"owner_telegram_id": telegram_id}]},
-        {"_id": 0, "id": 1, "slug": 1, "muscle_groups": 1, "secondary_groups": 1}
-    ).to_list(1000)
-    
-    # Создаём индексы для быстрого поиска
-    ex_by_id = {ex["id"]: ex for ex in exercises_catalog if ex.get("id")}
-    ex_by_slug = {ex["slug"]: ex for ex in exercises_catalog if ex.get("slug")}
-    
-    # Собираем статистику по мышечным группам
-    muscle_stats = {}
-    
-    for session in sessions:
-        for exercise in session.get("exercises", []):
-            if exercise.get("status") != "done":
-                continue
-            
-            # Находим определение упражнения
-            ex_def = None
-            if exercise.get("exercise_id"):
-                ex_def = ex_by_id.get(exercise["exercise_id"])
-            elif exercise.get("exercise_slug"):
-                ex_def = ex_by_slug.get(exercise["exercise_slug"])
-            
-            if not ex_def:
-                continue
-            
-            # Получаем primary и secondary группы мышц
-            primary_groups = ex_def.get("muscle_groups", [])
-            secondary_groups = ex_def.get("secondary_groups", [])
-            
-            # Считаем объём (volume = weight × reps × sets)
-            volume = 0
-            sessions_count = 1
-            
-            for set_log in exercise.get("set_logs", []):
-                if set_log.get("done"):
-                    weight = set_log.get("weight", 0) or 0
-                    reps = set_log.get("reps", 0) or 0
-                    volume += weight * reps
-            
-            # Распределяем объём: primary получают 100%, secondary получают 50%
-            for mg in primary_groups:
-                if mg not in muscle_stats:
-                    muscle_stats[mg] = {"volume": 0, "sessions": set()}
-                muscle_stats[mg]["volume"] += volume
-                muscle_stats[mg]["sessions"].add(session.get("id"))
-            
-            for mg in secondary_groups:
-                if mg not in muscle_stats:
-                    muscle_stats[mg] = {"volume": 0, "sessions": set()}
-                muscle_stats[mg]["volume"] += volume * 0.5  # Secondary = 50% volume
-                muscle_stats[mg]["sessions"].add(session.get("id"))
-    
-    # Форматируем результат
-    muscle_groups = {}
-    for mg, stats in muscle_stats.items():
-        muscle_groups[mg] = {
-            "volume": round(stats["volume"]),
-            "sessions": len(stats["sessions"])
-        }
-    
-    return {
-        "period": period,
-        "start_date": start_date.isoformat() if start_date else None,
-        "end_date": end_date.isoformat(),
-        "muscle_groups": muscle_groups
-    }
+                              from_: Optional[str] = Query(default=None, alias="from"),
+                              to: Optional[str] = None,
+                              current: dict = Depends(get_current_user)):
+    """Объём по мышечным группам за период (крупные группы + канон).
 
-
-# --- Фаза 2: карта мышц 2D ---
-
-def _build_muscle_map(sessions, ex_by_id, ex_by_slug) -> dict:
-    """Чистый агрегатор карты мышц: объём/рабочие подходы/сессии по канону.
-
-    Объём = Σ(weight × reps) по выполненным подходам, распределённый по
-    мышечным весам (primary=1.0, secondary=0.5). Возвращает регионы + totals +
-    imbalance (зона > 1.75× медианы ненулевых).
+    Раньше объём считался «сырым» (вес × повторы) и раскладывался по legacy-
+    группам один-к-одному, из-за чего цифры не совпадали с картой мышц, а
+    упражнения вне справочника терялись. Теперь используется тот же резолвер
+    упражнений и те же веса мышц, что и у карты мышц.
     """
-    regions = {m: {"volume_kg": 0.0, "working_sets": 0, "sessions": set()} for m in MUSCLE_CANON}
+    await _assert_can_read_stats(current, telegram_id)
+    if period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400,
+                            detail="period должен быть week, month, quarter, year, all или custom")
+    return await _athlete_muscle_groups(telegram_id, period, from_, to)
+
+
+# Крупные группы для радара: (ключ, подпись, канонические мышцы)
+RADAR_GROUPS = (
+    ("chest", "Грудь", ("chest",)),
+    ("back", "Спина", ("lats", "upper_back", "traps", "lower_back")),
+    ("shoulders", "Плечи", ("front_delts", "side_delts", "rear_delts")),
+    ("arms", "Руки", ("biceps", "triceps", "forearms")),
+    ("core", "Кор", ("abs", "obliques")),
+    ("legs", "Ноги", ("quads", "hamstrings", "adductors", "abductors")),
+    ("glutes", "Ягодицы", ("glutes",)),
+    ("calves", "Икры", ("calves",)),
+)
+
+
+def _exercise_volume_sets(exercise):
+    """Объём (кг) и число выполненных подходов упражнения.
+
+    Приоритет — пофходные логи. Если их нет (старые сессии), берём
+    замороженный тоннаж упражнения и число подходов из схемы.
+    """
+    logs = exercise.get("set_logs") or []
+    done_logs = [l for l in logs if l.get("done")]
+    if done_logs:
+        volume = 0.0
+        for log in done_logs:
+            volume += float(log.get("weight") or 0) * float(log.get("reps") or 0)
+        return volume, len(done_logs)
+    if logs:
+        return 0.0, 0
+    volume = float(exercise.get("tonnage") or 0)
+    sets_done = _sets_count(exercise.get("sets_scheme"))
+    return volume, sets_done
+
+
+async def _athlete_muscle_groups(tg: int, period: str = "week",
+                                 start: Optional[str] = None,
+                                 end: Optional[str] = None) -> dict:
+    frm, to = _period_range(period, start, end)
+    sessions = await _finished_sessions(tg, None, frm, to)
+    by_id, by_slug = await _exercise_dicts(tg)
+
+    muscles = {m: {"volume": 0.0, "sets": 0} for m in MUSCLE_CANON}
+    sessions_by_muscle = {m: set() for m in MUSCLE_CANON}
+    total_volume = 0.0
+    total_sets = 0
     for session in sessions:
         sid = session.get("id")
         for exercise in session.get("exercises") or []:
             if exercise.get("status") != "done":
                 continue
-            ex_def = None
-            if exercise.get("exercise_id"):
-                ex_def = ex_by_id.get(exercise["exercise_id"])
-            if not ex_def and exercise.get("exercise_slug"):
-                ex_def = ex_by_slug.get(exercise["exercise_slug"])
-            if not ex_def:
-                continue
+            ex_def = muscle_engine.resolve_exercise(exercise, by_id, by_slug)
             weights = normalize_muscle_weights(
-                ex_def.get("muscle_groups") or [],
-                ex_def.get("secondary_groups") or [],
+                ex_def.get("muscle_groups") or [], ex_def.get("secondary_groups") or []
             )
             if not weights:
                 continue
-            volume = 0.0
-            working_sets = 0
-            for lg in exercise.get("set_logs") or []:
-                if not lg.get("done"):
+            volume, sets_done = _exercise_volume_sets(exercise)
+            total_volume += volume
+            total_sets += sets_done
+            for canon, w in weights.items():
+                muscles[canon]["volume"] += volume * w
+                muscles[canon]["sets"] += int(round(sets_done * w))
+                if sid:
+                    sessions_by_muscle[canon].add(sid)
+
+    groups = []
+    for key, label, canon_list in RADAR_GROUPS:
+        vol = sum(muscles[m]["volume"] for m in canon_list)
+        sets = sum(muscles[m]["sets"] for m in canon_list)
+        sess = set()
+        for m in canon_list:
+            sess |= sessions_by_muscle[m]
+        if vol <= 0 and sets <= 0:
+            continue
+        groups.append({"key": key, "label": label, "volume": round(vol),
+                       "sets": sets, "sessions": len(sess)})
+    groups.sort(key=lambda g: -g["volume"])
+
+    muscle_rows = {
+        m: {"volume": round(muscles[m]["volume"]), "sets": muscles[m]["sets"],
+            "sessions": len(sessions_by_muscle[m])}
+        for m in MUSCLE_CANON if muscles[m]["volume"] > 0 or muscles[m]["sets"] > 0
+    }
+
+    return {
+        "period": period,
+        "start_date": frm.isoformat() if frm else None,
+        "end_date": to.isoformat() if to else None,
+        "totals": {"volume": round(total_volume), "sets": total_sets,
+                   "sessions": len(sessions)},
+        "groups": groups,
+        "muscles": muscle_rows,
+        # обратная совместимость со старым форматом (ключ → {volume, sessions})
+        "muscle_groups": {g["key"]: {"volume": g["volume"], "sessions": g["sessions"]}
+                          for g in groups},
+    }
+
+
+# --- Фаза 2: карта мышц 2D ---
+
+def _empty_region():
+    return {"volume_kg": 0.0, "working_sets": 0, "sessions": set(), "load_sum": 0.0}
+
+
+def _build_muscle_map(sessions, ex_by_id, ex_by_slug, loads: Optional[dict] = None) -> dict:
+    """Агрегатор карты мышц: объём/подходы/сессии/нагрузка по канону.
+
+    Если для сессии есть разбор (`muscle_load`, правила или ИИ) — берём его
+    значения; иначе считаем на месте по резолверу упражнений и весам мышц.
+    Веса нормируются, чтобы упражнение с несколькими основными группами не
+    учитывалось дважды.
+    """
+    regions = {m: _empty_region() for m in MUSCLE_CANON}
+    engines = set()
+    loads = loads or {}
+    raw_tonnage = 0.0
+
+    for session in sessions:
+        sid = session.get("id")
+        stored = (loads.get(sid) if sid else None) or session.get("muscle_load")
+        stored_muscles = (stored or {}).get("muscles") if isinstance(stored, dict) else None
+        if isinstance(stored_muscles, dict) and stored_muscles:
+            # Сессия уже разобрана (правила или ИИ) — берём готовые значения.
+            engines.add(stored.get("engine") or "rules")
+            raw_tonnage += sum(float(val.get("mechanical_kg") or 0) for val in stored_muscles.values() if isinstance(val, dict))
+            for canon, val in stored_muscles.items():
+                if canon not in regions or not isinstance(val, dict):
                     continue
-                volume += (lg.get("weight") or 0) * (lg.get("reps") or 0)
-                working_sets += 1
-            # legacy-сессии без set_logs: берём тоннаж упражнения как объём
-            if working_sets == 0:
-                volume = float(exercise.get("tonnage") or 0)
-                working_sets = len(exercise.get("sets_scheme") or [])
+                r = regions[canon]
+                r["volume_kg"] += float(val.get("mechanical_kg") or 0)
+                r["working_sets"] += int(val.get("sets") or 0)
+                r["load_sum"] += float(val.get("load_0_1") or 0)
+                if sid:
+                    r["sessions"].add(sid)
+            continue
+
+        engines.add("auto")
+        for exercise in session.get("exercises") or []:
+            if exercise.get("status") != "done":
+                continue
+            ex_def = muscle_engine.resolve_exercise(exercise, ex_by_id, ex_by_slug)
+            if not ex_def:
+                continue
+            raw_tonnage += float(_exercise_volume_sets(exercise)[0] or 0)
+            weights = normalize_muscle_weights(
+                ex_def.get("muscle_groups") or [], ex_def.get("secondary_groups") or []
+            )
+            if not weights:
+                continue
+            volume, working_sets = _exercise_volume_sets(exercise)
             if volume <= 0 and working_sets <= 0:
                 continue
             for canon, w in weights.items():
-                r = regions.setdefault(canon, {"volume_kg": 0.0, "working_sets": 0, "sessions": set()})
+                r = regions[canon]
                 r["volume_kg"] += volume * w
                 r["working_sets"] += int(round(working_sets * w))
                 if sid:
                     r["sessions"].add(sid)
 
     max_volume = max((r["volume_kg"] for r in regions.values()), default=0.0)
+    max_load = max((r["load_sum"] for r in regions.values()), default=0.0)
     out_regions = {}
     for m in MUSCLE_CANON:
-        r = regions.get(m) or {"volume_kg": 0.0, "working_sets": 0, "sessions": set()}
-        vol = round(r["volume_kg"])
+        r = regions[m]
+        if max_load > 0:
+            # подсветка идёт от JSON-нагрузки (правила/ИИ), а не от «сырого» тоннажа
+            intensity = round(muscle_engine.scale_for_map(r["load_sum"] / max_load), 3)
+        else:
+            intensity = round(r["volume_kg"] / max_volume, 3) if max_volume > 0 else 0.0
         out_regions[m] = {
-            "volume_kg": vol,
+            "volume_kg": round(r["volume_kg"]),
             "working_sets": r["working_sets"],
             "sessions": len(r["sessions"]),
-            "intensity_0_1": round(r["volume_kg"] / max_volume, 3) if max_volume > 0 else 0.0,
+            "load_sum": round(r["load_sum"], 3),
+            "intensity_0_1": intensity,
         }
 
-    nonzero = sorted(v["volume_kg"] for v in out_regions.values() if v["volume_kg"] > 0)
+    # Акцент считаем по той же величине, которой светится модель (интенсивность),
+    # иначе подпись «Акцент» противоречила подсветке.
+    lit = sorted((v["intensity_0_1"] for v in out_regions.values() if v["intensity_0_1"] > 0))
     imbalance = []
-    if nonzero:
-        median = nonzero[len(nonzero) // 2]
+    if lit:
+        median = lit[len(lit) // 2]
         if median > 0:
-            imbalance = [m for m, v in out_regions.items() if v["volume_kg"] > 1.75 * median]
+            imbalance = sorted(
+                (m for m, v in out_regions.items() if v["intensity_0_1"] > 1.45 * median),
+                key=lambda m: -out_regions[m]["intensity_0_1"],
+            )
 
     return {
+        "source": _muscle_source(engines),
         "regions": out_regions,
         "totals": {
+            # tonnage — «сырой» тоннаж (как в шапке), volume — суммарный
+            # мышечный объём (с дробными весами), они не обязаны совпадать.
+            "tonnage": round(raw_tonnage),
             "volume": round(sum(v["volume_kg"] for v in out_regions.values())),
             "sets": sum(v["working_sets"] for v in out_regions.values()),
             "sessions": len({sid for r in regions.values() for sid in r["sessions"]}),
@@ -4723,15 +5132,241 @@ def _build_muscle_map(sessions, ex_by_id, ex_by_slug) -> dict:
     }
 
 
-def _muscle_map_range(period: str, start: Optional[str], end: Optional[str]):
+def _muscle_source(engines) -> str:
+    """Источник агрегата: ai — все сессии разобраны ИИ, rules — правилами,
+    mixed — вперемешку, auto — разбора не было (считалось на лету)."""
+    kinds = set(engines or ())
+    if "auto" in kinds:
+        # хоть одна сессия периода не разобрана — показываем как «на лету»
+        return "auto"
+    if not kinds:
+        return "auto"
+    if kinds == {"ai"}:
+        return "ai"
+    if kinds == {"rules"}:
+        return "rules"
+    return "mixed"
+
+# --- ИИ-разбор мышц после тренировки (контракт muscle_load_v1) ---
+
+async def _exercise_dicts(telegram_id: Optional[int]):
+    """Справочник упражнений (встроенные + личные) для маппинга в канон."""
+    query = {"is_builtin": True}
+    if telegram_id:
+        query = {"$or": [{"is_builtin": True}, {"owner_telegram_id": telegram_id}]}
+    catalog = await db.exercises.find(
+        query, {"_id": 0, "id": 1, "slug": 1, "muscle_groups": 1,
+                "secondary_groups": 1, "equipment": 1},
+    ).to_list(4000)
+    by_id = {e["id"]: e for e in catalog if e.get("id")}
+    by_slug = {e["slug"]: e for e in catalog if e.get("slug")}
+    return by_id, by_slug
+
+async def _athlete_bodyweight(telegram_id: Optional[int]) -> Optional[float]:
+    if not telegram_id:
+        return None
+    try:
+        profile = await db.diary_profiles.find_one({"telegram_id": telegram_id}, {"_id": 0, "weight_kg": 1})
+    except Exception:
+        return None
+    try:
+        w = float((profile or {}).get("weight_kg") or 0)
+    except (TypeError, ValueError):
+        return None
+    return w if 30 <= w <= 250 else None
+
+async def _compute_muscle_load(session: dict, use_ai: bool = False) -> dict:
+    """Считает нагрузку по мышцам для одной сессии.
+
+    Всегда сначала считает детерминированные правила; при `use_ai` и настроенном
+    ключе пробует уточнить их языковой моделью. Любая проблема ИИ (нет ключа,
+    таймаут, битый JSON) оставляет результат правил — карта мышц не ломается.
+    """
+    tg = session.get("athlete_telegram_id")
+    by_id, by_slug = await _exercise_dicts(tg)
+    bodyweight = await _athlete_bodyweight(tg)
+    evidence = muscle_engine.build_evidence(session, by_id, by_slug, bodyweight)
+    baseline = muscle_engine.build_rules(evidence)
+    if not use_ai:
+        return baseline
+    cfg = _ai_config()
+    if not (cfg["base_url"] and cfg["api_key"]):
+        return baseline
+    extra = {}
+    effort = (os.environ.get("AI_MUSCLE_REASONING") or "none").strip().lower()
+    if effort and effort not in ("default", "auto", "-"):
+        extra["reasoning"] = {"effort": effort}
+    try:
+        content = await _ai_chat(muscle_engine.ai_messages(evidence, baseline),
+                                 temperature=0.2, extra=extra)
+    except HTTPException as e:
+        logger.warning(f"AI muscle analysis skipped: {e.detail}")
+        return baseline
+    except Exception:
+        logger.exception("AI muscle analysis failed")
+        return baseline
+    refined = muscle_engine.merge_ai_response(content, baseline, cfg["model"])
+    return refined or baseline
+
+
+def _ai_config():
+    """Текстовый провайдер (DeepSeek / RouterAI) — генерация, refine, parse."""
+    return {
+        "base_url": (os.environ.get("AI_BASE_URL") or "").rstrip("/"),
+        "api_key": os.environ.get("AI_API_KEY") or "",
+        "model": os.environ.get("AI_MODEL") or "deepseek/deepseek-v4-flash",
+    }
+
+
+def _ai_vision_config():
+    """Vision-провайдер (Google Gemini) — разбор фото в текст."""
+    return {
+        "base_url": (os.environ.get("AI_VISION_BASE_URL") or "").rstrip("/"),
+        "api_key": os.environ.get("AI_VISION_API_KEY") or "",
+        "model": os.environ.get("AI_VISION_MODEL") or "gemini-flash-latest",
+    }
+
+
+async def _store_muscle_load(session_id: str, use_ai: bool = False) -> Optional[dict]:
+    """Пересчитать и сохранить разбор в сессию (идемпотентно)."""
+    session = await db.workout_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        return None
+    data = await _compute_muscle_load(session, use_ai=use_ai)
+    data["session_id"] = session_id
+    await db.workout_sessions.update_one(
+        {"id": session_id},
+        {"$set": {"muscle_load": data, "muscle_load_at": data["created_at"]}},
+    )
+    return data
+
+def _ai_muscles_enabled() -> bool:
+    cfg = _ai_config()
+    return bool(cfg["base_url"] and cfg["api_key"])
+
+@api_router.get("/sessions/{session_id}/muscle-map")
+async def session_muscle_map(
+    session_id: str,
+    live: bool = Query(default=False),
+    current_user: dict = Depends(get_current_user),
+):
+    """Карта мышц тренировки.
+
+    В отличие от периодической карты, здесь строго одна сессия и только реально
+    выполненные подходы. Сохранённый агрегат ``muscle_load`` намеренно не берём:
+    он мог быть создан до поздней правки/миграции set_logs. Расчёт идёт через
+    текущий muscle_engine и тот же канонический агрегатор, что и периодическая
+    карта. Доступ — владелец или активный тренер.
+
+    ``live=true`` — карта идущей тренировки: считается по уже выполненным
+    подходам и обновляется по ходу заполнения. Для завершённой сессии флаг
+    ничего не меняет, а незавершённая без него по-прежнему 404.
+    """
+    session = await db.workout_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    await _assert_session_read(current_user, session)
+    if session.get("status") != "finished" and not live:
+        raise HTTPException(status_code=404, detail="Завершенная тренировка не найдена")
+    normalized = _completed_sets_session(session)
+    normalized["muscle_load"] = None
+    tg = normalized.get("athlete_telegram_id")
+    catalog = await db.exercises.find(
+        {"$or": [{"is_builtin": True}, {"owner_telegram_id": tg}]},
+        {"_id": 0, "id": 1, "slug": 1, "name": 1,
+         "muscle_groups": 1, "secondary_groups": 1},
+    ).to_list(4000)
+    ex_by_id = {e["id"]: e for e in catalog if e.get("id")}
+    ex_by_slug = {e["slug"]: e for e in catalog if e.get("slug")}
+    bodyweight = await _athlete_bodyweight(tg)
+    evidence = muscle_engine.build_evidence(normalized, ex_by_id, ex_by_slug, bodyweight)
+    load = muscle_engine.build_rules(evidence)
+    map_data = _build_muscle_map(
+        [normalized], ex_by_id, ex_by_slug, loads={session_id: load}
+    )
+    return {
+        "session_id": session_id,
+        "athlete_telegram_id": tg,
+        "date": session.get("date") or (
+            _session_day(session).isoformat() if _session_day(session) else None
+        ),
+        "title": session.get("title") or "",
+        "status": session.get("status"),
+        "is_live": session.get("status") != "finished",
+        "finished_at": session.get("finished_at"),
+        "views": MUSCLE_VIEWS,
+        "source": map_data.get("source"),
+        "regions": map_data.get("regions", {}),
+        "totals": map_data.get("totals", {}),
+        "imbalance": map_data.get("imbalance", []),
+        "muscle_load": load,
+    }
+
+
+@api_router.get("/sessions/{session_id}/muscle-load")
+async def session_muscle_load(session_id: str, refresh: bool = False,
+                              current_user: dict = Depends(get_current_user)):
+    """Разбор мышц по тренировке: сохранённый, иначе считается на месте."""
+    session = await db.workout_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    await _assert_session_actor(current_user, session, "athlete", None)
+    stored = session.get("muscle_load")
+    if stored and not refresh:
+        return {**stored, "ai_available": _ai_muscles_enabled()}
+    data = await _compute_muscle_load(session, use_ai=False)
+    return {**data, "ai_available": _ai_muscles_enabled()}
+
+@api_router.post("/sessions/{session_id}/muscle-load/analyze")
+async def session_muscle_analyze(session_id: str,
+                                 current_user: dict = Depends(get_current_user)):
+    """ИИ-разбор тренировки (пере)запускается вручную."""
+    session = await db.workout_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    await _assert_session_actor(current_user, session, "athlete", None)
+    _rate_limit(f"muscle-ai:{current_user['telegram_id']}", 20, 600,
+                "Слишком много запросов ИИ-разбора. Попробуйте позже.")
+    if not _ai_muscles_enabled():
+        data = await _compute_muscle_load(session, use_ai=False)
+        data["session_id"] = session_id
+        return {**data, "ai_available": False}
+    data = await _store_muscle_load(session_id, use_ai=True)
+    return {**(data or {}), "ai_available": True}
+
+# Периоды статистики: ключ -> длина окна в днях (None = «всё время»).
+STATS_PERIODS = {"week": 7, "month": 30, "quarter": 90, "year": 365, "all": None}
+STATS_PERIOD_KEYS = tuple(STATS_PERIODS) + ("custom",)
+
+# Порог, после которого графики переходят с дней на недели.
+DAY_GRANULARITY_MAX_DAYS = 45
+
+
+def _period_range(period: str, start: Optional[str] = None,
+                  end: Optional[str] = None):
+    """Единый диапазон [from, to] для всех блоков статистики.
+
+    Неделя/месяц/квартал/год — скользящее окно, включая сегодняшний день;
+    all — от начала времён до сегодня; custom — явные границы.
+    Верхняя граница всегда «сегодня», поэтому будущие (запланированные)
+    тренировки в статистику не попадают.
+    """
     today = datetime.now(timezone.utc).date()
-    if period == "custom" and (start or end):
-        return _parse_date(start) if start else None, (_parse_date(end) if end else today)
-    if period == "month":
-        return today - timedelta(days=30), today
-    if period == "all":
+    key = (period or "week").strip().lower()
+    if key == "custom":
+        frm = _parse_date(start) if start else None
+        to = _parse_date(end) if end else today
+        if frm and to and frm > to:
+            frm, to = to, frm
+        return frm, to
+    days = STATS_PERIODS.get(key, STATS_PERIODS["week"])
+    if days is None:
         return None, today
-    return today - timedelta(days=7), today  # week (по умолчанию)
+    return today - timedelta(days=days - 1), today
+
+
+def _muscle_map_range(period: str, start: Optional[str], end: Optional[str]):
+    return _period_range(period, start, end)
 
 
 async def _athlete_muscle_map(tg: int, period: str, start: Optional[str], end: Optional[str]) -> dict:
@@ -4744,7 +5379,22 @@ async def _athlete_muscle_map(tg: int, period: str, start: Optional[str], end: O
     ).to_list(2000)
     ex_by_id = {ex["id"]: ex for ex in catalog if ex.get("id")}
     ex_by_slug = {ex["slug"]: ex for ex in catalog if ex.get("slug")}
-    agg = _build_muscle_map(sessions, ex_by_id, ex_by_slug)
+    # Нагрузка по каждой сессии: сохранённый разбор, иначе детерминированные
+    # правила (быстро, без ИИ) — чтобы подсветка была согласованной.
+    bodyweight = await _athlete_bodyweight(tg)
+    loads = {}
+    for sess in sessions:
+        sid = sess.get("id")
+        stored = sess.get("muscle_load")
+        if isinstance(stored, dict) and stored.get("muscles"):
+            if sid:
+                loads[sid] = stored
+            continue
+        if not sid:
+            continue
+        evidence = muscle_engine.build_evidence(sess, ex_by_id, ex_by_slug, bodyweight)
+        loads[sid] = muscle_engine.build_rules(evidence)
+    agg = _build_muscle_map(sessions, ex_by_id, ex_by_slug, loads)
     return {
         "period": period,
         "start": frm.isoformat() if frm else None,
@@ -4760,8 +5410,9 @@ async def stats_muscle_map(telegram_id: int, period: str = "week",
                            current: dict = Depends(get_current_user)):
     """Карта мышц 2D: объём и рабочие подходы по каноническим зонам за период."""
     await _assert_can_read_stats(current, telegram_id)
-    if period not in ("week", "month", "all", "custom"):
-        raise HTTPException(status_code=400, detail="period должен быть week, month, all или custom")
+    if period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400,
+                            detail="period должен быть week, month, quarter, year, all или custom")
     return await _athlete_muscle_map(telegram_id, period, start, end)
 
 
@@ -4772,9 +5423,11 @@ async def coach_client_muscle_map(coach_id: int, athlete_id: int, period: str = 
     """Карта мышц подопечного для тренера (guard _assert_coach_of)."""
     if current["telegram_id"] != coach_id:
         raise HTTPException(status_code=403, detail="Доступ от имени другого тренера запрещён")
+    _assert_coach_mode(current)
     await _assert_coach_of(coach_id, athlete_id)
-    if period not in ("week", "month", "all", "custom"):
-        raise HTTPException(status_code=400, detail="period должен быть week, month, all или custom")
+    if period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400,
+                            detail="period должен быть week, month, quarter, year, all или custom")
     return await _athlete_muscle_map(athlete_id, period, start, end)
 
 
@@ -4832,7 +5485,11 @@ def cardio_kcal(ctype: str, intensity: Optional[str], weight_kg: Optional[float]
 
 
 def _parse_hhmmss_pace(distance_km: Optional[float], duration_sec: Optional[int]) -> Optional[str]:
-    """Темп мин/км в формате MM:SS (для дорожки/ходьбы)."""
+    """Темп мин/км в формате MM:SS (для дорожки/ходьбы).
+
+    Округляем всё значение до секунд и затем нормализуем через ``divmod``:
+    иначе 59.6 секунд давали некорректное ``00:60`` вместо ``01:00``.
+    """
     try:
         d = float(distance_km or 0)
         s = float(duration_sec or 0)
@@ -4841,7 +5498,9 @@ def _parse_hhmmss_pace(distance_km: Optional[float], duration_sec: Optional[int]
     if d <= 0 or s <= 0:
         return None
     pace_sec = s / d
-    return f"{int(pace_sec // 60):02d}:{int(round(pace_sec % 60)):02d}"
+    total_seconds = max(0, int(round(pace_sec)))
+    minutes, seconds = divmod(total_seconds, 60)
+    return f"{minutes:02d}:{seconds:02d}"
 
 
 def _avg_speed_kmh(distance_km: Optional[float],
@@ -4855,6 +5514,18 @@ def _avg_speed_kmh(distance_km: Optional[float],
     if d <= 0 or s <= 0:
         return None
     return round(d / (s / 3600.0), 2)
+
+
+def _to_float(value):
+    """Безопасное преобразование в float с поддержкой запятой как разделителя."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        value = value.strip().replace(",", ".").replace(" ", "")
+        if not value:
+            raise ValueError("empty string")
+        return float(value)
+    raise TypeError(f"unexpected type {type(value)}")
 
 
 def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
@@ -4883,12 +5554,12 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
     dur = p.get("duration_sec")
     if dur is None and p.get("duration_min") is not None:
         try:
-            dur = int(round(float(p["duration_min"]) * 60))
+            dur = int(round(_to_float(p["duration_min"]) * 60))
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректная длительность")
     if dur is not None:
         try:
-            dur = int(dur)
+            dur = int(_to_float(dur))
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректная длительность")
         if dur <= 0:
@@ -4899,7 +5570,7 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
 
     if "distance_km" in p and p.get("distance_km") is not None:
         try:
-            dist = float(p["distance_km"])
+            dist = _to_float(p["distance_km"])
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректная дистанция")
         if not math.isfinite(dist) or dist < 0 or dist > 500:
@@ -4910,7 +5581,7 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
                                ("max_hr", 30, 230, "Максимальный пульс")):
         if key in p and p.get(key) is not None:
             try:
-                v = int(p[key])
+                v = int(_to_float(p[key]))
             except (TypeError, ValueError):
                 raise HTTPException(status_code=400, detail=f"Некорректный {label.lower()}")
             if v < lo or v > hi:
@@ -4920,7 +5591,7 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
 
     if "calories" in p and p.get("calories") is not None:
         try:
-            cal = int(p["calories"])
+            cal = int(_to_float(p["calories"]))
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректные калории")
         if cal < 0 or cal > 20000:
@@ -4935,7 +5606,7 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
 
     if "rpe" in p and p.get("rpe") is not None:
         try:
-            rpe = float(p["rpe"])
+            rpe = _to_float(p["rpe"])
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректный RPE")
         if not math.isfinite(rpe) or rpe < 1 or rpe > 10:
@@ -4944,7 +5615,7 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
 
     if "incline_percent" in p and p.get("incline_percent") is not None:
         try:
-            inc = float(p["incline_percent"])
+            inc = _to_float(p["incline_percent"])
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректный наклон")
         if not math.isfinite(inc) or inc < 0 or inc > 40:
@@ -4953,7 +5624,7 @@ def _clean_cardio_payload(payload: dict, *, partial: bool = False) -> dict:
 
     if "avg_speed_kmh" in p and p.get("avg_speed_kmh") is not None:
         try:
-            sp = float(p["avg_speed_kmh"])
+            sp = _to_float(p["avg_speed_kmh"])
         except (TypeError, ValueError):
             raise HTTPException(status_code=400, detail="Некорректная скорость")
         if not math.isfinite(sp) or sp < 0 or sp > 60:
@@ -5015,15 +5686,8 @@ async def _athlete_weight_kg(tg: int) -> Optional[float]:
 
 
 def _cardio_range(period: str, start: Optional[str], end: Optional[str]):
-    """Диапазон дат для агрегата кардио. Возвращает (from_date|None, to_date)."""
-    today = datetime.now(timezone.utc).date()
-    if period == "custom" and (start or end):
-        return _parse_date(start) if start else None, (_parse_date(end) or today)
-    if period == "month":
-        return today - timedelta(days=30), today
-    if period == "all":
-        return None, today
-    return today - timedelta(days=7), today  # week (по умолчанию)
+    """Диапазон дат для агрегата кардио (общий со всей статистикой)."""
+    return _period_range(period, start, end)
 
 
 async def _cardio_weekly_target(tg: int) -> Optional[int]:
@@ -5068,13 +5732,16 @@ async def _athlete_cardio_stats(tg: int, period: str, start: Optional[str],
     hr_sum = 0
     hr_n = 0
     for r in rows:
-        mins = round((r.get("duration_sec") or 0) / 60)
-        minutes += mins
+        # Суммируем секунды и округляем только итог, иначе множество коротких
+        # сессий (например, 30×30 секунд) ошибочно превращается в 0 минут.
+        mins_exact = max(0.0, float(r.get("duration_sec") or 0) / 60.0)
+        mins = round(mins_exact)
+        minutes += mins_exact
         km += float(r.get("distance_km") or 0)
         kcal += int(r.get("calories") or 0)
         t = r.get("type") or "other"
         bt = by_type.setdefault(t, {"minutes": 0, "sessions": 0, "km": 0.0, "kcal": 0})
-        bt["minutes"] += mins
+        bt["minutes"] += mins_exact
         bt["sessions"] += 1
         bt["km"] = round(bt["km"] + float(r.get("distance_km") or 0), 3)
         bt["kcal"] += int(r.get("calories") or 0)
@@ -5082,8 +5749,9 @@ async def _athlete_cardio_stats(tg: int, period: str, start: Optional[str],
             hr_sum += int(r["avg_hr"])
             hr_n += 1
 
-    # Недельная норма и выполнение считаются по ТЕКУЩЕЙ календарной неделе
-    # (пн–вс), независимо от выбранного периода отображения.
+    # Недельная норма и её выполнение считаются по ТЕКУЩЕЙ календарной неделе
+    # (пн–вс), независимо от выбранного периода отображения — иначе «норма» и
+    # «минуты за период» показывали разные числа без объяснения.
     today = datetime.now(timezone.utc).date()
     week_from = today - timedelta(days=today.weekday())
     week_rows = await db.cardio_sessions.find(
@@ -5091,22 +5759,26 @@ async def _athlete_cardio_stats(tg: int, period: str, start: Optional[str],
                                              "$lte": today.isoformat()}},
         {"_id": 0, "duration_sec": 1},
     ).to_list(500)
-    week_minutes = sum(round((r.get("duration_sec") or 0) / 60) for r in week_rows)
+    week_minutes = sum(max(0.0, float(r.get("duration_sec") or 0) / 60.0) for r in week_rows)
     target = await _cardio_weekly_target(tg)
 
     return {
         "period": period,
         "start": frm.isoformat() if frm else None,
         "end": to.isoformat() if to else None,
-        "minutes": minutes,
+        "days": ((to - frm).days + 1) if (frm and to) else None,
+        "week_start": week_from.isoformat(),
+        "week_end": today.isoformat(),
+        "minutes": round(minutes, 1),
         "sessions": len(rows),
         "km": round(km, 2),
         "kcal": kcal,
         "avg_hr": round(hr_sum / hr_n) if hr_n else None,
         "by_type": by_type,
-        "weekly_minutes": week_minutes,
+        "weekly_minutes": round(week_minutes, 1),
         "weekly_target": target,
-        "compliance": (round(week_minutes / target, 3) if target else None),
+        "compliance": (round(week_minutes / target, 3) if target and target > 0 else None),
+        "weekly_compliance_pct": (round(week_minutes / target * 100, 1) if target and target > 0 else None),
         "type_labels": CARDIO_TYPE_LABELS,
     }
 
@@ -5141,7 +5813,7 @@ async def create_cardio(payload: CardioCreateReq, current: dict = Depends(get_cu
     fields.setdefault("source", "manual")
 
     # Калории: если не переданы — считаем по MET (вес из профиля/запроса).
-    if not fields.get("calories"):
+    if fields.get("calories") is None:
         weight = payload.weight_kg or await _athlete_weight_kg(athlete)
         fields["calories"] = cardio_kcal(fields.get("type"), fields.get("intensity"),
                                          weight, fields.get("duration_sec"))
@@ -5187,7 +5859,7 @@ async def list_cardio(athlete: Optional[int] = None,
                       current: dict = Depends(get_current_user)):
     """Список кардио-сессий (владелец или его тренер)."""
     tg = athlete or current["telegram_id"]
-    await _assert_can_read_stats(current, tg)
+    await _assert_can_read_stats(current, tg, "view_cardio")
     limit = max(1, min(int(limit or 100), 500))
     q = {"athlete_telegram_id": tg}
     rng = {}
@@ -5207,7 +5879,7 @@ async def _get_cardio_or_403(cardio_id: str, current: dict) -> dict:
     doc = await db.cardio_sessions.find_one({"id": cardio_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Кардио-сессия не найдена")
-    await _assert_can_read_stats(current, doc.get("athlete_telegram_id"))
+    await _assert_can_read_stats(current, doc.get("athlete_telegram_id"), "view_cardio")
     return doc
 
 
@@ -5264,17 +5936,23 @@ async def delete_cardio(cardio_id: str, current: dict = Depends(get_current_user
     return {"ok": True, "id": cardio_id}
 
 
-_CARDIO_VISION_PROMPT = """Ты разбираешь фотографию консоли кардиотренажёра (дорожка, велотренажёр, эллипс, гребной).
-Верни ТОЛЬКО JSON без пояснений по схеме:
+_CARDIO_VISION_PROMPT = """Ты — строгий OCR-парсер фотографии консоли кардиотренажёра (дорожка, велотренажёр, эллипс или гребной).
+Верни ТОЛЬКО один JSON-объект без пояснений, комментариев и markdown по схеме:
 {"type": "treadmill|bike|rower|walk|elliptical|other",
- "duration_sec": число секунд или null,
- "distance_km": число км или null,
- "avg_hr": средний пульс целым числом или null,
- "max_hr": максимальный пульс целым числом или null,
- "calories": калории целым числом или null,
- "incline_percent": наклон в % или null,
- "avg_speed_kmh": средняя скорость км/ч или null}
-Правила: время переводи в секунды (30:00 → 1800). Если поле не видно — null. Не выдумывай значения."""
+ "duration_sec": целое число секунд или null,
+ "distance_km": число в километрах или null,
+ "avg_hr": средний пульс в bpm (уд/мин), целое число или null,
+ "max_hr": максимальный пульс в bpm (уд/мин), целое число или null,
+ "calories": целое число килокалорий (kcal) или null,
+ "incline_percent": наклон в процентах (%) или null,
+ "avg_speed_kmh": средняя скорость в километрах в час (км/ч) или null}
+Правила распознавания:
+- Извлекай только цифры и подписи, которые действительно видны на фото. Никогда не угадывай, не пересчитывай и не подставляй типичные значения.
+- Если поле не видно, размыто, обрезано или его значение неоднозначно — ставь null.
+- Время переводи в секунды только при однозначном формате длительности: MM:SS или H:MM:SS (например, 30:00 → 1800). Если запись может быть часами/временем суток или формат неясен — duration_sec=null.
+- Пульс заполняй только по явно обозначенному HR/Heart Rate/Pulse показателю; не принимай за пульс скорость, каденс, номер программы или другую цифру. Если средний/максимальный пульс не различим однозначно — null.
+- Не вычисляй calories, distance, speed, pace или пульс из других полей. calories указывай только если на консоли явно показаны именно kcal/калории; это распознанное, а не рассчитанное значение.
+- Единицы результата всегда ровно те, что указаны в схеме; неизвестные единицы или неоднозначное преобразование означают null."""
 
 
 @api_router.post("/cardio/parse-photo")
@@ -5286,10 +5964,13 @@ async def cardio_parse_photo(file: UploadFile = File(...),
                 "Слишком много разборов фото. Попробуйте позже.")
     _assert_can_log_permission(current, current["telegram_id"], "log_cardio",
                                "Заполнение кардио недоступно: обратитесь к администратору")
-    raw = await file.read()
+    max_bytes = 8 * 1024 * 1024
+    # Читаем максимум на один байт больше лимита: не держим неограниченный
+    # upload в памяти и всё равно надёжно отклоняем файл ровно после 8 МБ.
+    raw = await file.read(max_bytes + 1)
     if not raw:
         raise HTTPException(status_code=400, detail="Пустой файл")
-    if len(raw) > 8 * 1024 * 1024:
+    if len(raw) > max_bytes:
         raise HTTPException(status_code=400, detail="Фото слишком большое (макс 8 МБ)")
     mime = (file.content_type or "").lower()
     if not mime.startswith("image/"):
@@ -5309,6 +5990,12 @@ async def cardio_parse_photo(file: UploadFile = File(...),
     images = [{"mime": mime, "data_b64": base64.b64encode(raw).decode("ascii")}]
     text = await _ai_chat_vision(_CARDIO_VISION_PROMPT, images)
     data = _extract_json(text)
+    # Vision response must be an object matching the extraction contract.  Do
+    # not let a JSON array/string turn into an AttributeError or a misleading
+    # empty draft.
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=422,
+                            detail="ИИ вернул не объект кардио — попробуйте ещё раз")
 
     draft = {}
     for key in ("type", "duration_sec", "distance_km", "avg_hr", "max_hr",
@@ -5323,15 +6010,79 @@ async def cardio_parse_photo(file: UploadFile = File(...),
             clean.update(_clean_cardio_payload({key: val}))
         except HTTPException:
             continue
-    if clean.get("duration_sec") and not clean.get("calories"):
-        weight = await _athlete_weight_kg(current["telegram_id"])
-        clean["calories"] = cardio_kcal(clean.get("type"), clean.get("intensity"),
-                                        weight, clean.get("duration_sec"))
+    # Confidence reflects only validated OCR fields, not derived metadata.
+    # Missing calories are estimated later on POST /cardio, not in the draft.
+    recognized = bool(clean)
     if not clean.get("avg_pace"):
-        clean["avg_pace"] = _parse_hhmmss_pace(clean.get("distance_km"),
-                                               clean.get("duration_sec"))
+        derived_pace = _parse_hhmmss_pace(clean.get("distance_km"),
+                                          clean.get("duration_sec"))
+        if derived_pace:
+            clean["avg_pace"] = derived_pace
     clean["source"] = "photo"
-    return {"draft": clean, "confidence": "vision" if clean else "low"}
+    return {"draft": clean, "confidence": "vision" if recognized else "low"}
+
+
+@api_router.post("/cardio/parse-photo-bg")
+async def cardio_parse_photo_bg(files: list[UploadFile] = File(...),
+                                current: dict = Depends(get_current_user)):
+    """Фото консоли → черновик кардио (фоновая задача).
+    Принимает 1 фото, запускает разбор в фоне. Клиент опрашивает GET /ai/program/jobs/{job_id}."""
+    _rate_limit(f"cardio-photo:{current['telegram_id']}", 20, 600,
+                "Слишком много разборов фото. Попробуйте позже.")
+    _assert_can_log_permission(current, current["telegram_id"], "log_cardio",
+                               "Заполнение кардио недоступно: обратитесь к администратору")
+    if not files:
+        raise HTTPException(status_code=400, detail="Загрузите хотя бы одно фото")
+    raw = await files[0].read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Пустой файл")
+    if len(raw) > 8 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Фото слишком большое (макс 8 МБ)")
+    mime = (files[0].content_type or "").lower()
+    if not mime.startswith("image/"):
+        fn = (files[0].filename or "").lower()
+        if fn.endswith((".jpg", ".jpeg")):
+            mime = "image/jpeg"
+        elif fn.endswith(".png"):
+            mime = "image/png"
+        elif fn.endswith(".webp"):
+            mime = "image/webp"
+        elif fn.endswith(".heic"):
+            mime = "image/heic"
+        else:
+            raise HTTPException(status_code=400, detail="Поддерживаются только изображения (jpg/png/webp/heic)")
+
+    import base64
+    images = [{"mime": mime, "data_b64": base64.b64encode(raw).decode("ascii")}]
+
+    async def _factory(job_id):
+        await _update_job_progress(job_id, "running", "Считываем показатели тренажёра…")
+        text = await _ai_chat_vision(_CARDIO_VISION_PROMPT, images)
+        data = _extract_json(text)
+        if not isinstance(data, dict):
+            raise HTTPException(status_code=422,
+                                detail="ИИ вернул не объект кардио — попробуйте ещё раз")
+        draft = {}
+        for key in ("type", "duration_sec", "distance_km", "avg_hr", "max_hr",
+                    "calories", "incline_percent", "avg_speed_kmh"):
+            if data.get(key) is not None:
+                draft[key] = data[key]
+        clean = {}
+        for key, val in draft.items():
+            try:
+                clean.update(_clean_cardio_payload({key: val}))
+            except HTTPException:
+                continue
+        recognized = bool(clean)
+        if not clean.get("avg_pace"):
+            derived_pace = _parse_hhmmss_pace(clean.get("distance_km"),
+                                              clean.get("duration_sec"))
+            if derived_pace:
+                clean["avg_pace"] = derived_pace
+        clean["source"] = "photo"
+        return {"draft": clean, "confidence": "vision" if recognized else "low"}
+
+    return await _ai_start_job(current, "cardio_parse", _factory)
 
 
 @api_router.get("/stats/{telegram_id}/cardio")
@@ -5340,9 +6091,10 @@ async def stats_cardio(telegram_id: int, period: str = "week",
                        current: dict = Depends(get_current_user)):
     """Агрегат кардио за период: минуты, сессии, км, ккал, разбивка по типам,
     недельная норма и её выполнение."""
-    await _assert_can_read_stats(current, telegram_id)
-    if period not in ("week", "month", "all", "custom"):
-        raise HTTPException(status_code=400, detail="period должен быть week, month, all или custom")
+    await _assert_can_read_stats(current, telegram_id, "view_cardio")
+    if period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400,
+                            detail="period должен быть week, month, quarter, year, all или custom")
     return await _athlete_cardio_stats(telegram_id, period, start, end)
 
 
@@ -5470,149 +6222,76 @@ async def stats_streak(telegram_id: int, weeks: int = 12,
 
 @api_router.get("/coach/{coach_id}/clients/{athlete_id}/stats")
 async def coach_client_stats(coach_id: int, athlete_id: int,
+                             period: Optional[str] = Query(default=None),
                              from_: Optional[str] = Query(default=None, alias="from"),
                              to: Optional[str] = None, plan_id: Optional[str] = None,
                              current: dict = Depends(get_current_user)):
     if current.get("telegram_id") != coach_id:
         raise HTTPException(status_code=403, detail="Доступ от имени другого тренера запрещён")
+    _assert_coach_mode(current)
     await _assert_coach_of(coach_id, athlete_id)
+    if period and period not in STATS_PERIOD_KEYS:
+        raise HTTPException(status_code=400,
+                            detail="period должен быть week, month, quarter, year, all или custom")
+    if period:
+        return await _athlete_detailed_stats(athlete_id, from_, to, plan_id, period)
     return await _athlete_detailed_stats(athlete_id, from_, to, plan_id)
 
 
 @api_router.get("/coach/{coach_id}/clients/{athlete_id}/exercise-progress")
 async def coach_client_exercise_progress(coach_id: int, athlete_id: int,
+                                         period: Optional[str] = None,
                                          slug: Optional[str] = None,
                                          plan_id: Optional[str] = None,
+                                         from_: Optional[str] = Query(default=None, alias="from"),
+                                         to: Optional[str] = None,
                                          current: dict = Depends(get_current_user)):
     if current.get("telegram_id") != coach_id:
         raise HTTPException(status_code=403, detail="Доступ от имени другого тренера запрещён")
+    _assert_coach_mode(current)
     await _assert_coach_of(coach_id, athlete_id)
-    return await _athlete_exercise_progress(athlete_id, slug, plan_id)
+    if period:
+        start, end = _resolve_period_query(period, from_, to)
+        return await _athlete_exercise_progress(athlete_id, slug, plan_id, start, end, period)
+    return await _athlete_exercise_progress(athlete_id, slug, plan_id, from_, to)
 
 
 @api_router.get("/coach/{coach_id}/clients/{athlete_id}/muscle-groups")
 async def coach_client_muscle_groups(coach_id: int, athlete_id: int, period: str = "week",
+                                     from_: Optional[str] = Query(default=None, alias="from"),
+                                     to: Optional[str] = None,
                                      current: dict = Depends(get_current_user)):
-    """Статистика по мышечным группам подопечного."""
+    """Статистика по мышечным группам подопечного (та же логика, что у атлета)."""
     if current.get("telegram_id") != coach_id:
         raise HTTPException(status_code=403, detail="Доступ от имени другого тренера запрещён")
+    _assert_coach_mode(current)
     await _assert_coach_of(coach_id, athlete_id)
-    
-    # Используем ту же логику, что и для спортсмена
-    today = datetime.now(timezone.utc).date()
-    if period == "week":
-        start_date = today - timedelta(days=7)
-    elif period == "month":
-        start_date = today - timedelta(days=30)
-    else:
-        start_date = None
-    
-    end_date = today
-    
-    query = {"athlete_telegram_id": athlete_id, "status": "finished"}
-    if start_date:
-        query["date"] = {"$gte": start_date.isoformat()}
-    
-    sessions = await db.workout_sessions.find(query, {"_id": 0}).to_list(3000)
-    
-    exercises_catalog = await db.exercises.find(
-        {"$or": [{"is_builtin": True}, {"owner_telegram_id": athlete_id}]},
-        {"_id": 0, "id": 1, "slug": 1, "muscle_groups": 1, "secondary_groups": 1}
-    ).to_list(1000)
-    
-    ex_by_id = {ex["id"]: ex for ex in exercises_catalog if ex.get("id")}
-    ex_by_slug = {ex["slug"]: ex for ex in exercises_catalog if ex.get("slug")}
-    
-    muscle_stats = {}
-    
-    for session in sessions:
-        for exercise in session.get("exercises", []):
-            if exercise.get("status") != "done":
-                continue
-            
-            ex_def = None
-            if exercise.get("exercise_id"):
-                ex_def = ex_by_id.get(exercise["exercise_id"])
-            elif exercise.get("exercise_slug"):
-                ex_def = ex_by_slug.get(exercise["exercise_slug"])
-            
-            if not ex_def:
-                continue
-            
-            primary_groups = ex_def.get("muscle_groups", [])
-            secondary_groups = ex_def.get("secondary_groups", [])
-            
-            volume = 0
-            for set_log in exercise.get("set_logs", []):
-                if set_log.get("done"):
-                    weight = set_log.get("weight", 0) or 0
-                    reps = set_log.get("reps", 0) or 0
-                    volume += weight * reps
-            
-            for mg in primary_groups:
-                if mg not in muscle_stats:
-                    muscle_stats[mg] = {"volume": 0, "sessions": set()}
-                muscle_stats[mg]["volume"] += volume
-                muscle_stats[mg]["sessions"].add(session.get("id"))
-            
-            for mg in secondary_groups:
-                if mg not in muscle_stats:
-                    muscle_stats[mg] = {"volume": 0, "sessions": set()}
-                muscle_stats[mg]["volume"] += volume * 0.5
-                muscle_stats[mg]["sessions"].add(session.get("id"))
-    
-    muscle_groups = {}
-    for mg, stats in muscle_stats.items():
-        muscle_groups[mg] = {
-            "volume": round(stats["volume"]),
-            "sessions": len(stats["sessions"])
-        }
-    
-    return {
-        "period": period,
-        "start_date": start_date.isoformat() if start_date else None,
-        "end_date": end_date.isoformat(),
-        "muscle_groups": muscle_groups
-    }
-
-
-# ===========================================================================
-# P6 — ИИ-анализ программ (двухмодельная архитектура)
-# - Текст/reasoning: DeepSeek V4 Flash через RouterAI (AI_BASE_URL/API_KEY/MODEL)
-# - Vision (фото): Google Gemini через OpenAI-совместимый эндпоинт
-#   (AI_VISION_BASE_URL/API_KEY/MODEL)
-# ===========================================================================
-def _ai_config():
-    """Текстовый провайдер (DeepSeek / RouterAI) — генерация, refine, parse."""
-    return {
-        "base_url": (os.environ.get("AI_BASE_URL") or "").rstrip("/"),
-        "api_key": os.environ.get("AI_API_KEY") or "",
-        "model": os.environ.get("AI_MODEL") or "deepseek/deepseek-v4-flash",
-    }
-
-
-def _ai_vision_config():
-    """Vision-провайдер (Google Gemini) — разбор фото в текст."""
-    return {
-        "base_url": (os.environ.get("AI_VISION_BASE_URL") or "").rstrip("/"),
-        "api_key": os.environ.get("AI_VISION_API_KEY") or "",
-        "model": os.environ.get("AI_VISION_MODEL") or "gemini-flash-latest",
-    }
+    return await _athlete_muscle_groups(athlete_id, period, from_, to)
 
 
 @api_router.get("/ai/status")
 async def ai_status(current: dict = Depends(get_current_user)):
     cfg = _ai_config()
     vcfg = _ai_vision_config()
+    main_enabled = bool(cfg["base_url"] and cfg["api_key"])
+    # Vision доступен через выделенный провайдер (Gemini) или через основной (DeepSeek)
+    vision_available = bool(vcfg["base_url"] and vcfg["api_key"]) or main_enabled
     return {
-        "enabled": bool(cfg["base_url"] and cfg["api_key"]),
+        "enabled": main_enabled,
         "model": cfg["model"],
-        "vision_enabled": bool(vcfg["base_url"] and vcfg["api_key"]),
-        "vision_model": vcfg["model"],
+        "vision_enabled": vision_available,
+        "vision_model": vcfg["model"] if (vcfg["base_url"] and vcfg["api_key"]) else cfg["model"],
+        "vision_provider": "gemini" if (vcfg["base_url"] and vcfg["api_key"]) else "deepseek",
     }
 
 
-async def _ai_chat(messages, temperature=0.3, json_mode=True):
+async def _ai_chat(messages, temperature=0.3, json_mode=True, extra=None):
+    """Запрос в OpenAI-совместимый чат.
+
+    `extra` — необязательные параметры конкретного провайдера (например
+    управление «размышлениями» модели). Если провайдер их не понимает,
+    повторяем запрос без них и без response_format — так вызов не падает.
+    """
     cfg = _ai_config()
     if not (cfg["base_url"] and cfg["api_key"]):
         raise HTTPException(status_code=503,
@@ -5624,12 +6303,16 @@ async def _ai_chat(messages, temperature=0.3, json_mode=True):
     }
     if json_mode:
         body["response_format"] = {"type": "json_object"}
+    if extra:
+        body.update(extra)
     url = f"{cfg['base_url']}/chat/completions"
     try:
         async with httpx.AsyncClient(timeout=180) as c:
             r = await c.post(url, json=body, headers=headers)
-            if r.status_code == 400:
-                # часть провайдеров не поддерживает response_format — повтор без него
+            if r.status_code == 400 and (extra or json_mode):
+                # провайдер не поддерживает часть полей — повторяем «минимальным» телом
+                for k in list((extra or {}).keys()):
+                    body.pop(k, None)
                 body.pop("response_format", None)
                 r = await c.post(url, json=body, headers=headers)
     except httpx.HTTPError as e:
@@ -5648,19 +6331,31 @@ async def _ai_chat(messages, temperature=0.3, json_mode=True):
 
 
 async def _ai_chat_vision(prompt_text, images):
-    """Отправляет промпт + список изображений в Gemini (OpenAI-совместимый vision).
+    """Отправляет промпт + список изображений в OpenAI-совместимый vision API.
+
+    Сначала пробует выделенный vision-провайдер (AI_VISION_* — Gemini).
+    Если он не настроен — использует основной текстовый провайдер (AI_* — DeepSeek),
+    который тоже поддерживает vision (multimodal через data: URI).
+
     images: list[{"mime": "image/jpeg", "data_b64": "..."}].
     Возвращает текст-описание программы (для последующей передачи в _ai_chat)."""
-    cfg = _ai_vision_config()
-    if not (cfg["base_url"] and cfg["api_key"]):
-        raise HTTPException(status_code=503,
-                            detail="Разбор по фото недоступен: не задан ключ Gemini")
     content = [{"type": "text", "text": prompt_text}]
     for img in images:
         content.append({
             "type": "image_url",
             "image_url": {"url": f"data:{img['mime']};base64,{img['data_b64']}"},
         })
+
+    cfg = _ai_vision_config()
+    use_main = False
+    if not (cfg["base_url"] and cfg["api_key"]):
+        # Vision не настроен — используем основной AI провайдер (DeepSeek)
+        cfg = _ai_config()
+        use_main = True
+        if not (cfg["base_url"] and cfg["api_key"]):
+            raise HTTPException(status_code=503,
+                                detail="Разбор по фото недоступен: не задан ключ AI-сервиса")
+
     headers = {"Authorization": f"Bearer {cfg['api_key']}"}
     body = {
         "model": cfg["model"],
@@ -5670,21 +6365,44 @@ async def _ai_chat_vision(prompt_text, images):
         "stream": False,
     }
     url = f"{cfg['base_url']}/chat/completions"
-    try:
-        async with httpx.AsyncClient(timeout=180) as c:
-            r = await c.post(url, json=body, headers=headers)
-    except httpx.HTTPError as e:
-        raise HTTPException(status_code=502, detail=f"Vision-сервис недоступен: {e.__class__.__name__}")
-    if r.status_code >= 400:
+    # Провайдер (RouterAI/Gemini) иногда возвращает 200 OK с пустым content —
+    # повторяем запрос с коротким backoff, чтобы не ронять пользователю поток.
+    last_err = None
+    for attempt in range(3):
         try:
-            msg = (r.json().get("error") or {}).get("message") or r.text
+            async with httpx.AsyncClient(timeout=180) as c:
+                r = await c.post(url, json=body, headers=headers)
+        except httpx.HTTPError as e:
+            last_err = f"Vision-сервис недоступен: {e.__class__.__name__}"
+            if attempt < 2:
+                await asyncio.sleep(2 * (attempt + 1))
+                continue
+            break
+        if r.status_code >= 400:
+            try:
+                msg = (r.json().get("error") or {}).get("message") or r.text
+            except Exception:
+                msg = r.text
+            last_err = f"Ошибка Vision-сервиса ({r.status_code}): {str(msg)[:200]}"
+            if attempt < 2:
+                await asyncio.sleep(2 * (attempt + 1))
+                continue
+            break
+        try:
+            out = r.json()["choices"][0]["message"]["content"] or ""
         except Exception:
-            msg = r.text
-        raise HTTPException(status_code=502, detail=f"Ошибка Vision-сервиса ({r.status_code}): {str(msg)[:200]}")
-    try:
-        return r.json()["choices"][0]["message"]["content"] or ""
-    except Exception:
-        raise HTTPException(status_code=502, detail="Некорректный ответ Vision-сервиса")
+            last_err = "Некорректный ответ Vision-сервиса"
+            if attempt < 2:
+                await asyncio.sleep(2 * (attempt + 1))
+                continue
+            break
+        if out.strip():
+            return out
+        # Пустой ответ — повторяем
+        last_err = "Vision-сервис вернул пустой ответ"
+        if attempt < 2:
+            await asyncio.sleep(2 * (attempt + 1))
+    raise HTTPException(status_code=502, detail=last_err or "Vision-сервис не ответил")
 
 
 def _extract_json(text):
@@ -6099,29 +6817,141 @@ def _ai_require_enabled():
                             detail="ИИ-анализ пока не настроен: не задан API-ключ сервиса")
 
 
+async def _update_job_progress(job_id, status, progress=None):
+    """Безопасно обновить статус и/или прогресс ИИ-задачи в БД (подавляет дубликат-ключ)."""
+    update = {"status": status}
+    if progress is not None:
+        update["progress"] = progress[:2000]
+    try:
+        await db.ai_jobs.update_one({"id": job_id}, {"$set": update})
+    except Exception:
+        logger.exception(f"Failed to update job {job_id}")
+
+
+async def _ai_chat_stream(messages, job_id, temperature=0.3, json_mode=True, extra=None, kind="generate"):
+    """Потоковый вариант _ai_chat — chunks приходят по мере генерации модели.
+
+    Периодически (каждые ~1.5 сек) сохраняет накопленный reasoning_content
+    в ``db.ai_jobs.progress``, чтобы фронтопоинт показывал живые «мысли» модели.
+    Если провайдер не поддерживает stream, падает назад на обычный _ai_chat.
+    """
+    cfg = _ai_config()
+    if not (cfg["base_url"] and cfg["api_key"]):
+        raise HTTPException(status_code=503,
+                            detail="ИИ-анализ пока не настроен: не задан API-ключ сервиса")
+    headers = {"Authorization": f"Bearer {cfg['api_key']}"}
+    body = {
+        "model": cfg["model"], "messages": messages, "temperature": temperature,
+        "max_tokens": 32000, "stream": True,
+    }
+    if json_mode:
+        body["response_format"] = {"type": "json_object"}
+    if extra:
+        body.update(extra)
+    url = f"{cfg['base_url']}/chat/completions"
+
+    full_content = ""
+    reasoning = ""
+    last_store = 0.0
+    content_len_at_last_store = 0
+
+    try:
+        async with httpx.AsyncClient(timeout=300) as c:
+            async with c.stream("POST", url, json=body, headers=headers) as r:
+                if r.status_code >= 400:
+                    body.pop("stream", None)  # убираем stream для fallback
+                    try:
+                        err_msg = (r.json().get("error") or {}).get("message") or r.text
+                    except Exception:
+                        err_msg = r.text
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"Ошибка ИИ-сервиса ({r.status_code}): {str(err_msg)[:200]}",
+                    )
+
+                async for raw in r.aiter_lines():
+                    if not raw.startswith("data: "):
+                        continue
+                    payload = raw[6:].strip()
+                    if payload == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(payload)
+                    except json.JSONDecodeError:
+                        continue
+                    delta = (chunk.get("choices") or [{}])[0].get("delta", {})
+                    content = delta.get("content") or ""
+                    rc = delta.get("reasoning_content") or ""
+                    if content:
+                        full_content += content
+                    if rc:
+                        reasoning += rc
+                    # Обновляем прогресс каждые ~2 секунды
+                    if content or rc:
+                        now_t = time.time()
+                        if now_t - last_store >= 2.0:
+                            last_store = now_t
+                            if rc:
+                                # Есть рассуждения модели — показываем их
+                                 asyncio.create_task(
+                                    _update_job_progress(job_id, "running", reasoning[-2000:])
+                                )
+                            else:
+                                # Нет рассуждений — показываем прогресс по объёму
+                                new_chars = len(full_content) - content_len_at_last_store
+                                content_len_at_last_store = len(full_content)
+                                pct = min(100, len(full_content) // 200)
+                                progress_msg = f"Обработано {len(full_content)} символов ответа…"
+                                asyncio.create_task(
+                                    _update_job_progress(job_id, "running", progress_msg)
+                                )
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"ИИ-сервис недоступен: {e.__class__.__name__}")
+
+    # Финальное сохранение прогресса (весь накопленный reasoning)
+    asyncio.create_task(_update_job_progress(job_id, "running", reasoning[-2000:] if reasoning else ""))
+
+    if not full_content and not reasoning:
+        # Провайдер не отдал ни одного content-чанка → fallback на обычный _ai_chat
+        logger.warning("Stream returned no content chunks, falling back to non-stream")
+        return await _ai_chat(messages, temperature=temperature, json_mode=json_mode, extra=extra)
+
+    return full_content
+
+
 async def _ai_start_job(current, kind, coro_factory):
-    """Долгие ИИ-запросы (>60 c) убивает ingress — выполняем в фоне, клиент опрашивает job."""
+    """Долгие ИИ-запросы (>60 c) убивает ingress — выполняем в фоне, клиент опрашивает job.
+
+    Немедленно выставляет статус ``running`` и пустой ``progress``, чтобы фронт
+    видел, что задача стартовала.
+    """
     job_id = str(uuid.uuid4())
+    now_iso = datetime.now(timezone.utc).isoformat()
     await db.ai_jobs.insert_one({
         "id": job_id, "telegram_id": current.get("telegram_id"), "kind": kind,
-        "status": "pending", "template": None, "error": None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "running", "progress": "", "template": None, "error": None,
+        "created_at": now_iso, "started_at": now_iso,
     })
 
     async def _run():
         try:
-            tpl = await coro_factory()
-            await db.ai_jobs.update_one({"id": job_id}, {"$set": {"status": "done", "template": tpl}})
+            tpl = await coro_factory(job_id)
+            await _update_job_progress(job_id, "done", progress="")
+            if tpl:
+                await db.ai_jobs.update_one({"id": job_id}, {"$set": {"template": tpl}})
         except HTTPException as e:
-            await db.ai_jobs.update_one({"id": job_id}, {"$set": {"status": "error", "error": str(e.detail)}})
+            await _update_job_progress(job_id, "error", progress="")
+            await db.ai_jobs.update_one({"id": job_id}, {"$set": {"error": str(e.detail)}})
         except Exception:
             logger.exception(f"AI job {job_id} failed")
+            await _update_job_progress(job_id, "error", progress="")
             await db.ai_jobs.update_one(
                 {"id": job_id},
-                {"$set": {"status": "error", "error": "Непредвиденная ошибка ИИ — попробуйте ещё раз"}})
+                {"$set": {"error": "Непредвиденная ошибка ИИ — попробуйте ещё раз"}}
+            )
 
     asyncio.create_task(_run())
-    return {"job_id": job_id, "status": "pending"}
+    return {"job_id": job_id, "status": "running"}
 
 
 @api_router.get("/ai/program/jobs/{job_id}")
@@ -6177,15 +7007,15 @@ async def ai_generate_program(payload: AiGenerateReq, current: dict = Depends(ge
     if qa_lines:
         extra = "\n\nОтветы пользователя на уточняющие вопросы (обязательно учти):\n" + "\n".join(qa_lines)
 
-    async def _factory():
-        content = await _ai_chat([
+    async def _factory(job_id):
+        content = await _ai_chat_stream([
             {"role": "system", "content": _AI_SYSTEM_GEN},
             {"role": "user", "content":
                 "Составь ПОЛНОЦЕННУЮ объёмную тренировочную программу по пожеланиям пользователя: "
                 "5–8 упражнений в каждый тренировочный день, с прогрессией по неделям. "
                 "Если пользователь не указал длительность — сделай 4 недели; не более 12 недель. "
                 f"Пожелания:\n{prompt[:4000]}{extra}"},
-        ], temperature=0.5)
+        ], job_id=job_id, temperature=0.5, kind="generate")
         data = _extract_json(content)
         return await _ai_build_template(data, current, "ai")
 
@@ -6209,8 +7039,8 @@ async def ai_refine_program(payload: AiRefineReq, current: dict = Depends(get_cu
         raise HTTPException(status_code=403, detail="Можно править только свои программы")
     current_json = json.dumps(_template_to_ai_json(doc), ensure_ascii=False, separators=(",", ":"))
 
-    async def _factory():
-        content = await _ai_chat([
+    async def _factory(job_id):
+        content = await _ai_chat_stream([
             {"role": "system", "content": _AI_SYSTEM_GEN},
             {"role": "user", "content":
                 "Вот ТЕКУЩАЯ тренировочная программа пользователя (JSON по схеме):\n"
@@ -6219,15 +7049,21 @@ async def ai_refine_program(payload: AiRefineReq, current: dict = Depends(get_cu
                 "Верни ПОЛНУЮ обновлённую программу по той же схеме. Измени ТОЛЬКО то, о чём просит "
                 "пользователь; всё остальное (название, недели, дни, упражнения, веса, подходы) сохрани "
                 "без изменений. Название и описание меняй только если пользователь явно попросил."},
-        ], temperature=0.3)
+        ], job_id=job_id, temperature=0.3, kind="refine")
         data = _extract_json(content)
         return await _ai_build_template(data, current, doc.get("source") or "ai", replace=doc)
 
     return await _ai_start_job(current, "refine", _factory)
 
 
-async def _ai_parse_text(text, current):
-    content = await _ai_chat([
+async def _ai_parse_text(text, current, job_id=None):
+    content = await _ai_chat_stream([
+        {"role": "system", "content": _AI_SYSTEM},
+        {"role": "user", "content":
+            "Разбери готовый план тренировок в структуру. Сохрани ВСЕ недели, дни, упражнения, "
+            "веса, проценты, подходы и повторы максимально близко к источнику. "
+            f"Источник:\n{text[:60000]}"},
+    ], job_id=job_id, temperature=0.1) if job_id else await _ai_chat([
         {"role": "system", "content": _AI_SYSTEM},
         {"role": "user", "content":
             "Разбери готовый план тренировок в структуру. Сохрани ВСЕ недели, дни, упражнения, "
@@ -6247,7 +7083,7 @@ async def ai_parse_program(payload: AiParseReq, current: dict = Depends(get_curr
     if len(text) < 20:
         raise HTTPException(status_code=400, detail="Вставьте текст плана (минимум 20 символов)")
     _ai_require_enabled()
-    return await _ai_start_job(current, "parse", lambda: _ai_parse_text(text, current))
+    return await _ai_start_job(current, "parse", lambda job_id: _ai_parse_text(text, current, job_id=job_id))
 
 
 @api_router.post("/ai/program/parse-file")
@@ -6318,8 +7154,11 @@ async def ai_parse_program_photo(files: list[UploadFile] = File(...),
     _ai_require_enabled()
     vcfg = _ai_vision_config()
     if not (vcfg["base_url"] and vcfg["api_key"]):
-        raise HTTPException(status_code=503,
-                            detail="Разбор по фото недоступен: не задан ключ Gemini")
+        # Если выделенный vision не настроен — используем основной AI провайдер
+        vcfg = _ai_config()
+        if not (vcfg["base_url"] and vcfg["api_key"]):
+            raise HTTPException(status_code=503,
+                                detail="Разбор по фото недоступен: не задан ключ AI-сервиса")
 
     import base64
     images = []
@@ -6350,15 +7189,18 @@ async def ai_parse_program_photo(files: list[UploadFile] = File(...),
     if not images:
         raise HTTPException(status_code=400, detail="Не удалось прочитать ни одно изображение")
 
-    async def _factory():
+    async def _factory(job_id):
         # Шаг 1: Gemini достаёт текст программы из изображений
+        await _update_job_progress(job_id, "running", "Распознаём фото через Gemini…")
         extracted = await _ai_chat_vision(_VISION_EXTRACT_PROMPT, images)
         extracted = (extracted or "").strip()
+        await _update_job_progress(job_id, "running",
+                                   "Фото распознаны, структурируем программу в DeepSeek…")
         if len(extracted) < 20:
             raise HTTPException(status_code=422,
                                 detail="Не удалось распознать программу на фото — проверьте качество снимков")
         # Шаг 2: DeepSeek структурирует извлечённый текст в шаблон
-        return await _ai_parse_text(extracted, current)
+        return await _ai_parse_text(extracted, current, job_id=job_id)
 
     return await _ai_start_job(current, "parse-photo", _factory)
 
@@ -6798,6 +7640,88 @@ async def diary_delete_session(session_id: str, current: dict = Depends(get_curr
     return {"ok": True}
 
 
+@api_router.post("/coach/{coach_id}/diary/{athlete_id}")
+async def coach_create_diary_session(coach_id: int, athlete_id: int,
+                                     payload: DiarySessionCreate,
+                                     current: dict = Depends(get_current_user)):
+    """Тренер создаёт дневниковую запись тренировки за подопечного."""
+    tgid = current["telegram_id"]
+    if tgid != coach_id:
+        raise HTTPException(status_code=403, detail="Нет доступа")
+    _assert_coach_mode(current)
+    # Проверяем, что тренер связан с этим спортсменом
+    link = await db.coach_links.find_one({
+        "coach_telegram_id": coach_id,
+        "athlete_telegram_id": athlete_id,
+        "status": "active",
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Этот спортсмен не ваш подопечный")
+
+    profile = await _diary_profile_get(athlete_id)
+    cat = await _diary_catalog(athlete_id)
+    items = [i.model_dump() for i in (payload.exercises or [])]
+    exs = [_diary_exercise_card(it, idx, cat) for idx, it in enumerate(items)]
+    exs = [e for e in exs if e.get("exercise_name")]
+    if not exs:
+        raise HTTPException(status_code=400, detail="Добавьте хотя бы одно упражнение")
+    now = datetime.now(timezone.utc).isoformat()
+    the_date = payload.date or datetime.now(timezone.utc).date().isoformat()
+    group, _diff_lbl = _day_group_difficulty(exs)
+    default_title = f"Тренировка · {group}" if group else "Тренировка"
+    session = {
+        "id": str(uuid.uuid4()),
+        "plan_id": None, "athlete_telegram_id": athlete_id, "coach_telegram_id": coach_id,
+        "mode": "diary", "week_index": None, "day_index": None,
+        "date": the_date, "title": (payload.title or default_title)[:80],
+        "status": "finished", "paused": False,
+        "started_by": "coach", "started_at": now, "finished_at": now,
+        "rpe": payload.rpe, "notes": payload.notes,
+        "raw_input": payload.raw_input, "source_input": payload.source_input or "coach_diary",
+        "exercises": exs, "ai_feedback": None,
+        "version": 0,
+        "last_event_at": now, "created_at": now, "updated_at": now,
+    }
+    diff = _diary_difficulty(session, profile)
+    session["difficulty_score"] = diff["score"]
+    session["stats"] = _session_stats(session)
+    await db.workout_sessions.insert_one(dict(session))
+    await _update_avg_difficulty(athlete_id)
+    logger.info(f"Coach diary session created: {session['id']} (coach={coach_id}, athlete={athlete_id})")
+    out = _serialize_session(session)
+    out["difficulty"] = diff
+    return out
+
+
+@api_router.get("/coach/{coach_id}/diary/{athlete_id}/history")
+async def coach_list_diary_sessions(coach_id: int, athlete_id: int,
+                                    limit: int = 50,
+                                    current: dict = Depends(get_current_user)):
+    """Тренер получает историю дневниковых записей подопечного."""
+    tgid = current["telegram_id"]
+    if tgid != coach_id:
+        raise HTTPException(status_code=403, detail="Нет доступа")
+    _assert_coach_mode(current)
+    link = await db.coach_links.find_one({
+        "coach_telegram_id": coach_id,
+        "athlete_telegram_id": athlete_id,
+        "status": "active",
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Этот спортсмен не ваш подопечный")
+
+    docs = await db.workout_sessions.find(
+        {"athlete_telegram_id": athlete_id, "mode": "diary"}, {"_id": 0}
+    ).sort("date", -1).to_list(min(200, max(1, limit)))
+    out = []
+    for s in docs:
+        item = _serialize_session(s)
+        if s.get("difficulty_score") is not None:
+            item["difficulty"] = {"score": s.get("difficulty_score")}
+        out.append(item)
+    return {"sessions": out}
+
+
 # --- ИИ-агент: разбор записи, анализ, недельные советы, чат, генерация -------
 _DIARY_PARSE_SCHEMA = ('{"title":"краткое название тренировки","exercises":[{"name":"название по-русски",'
                        '"muscle_group":"legs|chest|back|shoulders|biceps|triceps|core",'
@@ -6891,7 +7815,7 @@ async def diary_parse(payload: DiaryParseReq, current: dict = Depends(get_curren
         raise HTTPException(status_code=400, detail="Опишите тренировку подробнее")
     _ai_require_enabled()
 
-    async def _factory():
+    async def _factory(job_id):
         content = await _ai_chat([
             {"role": "system", "content": _DIARY_PARSE_SYSTEM},
             {"role": "user", "content": f"Запись пользователя (что он сделал на тренировке):\n{text[:4000]}"},
@@ -6919,7 +7843,7 @@ async def diary_analyze(payload: dict = Body(...), current: dict = Depends(get_c
     _ai_require_enabled()
     profile = await _diary_profile_get(current["telegram_id"])
 
-    async def _factory():
+    async def _factory(job_id):
         st = _get_session_stats(s)
         diff = _diary_difficulty(s, profile)
         exlines = []
@@ -6959,36 +7883,43 @@ async def diary_analyze(payload: dict = Body(...), current: dict = Depends(get_c
     return await _ai_start_job(current, "diary_analyze", _factory)
 
 
-@api_router.get("/diary/agent/weekly")
+@api_router.post("/diary/agent/weekly")
 async def diary_agent_weekly(current: dict = Depends(get_current_user)):
-    tgid = current["telegram_id"]
+    """Еженедельный разбор (фоновая задача). Клиент опрашивает GET /ai/program/jobs/{job_id}."""
+    _rate_limit(f"ai:{current['telegram_id']}", 30, 600,
+                "Слишком много запросов к ИИ. Попробуйте позже.")
     _ai_require_enabled()
-    profile = await _diary_profile_get(tgid)
-    vol = await _weekly_muscle_volume(tgid, 7)
-    vol_txt = ", ".join(f"{g['label']}: {g['sets']} подходов" for g in vol["groups"]) or "нет данных за неделю"
-    content = await _ai_chat([
-        {"role": "system", "content": _DIARY_WEEKLY_SYSTEM},
-        {"role": "user", "content": f"{_profile_context(profile)}\n\n"
-                                    f"ОБЪЁМ ЗА 7 ДНЕЙ ({vol['workouts']} тренировок): {vol_txt}."},
-    ], temperature=0.5)
-    data = _extract_json(content)
-    cat = await _diary_catalog(tgid)
-    recs = []
-    for r in (data.get("recommend_exercises") or [])[:6]:
-        nm = str(r.get("name") or "").strip()
-        if not nm:
-            continue
-        match = _resolve_catalog_ex(nm, None, cat)
-        recs.append({"name": (match or {}).get("name") or nm, "exercise_slug": (match or {}).get("slug"),
-                     "muscle_group": r.get("muscle_group"), "reason": str(r.get("reason") or "")[:200]})
-    return {
-        "volume": vol,
-        "assessment": str(data.get("assessment") or "")[:500],
-        "balance": [{"group": str(b.get("group") or ""), "status": b.get("status"),
-                     "note": str(b.get("note") or "")[:200]} for b in (data.get("balance") or [])[:8]],
-        "recommend_exercises": recs,
-        "advice": str(data.get("advice") or "")[:400],
-    }
+    tgid = current["telegram_id"]
+
+    async def _factory(job_id):
+        profile = await _diary_profile_get(tgid)
+        vol = await _weekly_muscle_volume(tgid, 7)
+        vol_txt = ", ".join(f"{g['label']}: {g['sets']} подходов" for g in vol["groups"]) or "нет данных за неделю"
+        content = await _ai_chat([
+            {"role": "system", "content": _DIARY_WEEKLY_SYSTEM},
+            {"role": "user", "content": f"{_profile_context(profile)}\n\n"
+                                        f"ОБЪЁМ ЗА 7 ДНЕЙ ({vol['workouts']} тренировок): {vol_txt}."},
+        ], temperature=0.5)
+        data = _extract_json(content)
+        cat = await _diary_catalog(tgid)
+        recs = []
+        for r in (data.get("recommend_exercises") or [])[:6]:
+            nm = str(r.get("name") or "").strip()
+            if not nm:
+                continue
+            match = _resolve_catalog_ex(nm, None, cat)
+            recs.append({"name": (match or {}).get("name") or nm, "exercise_slug": (match or {}).get("slug"),
+                         "muscle_group": r.get("muscle_group"), "reason": str(r.get("reason") or "")[:200]})
+        return {
+            "volume": vol,
+            "assessment": str(data.get("assessment") or "")[:500],
+            "balance": [{"group": str(b.get("group") or ""), "status": b.get("status"),
+                         "note": str(b.get("note") or "")[:200]} for b in (data.get("balance") or [])[:8]],
+            "recommend_exercises": recs,
+            "advice": str(data.get("advice") or "")[:400],
+        }
+
+    return await _ai_start_job(current, "diary_weekly", _factory)
 
 
 @api_router.get("/diary/agent/chat/{thread_id}")
@@ -7043,7 +7974,7 @@ async def diary_agent_next(payload: DiaryNextReq, current: dict = Depends(get_cu
     _ai_require_enabled()
     tgid = current["telegram_id"]
 
-    async def _factory():
+    async def _factory(job_id):
         profile = await _diary_profile_get(tgid)
         vol = await _weekly_muscle_volume(tgid, 7)
         vol_txt = ", ".join(f"{g['label']}: {g['sets']}" for g in vol["groups"]) or "нет данных"
@@ -7159,6 +8090,7 @@ async def get_clients_live_status(
     # Проверка прав
     if caller["telegram_id"] != coach_tg:
         raise HTTPException(403, "Access denied")
+    _assert_coach_mode(caller)
     
     # Получить всех клиентов (только активные связи)
     links = await db.coach_links.find({"coach_telegram_id": coach_tg, "status": "active"}).to_list(1000)

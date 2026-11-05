@@ -22,6 +22,7 @@ import {
   setAdminRole,
 } from "@/api";
 import { useAuth } from "@/context/AuthContext";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { useBackButton } from "@/hooks/useTelegramUI";
 import { haptic } from "@/lib/platform";
 import InviteManager from "@/components/InviteManager";
@@ -211,7 +212,10 @@ export default function Admin() {
   const [summary, setSummary] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
 
-  const roles = (authUser && authUser.roles) || [];
+  // Роли берём из capabilities (актуальные права), а не из кэша профиля:
+  // после снятия админа в админке старый authUser.roles оставлял доступ.
+  const { roles: capsRoles } = useCapabilities();
+  const roles = capsRoles.length ? capsRoles : (authUser && authUser.roles) || [];
   const isAdmin = roles.includes("admin");
 
   const loadUsers = useCallback(async () => {

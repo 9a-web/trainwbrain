@@ -3,7 +3,9 @@ import {
   Check, X, WandSparkles, ChevronDown, CheckCircle2, Trash2, Plus, MessageSquareText, Pencil, Layers, RotateCcw, UserCog,
 } from "lucide-react";
 import "./WorkoutView.css";
+import MuscleLiveMap from "./MuscleLiveMap";
 import Portal from "./Portal";
+import Collapse from "./Collapse";
 
 // ---------- helpers ----------
 export const fmtWeight = (w) => {
@@ -191,17 +193,48 @@ const SetList = ({ ex, editable, onSetLog }) => {
 // ---------- мини-график: динамика топового веса упражнения по неделям плана ----------
 const ForecastChart = ({ series, currentWeek }) => {
   const uid = React.useId();
+  const svgRef = useRef(null);
+  // Геометрия считается в реальных пикселях контейнера (viewBox = размер svg).
+  // Раньше было viewBox="0 0 150 56" + preserveAspectRatio="none": на телефоне
+  // график растягивался по X в 2.1 раза сильнее, чем по Y — линия становилась
+  // «жирной» и рваной, а точка текущей недели превращалась в овал 15×8 px.
+  const [box, setBox] = useState({ w: 150, h: 56 });
+  React.useLayoutEffect(() => {
+    const el = svgRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const w = Math.round(r.width * 100) / 100;
+      const h = Math.round(r.height * 100) / 100;
+      if (w > 0 && h > 0) setBox((b) => (b.w === w && b.h === h ? b : { w, h }));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   if (!series || series.length < 2) return null;
-  const W = 150;
-  const H = 56;
-  const pad = 8;
+  const n = series.length;
+  const W = box.w;
+  const H = box.h;
+  const pad = Math.min(14, Math.max(7, Math.round(H * 0.13)));
   const vals = series.map((p) => p.value);
   const min = Math.min(...vals);
   const max = Math.max(...vals);
-  const range = max - min || 1;
-  const n = series.length;
+  // Плоский ряд (вес одинаковый на всех неделях) раньше прижимался к нижнему
+  // краю: выходил пустой прямоугольник с линией по низу. Держим запас по
+  // вертикали и такой ряд центрируем.
+  const mid = (min + max) / 2;
+  const spread = max - min || Math.max(Math.abs(max) * 0.08, 1);
+  const lo = mid - spread / 2;
+  const hi = mid + spread / 2;
+  const baseY = H - pad;
   const xx = (i) => pad + (i / (n - 1)) * (W - 2 * pad);
-  const yy = (v) => (H - pad) - ((v - min) / range) * (H - 2 * pad);
+  const yy = (v) => baseY - ((v - lo) / (hi - lo)) * (H - 2 * pad);
   const pts = series.map((p, i) => [xx(i), yy(p.value)]);
   // Слегка скруглённая линия (Catmull-Rom -> Безье, мягкий коэффициент)
   const smooth = (points) => {
@@ -222,20 +255,28 @@ const ForecastChart = ({ series, currentWeek }) => {
     return d;
   };
   const line = smooth(pts);
-  const area = `${line} L${pts[n - 1][0].toFixed(1)},${H} L${pts[0][0].toFixed(1)},${H} Z`;
+  const area = `${line} L${pts[n - 1][0].toFixed(1)},${baseY.toFixed(1)} L${pts[0][0].toFixed(1)},${baseY.toFixed(1)} Z`;
   let curIdx = series.findIndex((p) => p.week === currentWeek);
   if (curIdx < 0) curIdx = n - 1;
   const solidPts = pts.slice(0, curIdx + 1);   // пройдено (до текущей недели включительно)
   const dashedPts = pts.slice(curIdx);         // предстоит (от текущей недели до конца)
   const gid = `fc-${uid.replace(/[^a-zA-Z0-9]/g, "")}`;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="forecast-svg" preserveAspectRatio="none" aria-hidden="true">
+    <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="forecast-svg" aria-hidden="true">
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FF8A24" stopOpacity="0.45" />
           <stop offset="100%" stopColor="#FF8A24" stopOpacity="0" />
         </linearGradient>
       </defs>
+      <line
+        x1={pad}
+        y1={baseY}
+        x2={W - pad}
+        y2={baseY}
+        stroke="rgba(255,255,255,0.14)"
+        strokeWidth="1"
+      />
       <path d={area} fill={`url(#${gid})`} />
       {dashedPts.length >= 2 ? (
         <path
@@ -298,7 +339,9 @@ const PlanRows = ({ sets, planSets, weightType }) => (
 );
 
 // ---------- карточка упражнения ----------
-const ExerciseCard = ({ ex, isPreview, onAction, onEdit, onSetLog, mode = "athlete", finished = false, readOnly = false, forecast, currentWeek, planSets }) => {
+// Открытая карточка — одна на весь экран: состоянием управляет WorkoutView,
+// поэтому раскрытие карточки автоматически сворачивает предыдущую.
+const ExerciseCard = ({ ex, isPreview, onAction, onEdit, onSetLog, mode = "athlete", finished = false, readOnly = false, forecast, currentWeek, planSets, isOpen = false, onToggle }) => {
   const meta = STATUS_META[ex.status] || STATUS_META.pending;
   const isActive = !isPreview && ex.status === "in_progress";
   const isFinishedCard = !isPreview && (ex.status === "done" || ex.status === "skipped");
@@ -308,16 +351,11 @@ const ExerciseCard = ({ ex, isPreview, onAction, onEdit, onSetLog, mode = "athle
   // По-подходный чек-лист — для основных упражнений в живой сессии
   const useSetList = !isPreview && !isAcc && Array.isArray(ex.set_logs) && ex.set_logs.length > 0;
 
-  // Активное упражнение раскрыто по умолчанию, остальные свёрнуты
-  const [open, setOpen] = useState(isActive);
-  // Если упражнение становится активным позже (данные сессии подгрузились
-  // или предыдущее упражнение завершено) — раскрываем его автоматически,
-  // не мешая ручным переключениям пользователя.
-  const wasActive = useRef(isActive);
-  useEffect(() => {
-    if (isActive && !wasActive.current) setOpen(true);
-    wasActive.current = isActive;
-  }, [isActive]);
+  // Открытость карточкой управляет WorkoutView (аккордеон: открыта одна).
+  // Если карточку отрисуют без внешнего состояния — работает локальное.
+  const [selfOpen, setSelfOpen] = useState(false);
+  const open = onToggle ? isOpen : selfOpen;
+  const toggleOpen = () => (onToggle ? onToggle(ex.order) : setSelfOpen((o) => !o));
 
   // Кнопки действий спортсмена: у основных — только у активного; у подсобных — пока не выполнено.
   // Когда тренировка завершена — действия скрыты (вернутся после «Продолжить»).
@@ -329,7 +367,13 @@ const ExerciseCard = ({ ex, isPreview, onAction, onEdit, onSetLog, mode = "athle
 
   return (
     <div className={`ex-card ${isActive ? "ex-card-active" : ""} ${ex.status === "done" ? "ex-card-done" : ""}`} data-testid={`exercise-card-${ex.order}`}>
-      <button type="button" className="ex-head" onClick={() => setOpen((o) => !o)}>
+      <button
+        type="button"
+        className="ex-head"
+        onClick={toggleOpen}
+        aria-expanded={open}
+        data-testid={`exercise-head-${ex.order}`}
+      >
         <div className="ex-head-left">
           <span className="ex-name">{ex.exercise_name}</span>
           <span className="ex-status-line">
@@ -445,55 +489,53 @@ const ExerciseCard = ({ ex, isPreview, onAction, onEdit, onSetLog, mode = "athle
         </div>
       ) : null}
 
-      {open ? (
-        <>
-          {isAcc ? (
-            <div className="ex-acc-body">
-              {ex.sets_scheme && ex.sets_scheme.length > 0 ? (
-                <div className="ex-plan">
-                  <PlanRows sets={ex.sets_scheme} planSets={planSets} weightType={ex.weight_type} />
-                </div>
-              ) : (
-                <div className="ex-acc-rec"><b>4 подхода</b></div>
-              )}
-            </div>
-          ) : (
-            <div className="ex-body">
+      <Collapse open={open}>
+        {isAcc ? (
+          <div className="ex-acc-body">
+            {ex.sets_scheme && ex.sets_scheme.length > 0 ? (
               <div className="ex-plan">
-                {useSetList ? (
-                  <SetList
-                    ex={ex}
-                    editable={!finished && !readOnly}
-                    onSetLog={onSetLog}
-                  />
-                ) : (
-                  <PlanRows sets={ex.sets_scheme} planSets={planSets} weightType={ex.weight_type} />
-                )}
-                <div className="ex-meta">
-                  <div className="ex-meta-row">Тоннаж: <b>{ex.tonnage}кг</b></div>
-                  {ex.muscle_letter ? <div className="ex-meta-row">Группа: <b>{ex.muscle_letter}</b></div> : null}
-                  {ex.difficulty ? <div className="ex-meta-row">Сложность: <b>{ex.difficulty}</b></div> : null}
-                </div>
+                <PlanRows sets={ex.sets_scheme} planSets={planSets} weightType={ex.weight_type} />
               </div>
-              {forecast && forecast.length >= 2 ? (
-                <div className="ex-forecast">
-                  <ForecastChart series={forecast} currentWeek={currentWeek} />
-                  <span className="ex-forecast-caption">Прогноз по плану</span>
-                </div>
-              ) : null}
-            </div>
-          )}
-          {ex.comment ? (
-            <div className="ex-comment" data-testid={`comment-${ex.order}`}>
-              <div className="ex-comment-head">
-                <MessageSquareText size={14} />
-                <span>Заметки</span>
+            ) : (
+              <div className="ex-acc-rec"><b>4 подхода</b></div>
+            )}
+          </div>
+        ) : (
+          <div className="ex-body">
+            <div className="ex-plan">
+              {useSetList ? (
+                <SetList
+                  ex={ex}
+                  editable={!finished && !readOnly}
+                  onSetLog={onSetLog}
+                />
+              ) : (
+                <PlanRows sets={ex.sets_scheme} planSets={planSets} weightType={ex.weight_type} />
+              )}
+              <div className="ex-meta">
+                <div className="ex-meta-row">Тоннаж: <b>{ex.tonnage}кг</b></div>
+                {ex.muscle_letter ? <div className="ex-meta-row">Группа: <b>{ex.muscle_letter}</b></div> : null}
+                {ex.difficulty ? <div className="ex-meta-row">Сложность: <b>{ex.difficulty}</b></div> : null}
               </div>
-              <p className="ex-comment-text">{ex.comment}</p>
             </div>
-          ) : null}
-        </>
-      ) : null}
+            {forecast && forecast.length >= 2 ? (
+              <div className="ex-forecast">
+                <ForecastChart series={forecast} currentWeek={currentWeek} />
+                <span className="ex-forecast-caption">Прогноз по плану</span>
+              </div>
+            ) : null}
+          </div>
+        )}
+        {ex.comment ? (
+          <div className="ex-comment" data-testid={`comment-${ex.order}`}>
+            <div className="ex-comment-head">
+              <MessageSquareText size={14} />
+              <span>Заметки</span>
+            </div>
+            <p className="ex-comment-text">{ex.comment}</p>
+          </div>
+        ) : null}
+      </Collapse>
     </div>
   );
 };
@@ -632,6 +674,51 @@ const WorkoutView = ({ view, isPreview = false, paused = false, mode = "athlete"
   const exercises = view.exercises || [];
   const mainExs = exercises.filter((e) => !e.is_accessory);
   const accExs = exercises.filter((e) => e.is_accessory);
+
+  // Аккордеон: открыта ровно одна карточка. Активное упражнение раскрывается
+  // само (в т.ч. когда предыдущее завершено и ход перешёл к следующему),
+  // а ручное раскрытие любой карточки закрывает предыдущую.
+  const activeOrder = React.useMemo(() => {
+    if (isPreview) return null;
+    const active = (view.exercises || []).find((e) => e.status === "in_progress");
+    return active ? active.order : null;
+  }, [isPreview, view.exercises]);
+  const [openOrder, setOpenOrder] = useState(activeOrder);
+  useEffect(() => {
+    if (activeOrder === null) return;
+    setOpenOrder((cur) => (cur === activeOrder ? cur : activeOrder));
+  }, [activeOrder]);
+
+  // Текущее открытие — в ref, чтобы обработчик клика не зависел от замыкания.
+  const openOrderRef = useRef(openOrder);
+  openOrderRef.current = openOrder;
+  const toggleCard = useCallback((order) => {
+    const prev = openOrderRef.current;
+    const next = prev === order ? null : order;
+    // Закрытие карточки выше сдвигает список вверх — подкручиваем страницу
+    // ровно на текущую высоту закрывающейся карточки (покадрово, в такт
+    // анимации), чтобы карточка под пальцем не «улетала» с экрана.
+    if (next !== null && prev !== null && prev !== next) {
+      const prevHead = document.querySelector(`[data-testid="exercise-head-${prev}"]`);
+      const nextHead = document.querySelector(`[data-testid="exercise-head-${order}"]`);
+      if (prevHead && nextHead && prevHead.getBoundingClientRect().top < nextHead.getBoundingClientRect().top) {
+        const prevBody = document.querySelector(`[data-testid="exercise-card-${prev}"] .ex-collapse`);
+        const h0 = prevBody ? prevBody.getBoundingClientRect().height : 0;
+        if (h0 > 24) {
+          const startY = window.scrollY;
+          let frames = 0;
+          const step = () => {
+            const h = prevBody.getBoundingClientRect().height;
+            window.scrollTo(0, Math.max(0, startY - (h0 - h)));
+            frames += 1;
+            if (h > 0.5 && frames < 60) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      }
+    }
+    setOpenOrder(next);
+  }, []);
 
   // Группируем основные упражнения по суперсетам
   const groupedMainExs = React.useMemo(() => {
@@ -808,6 +895,8 @@ const WorkoutView = ({ view, isPreview = false, paused = false, mode = "athlete"
                       forecast={forecastBySlug[ssEx.exercise_slug]}
                       currentWeek={currentWeek}
                       planSets={planSetsByOrder[ssEx.order]}
+                      isOpen={openOrder === ssEx.order}
+                      onToggle={toggleCard}
                     />
                     {!isLastInSuperset(idx) && (
                       <div className="wv-superset-arrow" data-testid={`superset-arrow-${idx}`}>
@@ -841,6 +930,8 @@ const WorkoutView = ({ view, isPreview = false, paused = false, mode = "athlete"
               forecast={forecastBySlug[ex.exercise_slug]}
               currentWeek={currentWeek}
               planSets={planSetsByOrder[ex.order]}
+              isOpen={openOrder === ex.order}
+              onToggle={toggleCard}
             />
           );
         })}
@@ -875,6 +966,8 @@ const WorkoutView = ({ view, isPreview = false, paused = false, mode = "athlete"
                   onAction={onAction}
                   onEdit={(e) => setEditing(e)}
                   planSets={planSetsByOrder[ex.order]}
+                  isOpen={openOrder === ex.order}
+                  onToggle={toggleCard}
                 />
               ))}
             </div>
@@ -901,6 +994,10 @@ const WorkoutView = ({ view, isPreview = false, paused = false, mode = "athlete"
           </div>
         </div>
       ) : null}
+
+      {/* Карта мышц — под всей тренировкой, в самом низу: подсвечивается
+          по мере выполнения упражнений */}
+      <MuscleLiveMap view={view} testPrefix="wv-muscles" />
 
       {editing ? (
         <EditExerciseModal ex={editing} onClose={() => setEditing(null)} onSave={handleSave} />

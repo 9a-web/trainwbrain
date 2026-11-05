@@ -60,6 +60,15 @@ export function AuthProvider({ children }) {
   // Инкремент на каждый вход: гарантирует, что «догоняющий» refresh()
   // не перезапишет пользователя/токен, только что полученные при логине.
   const authFlowRef = useRef(0);
+  // Telegram SDK загружается async — обновляем доступность Telegram сразу после
+  // его появления, чтобы кнопка входа через Telegram показалась.
+  const [tgAvailable, setTgAvailable] = useState(isTelegram());
+
+  useEffect(() => {
+    const onReady = () => setTgAvailable(isTelegram());
+    window.addEventListener("twb:telegram-ready", onReady);
+    return () => window.removeEventListener("twb:telegram-ready", onReady);
+  }, []);
 
   const refresh = useCallback(async () => {
     const startedToken = getAuthToken();
@@ -215,6 +224,13 @@ export function AuthProvider({ children }) {
       saveUser(next);
       return next;
     });
+    // Все инстансы useCapabilities перечитывают active_mode/permissions,
+    // чтобы AppShell сразу переключил главный экран (спортсмен/тренер/клиент).
+    try {
+      window.dispatchEvent(new CustomEvent("twb:capabilities-changed", { detail: { mode } }));
+    } catch (e) {
+      /* no-op */
+    }
     return updated;
   }, [authUser?.telegram_id]);
 
@@ -223,7 +239,7 @@ export function AuthProvider({ children }) {
       authUser,
       loading,
       isAuthenticated: !!authUser,
-      isTelegramAvailable: isTelegram(),
+      isTelegramAvailable: tgAvailable,
       loginEmail,
       registerEmail,
       loginTelegram,
@@ -237,6 +253,7 @@ export function AuthProvider({ children }) {
     [
       authUser,
       loading,
+      tgAvailable,
       loginEmail,
       registerEmail,
       loginTelegram,

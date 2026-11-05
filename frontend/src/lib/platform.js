@@ -7,9 +7,15 @@
  * so components stay clean and degrade gracefully everywhere.
  */
 
-const tg =
-  (typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp) ||
-  null;
+// The Telegram WebApp SDK is loaded with `async` (see public/index.html) so a
+// slow/unreachable telegram.org never blocks first paint. So we must not capture
+// window.Telegram at module load: read it lazily and, where needed, wait for it.
+function getTg() {
+  return (
+    (typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp) ||
+    null
+  );
+}
 
 /**
  * In a normal browser the Telegram SDK (if loaded) still creates
@@ -17,6 +23,7 @@ const tg =
  * A real Telegram client provides a real platform and/or user/init data.
  */
 export function isTelegram() {
+  const tg = getTg();
   if (!tg) return false;
   const hasUser = !!(tg.initDataUnsafe && tg.initDataUnsafe.user);
   const realPlatform = !!(tg.platform && tg.platform !== "unknown");
@@ -39,19 +46,22 @@ export function getEnv() {
 
 /** Telegram platform string: ios | android | tdesktop | macos | web | weba | "web" (fallback). */
 export function getPlatform() {
+  const tg = getTg();
   return (tg && tg.platform) || "web";
 }
 
 export function getTelegram() {
-  return tg;
+  return getTg();
 }
 
 export function getTelegramUser() {
+  const tg = getTg();
   return (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 }
 
 /** start_param from a deep link: https://t.me/<bot>?startapp=<param> */
 export function getStartParam() {
+  const tg = getTg();
   return (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || null;
 }
 
@@ -96,6 +106,7 @@ export function setWebUserName(name) {
 // Haptics (safe no-op fallback off-Telegram)
 // ---------------------------------------------------------------------------
 export function haptic(style = "light") {
+  const tg = getTg();
   try {
     tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred && tg.HapticFeedback.impactOccurred(style);
   } catch (e) {
@@ -104,6 +115,7 @@ export function haptic(style = "light") {
 }
 
 export function hapticNotify(type = "success") {
+  const tg = getTg();
   try {
     tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred && tg.HapticFeedback.notificationOccurred(type);
   } catch (e) {
@@ -112,6 +124,7 @@ export function hapticNotify(type = "success") {
 }
 
 export function hapticSelection() {
+  const tg = getTg();
   try {
     tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged && tg.HapticFeedback.selectionChanged();
   } catch (e) {
@@ -123,14 +136,17 @@ export function hapticSelection() {
 // Telegram theme (respect Telegram colors, keep brand dark header/background)
 // ---------------------------------------------------------------------------
 export function getThemeParams() {
+  const tg = getTg();
   return (tg && tg.themeParams) || {};
 }
 
 export function getColorScheme() {
+  const tg = getTg();
   return (tg && tg.colorScheme) || "dark";
 }
 
 export function applyTheme() {
+  const tg = getTg();
   if (!tg) return;
   try {
     const tp = tg.themeParams || {};
@@ -148,11 +164,13 @@ export function applyTheme() {
 }
 
 export function onThemeChange(cb) {
+  const tg = getTg();
   if (!tg || !tg.onEvent) return () => {};
   tg.onEvent("themeChanged", cb);
   return () => {
     try {
-      tg.offEvent("themeChanged", cb);
+      const t = getTg();
+      t && t.offEvent && t.offEvent("themeChanged", cb);
     } catch (e) {
       /* no-op */
     }
@@ -167,8 +185,22 @@ let deferredPrompt = null;
 export function initPlatform() {
   if (typeof window === "undefined") return;
 
-  // Telegram enhancement
-  if (tg) {
+  const exposeEnv = () => {
+    try {
+      const html = document.documentElement;
+      html.setAttribute("data-env", getEnv());
+      html.setAttribute("data-platform", getPlatform());
+    } catch (e) {
+      /* no-op */
+    }
+  };
+
+  // Telegram enhancement: run when the SDK becomes available. Because the script
+  // is loaded `async`, window.Telegram.WebApp might appear a moment after React
+  // boots, so we retry for a short window and notify listeners when detected.
+  const enhanceTelegram = () => {
+    const tg = getTg();
+    if (!tg) return;
     try {
       tg.ready();
       tg.expand();
@@ -177,16 +209,27 @@ export function initPlatform() {
     } catch (e) {
       /* no-op */
     }
+    exposeEnv();
+    window.dispatchEvent(new CustomEvent("twb:telegram-ready"));
+  };
+  enhanceTelegram();
+  if (!getTg()) {
+    let tries = 0;
+    const id = window.setInterval(() => {
+      tries += 1;
+      if (getTg()) {
+        window.clearInterval(id);
+        enhanceTelegram();
+      } else if (tries >= 40) {
+        // ~4s: no Telegram SDK — stay a plain website (graceful).
+        window.clearInterval(id);
+        exposeEnv();
+      }
+    }, 100);
   }
 
   // Expose environment on <html> for optional CSS hooks
-  try {
-    const html = document.documentElement;
-    html.setAttribute("data-env", getEnv());
-    html.setAttribute("data-platform", getPlatform());
-  } catch (e) {
-    /* no-op */
-  }
+  exposeEnv();
 
   // Capture the install prompt so we can offer a custom "Install" affordance
   window.addEventListener("beforeinstallprompt", (e) => {

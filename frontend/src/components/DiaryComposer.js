@@ -7,6 +7,7 @@ import {
   pollDiaryJob,
   getExercises,
 } from "@/api";
+import { addBgJob, removeBgJob } from "@/hooks/useBackgroundJobs";
 import "@/components/Diary.css";
 
 const emptyGroup = () => ({ weight: "", sets: "3", reps: "10" });
@@ -223,7 +224,9 @@ const DiaryComposer = ({ open, onClose, date, onSaved, prefill }) => {
     setBusyMsg("ИИ распознаёт запись...");
     try {
       const { job_id } = await diaryParse(text.trim());
+      addBgJob({ id: job_id, kind: "diary_parse", preview: "Распознавание тренировки" });
       const job = await pollDiaryJob(job_id);
+      removeBgJob(job_id);
       if (job.status !== "done" || !job.template) {
         throw new Error(job.error || "Не удалось распознать");
       }

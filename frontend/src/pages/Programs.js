@@ -286,6 +286,9 @@ const Programs = () => {
   }, [user?.telegram_id]);
 
   // Автоопенер конфига после навигации из ИИ-просмотра (state.assignTemplateId)
+  // `assign` объявлен ниже в компоненте; не добавляем его в deps, чтобы не
+  // читать const до инициализации во время рендера.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const targetId = location.state?.assignTemplateId;
     if (!targetId || !templates.length || !user?.telegram_id) return;
@@ -307,6 +310,7 @@ const Programs = () => {
         : [1];
       assign(tpl, { training_days: defaultDays });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templates, location.state, user?.telegram_id]);
 
   const myTemplates = templates.filter((t) => !t.is_builtin);

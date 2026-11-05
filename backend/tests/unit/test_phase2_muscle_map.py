@@ -103,7 +103,7 @@ def test_empty_period_all_regions_neutral():
         assert r["working_sets"] == 0
         assert r["sessions"] == 0
         assert r["intensity_0_1"] == 0.0
-    assert agg["totals"] == {"volume": 0, "sets": 0, "sessions": 0}
+    assert agg["totals"] == {"tonnage": 0, "volume": 0, "sets": 0, "sessions": 0}
     assert agg["imbalance"] == []
 
 
@@ -139,8 +139,9 @@ def test_legacy_session_without_set_logs_uses_tonnage():
     }
     agg = _build_muscle_map([_session("s2", [ex])], CATALOG["by_id"], CATALOG["by_slug"])
     assert agg["regions"]["quads"]["volume_kg"] == 6000
-    assert agg["regions"]["quads"]["working_sets"] == 2  # число строк sets_scheme
-    assert agg["regions"]["hamstrings"]["working_sets"] == 1  # round(2*0.6)
+    # подходы считаются по схеме (Σ sets = 6), а не по числу строк
+    assert agg["regions"]["quads"]["working_sets"] == 6
+    assert agg["regions"]["hamstrings"]["working_sets"] == 4  # round(6*0.6)
 
 
 def test_skipped_and_undone_sets_ignored():
@@ -168,7 +169,7 @@ def test_unknown_exercise_ignored():
     ex = {"status": "done", "exercise_slug": "alien-exercise",
           "set_logs": [{"done": True, "weight": 100, "reps": 10}]}
     agg = _build_muscle_map([_session("s5", [ex])], {}, {})
-    assert agg["totals"] == {"volume": 0, "sets": 0, "sessions": 0}
+    assert agg["totals"] == {"tonnage": 0, "volume": 0, "sets": 0, "sessions": 0}
 
 
 def test_sessions_counted_across_workouts():

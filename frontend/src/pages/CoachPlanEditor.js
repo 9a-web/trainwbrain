@@ -14,6 +14,7 @@ import Portal from "@/components/Portal";
 import SupersetGroup from "@/components/SupersetGroup";
 import ExerciseHistoryModal from "@/components/ExerciseHistoryModal";
 import { haptic, hapticNotify } from "@/lib/platform";
+import { useCapabilities } from "@/hooks/useCapabilities";
 import { useBackButton } from "@/hooks/useTelegramUI";
 import "./Coach.css";
 
@@ -274,6 +275,12 @@ export default function CoachPlanEditor() {
   const location = useLocation();
   const requestedWeek = location.state?.week;  // открыть редактор сразу на этой неделе
   useBackButton(true, () => navigate(`/coach/${aid}`));
+  // Страховка: тренерские экраны доступны только в режиме тренера.
+  const { loading: capsLoading, coachMode } = useCapabilities();
+  useEffect(() => {
+    if (!capsLoading && !coachMode) navigate("/", { replace: true });
+  }, [capsLoading, coachMode, navigate]);
+
 
   const [athlete, setAthlete] = useState(null);
   const [plan, setPlan] = useState(null);
@@ -306,7 +313,7 @@ export default function CoachPlanEditor() {
     } finally {
       setLoading(false);
     }
-  }, [coachId, aid, requestedWeek]);
+  }, [coachId, aid, requestedWeek, selectedWeek]);
 
   useEffect(() => {
     load();

@@ -131,6 +131,12 @@ export const startSession = (payload) =>
   client.post(`/sessions/start`, payload).then((r) => r.data);
 export const getSession = (id) =>
   client.get(`/sessions/${id}`).then((r) => r.data);
+export const getSessionMuscleLoad = (id, params) =>
+  client.get(`/sessions/${id}/muscle-load`, { params }).then((r) => r.data);
+export const getSessionMuscleMap = (id, params) =>
+  client.get(`/sessions/${id}/muscle-map`, { params }).then((r) => r.data);
+export const listSessionHistory = (_telegramId, params) =>
+  client.get(`/sessions/history`, { params }).then((r) => r.data);
 export const getActiveSession = (params) =>
   client.get(`/sessions/active`, { params }).then((r) => r.data);
 export const sessionExerciseAction = (id, order, action, actor, by) =>
@@ -157,6 +163,11 @@ export const resumeSession = (id) =>
   client.post(`/sessions/${id}/resume`).then((r) => r.data);
 export const pauseSession = (id, resume) =>
   client.post(`/sessions/${id}/pause`, null, { params: { resume } }).then((r) => r.data);
+
+// ИИ-разбор мышц по тренировке (контракт muscle_load_v1)
+// getSessionMuscleLoad объявлен выше и принимает optional params.
+export const analyzeSessionMuscles = (id) =>
+  client.post(`/sessions/${id}/muscle-load/analyze`).then((r) => r.data);
 
 // --- Статистика ---
 export const getStats = (telegramId) =>
@@ -236,6 +247,10 @@ export const getCoachClientSession = (coachId, athleteId) =>
   client.get(`/coach/${coachId}/clients/${athleteId}/session`).then((r) => r.data);
 export const getAthleteCoach = (telegramId) =>
   client.get(`/athlete/${telegramId}/coach`).then((r) => r.data);
+export const coachCreateDiarySession = (coachId, athleteId, payload) =>
+  client.post(`/coach/${coachId}/diary/${athleteId}`, payload).then((r) => r.data);
+export const coachListDiarySessions = (coachId, athleteId, params) =>
+  client.get(`/coach/${coachId}/diary/${athleteId}/history`, { params }).then((r) => r.data);
 export const setPlanVisibility = (planId, visibility) =>
   client.patch(`/plans/${planId}/visibility`, { visibility }).then((r) => r.data);
 export const publishPlanWeek = (planId, week, published) =>
@@ -282,6 +297,8 @@ export const revokeInvite = (id) =>
   client.post(`/invites/${encodeURIComponent(id)}/revoke`).then((r) => r.data);
 export const redeemInvite = (code) =>
   client.post(`/invites/redeem`, { code }).then((r) => r.data);
+export const checkInvite = (code) =>
+  client.post(`/invites/check`, { code }).then((r) => r.data);
 
 // --- Фаза 1: админ-панель ---
 export const getAdminSummary = () =>
@@ -321,6 +338,20 @@ export const parseCardioPhoto = (file, onProgress) => {
     .then((r) => r.data);
 };
 
+/**
+ * Фоновый разбор фото кардио-тренажёра.
+ * Возвращает { job_id, status: "running" }. Опрашивать через getAiJob.
+ */
+export const parseCardioPhotoBg = (file) => {
+  const fd = new FormData();
+  fd.append("files", file);
+  return client
+    .post(`/cardio/parse-photo-bg`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data);
+};
+
 export default client;
 
 // --- Дневник (Diary) + ИИ-агент ---
@@ -343,7 +374,7 @@ export const diaryParse = (text) =>
 export const diaryAnalyze = (session_id) =>
   client.post(`/diary/analyze`, { session_id }).then((r) => r.data);
 export const diaryWeekly = () =>
-  client.get(`/diary/agent/weekly`).then((r) => r.data);
+  client.post(`/diary/agent/weekly`).then((r) => r.data);
 export const diaryChat = (message, thread_id) =>
   client.post(`/diary/agent/chat`, { message, ...(thread_id ? { thread_id } : {}) }).then((r) => r.data);
 export const getDiaryChat = (threadId) =>

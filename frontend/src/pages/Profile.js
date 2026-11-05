@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Users, UserCog, Dumbbell, Link2, X, BarChart3, ChevronRight, Bell, Calculator, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LogOut, Users, UserCog, UserRound, Dumbbell, Link2, X, BarChart3, ChevronRight, Bell, Calculator, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useUser } from "@/context/UserContext";
@@ -28,7 +28,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { authUser, logout, switchMode } = useAuth();
   const { avatarUrl, env, platform } = useUser();
-  const { roles } = useCapabilities();
+  const { roles, capabilities } = useCapabilities();
 
   useBackButton(true, () => navigate(-1));
 
@@ -37,18 +37,30 @@ export default function Profile() {
   const userRoles = (authUser && authUser.roles) || ["athlete"];
   // Приоритет у capabilities; фолбэк — роли из профиля пользователя.
   const effectiveRoles = capsRoles.length ? capsRoles : userRoles;
-  const activeMode = (authUser && authUser.active_mode) || "athlete";
-  const isCoach = effectiveRoles.includes("coach") || activeMode === "coach";
+  const activeMode =
+    (capabilities && capabilities.active_mode) || (authUser && authUser.active_mode) || "athlete";
+  // Роли — постоянные права аккаунта. Тренерские разделы показываем только
+  // когда ВКЛЮЧЁН режим тренера, иначе «Подопечные» и «Кабинет тренера»
+  // висели в профиле спортсмена просто потому, что роль coach не снимается.
   const isAdmin = effectiveRoles.includes("admin");
+  // Переключатель режима виден только тем, у кого роль coach действительно есть
+  // (выдана админом или получена через код тренера). Иначе кнопка «Тренер» сама
+  // выдавала роль coach на бэкенде, и тренерские разделы оставались навсегда.
+  const hasCoachRole = effectiveRoles.includes("coach");
+  const isCoachMode = (hasCoachRole || isAdmin) && activeMode === "coach";
+  // Управляемый клиент не переключает режимы: его ведёт тренер.
+  const isManagedClient =
+    capabilities?.access_tier === "coach_managed" && !effectiveRoles.includes("coach");
   const providers = (authUser && authUser.auth_provider) || [];
 
   // Фаза 1: определяем режим пользователя по capabilities / roles
   const modeLabel = useMemo(() => {
+    if (activeMode === "client") return "Клиент (предпросмотр)";
     if (isAdmin) return "Админ";
-    if (isCoach) return "Тренер";
+    if (isCoachMode) return "Тренер";
     if (activeMode === "athlete") return "Самостоятельно";
     return "С подопечным тренером";
-  }, [isAdmin, isCoach, activeMode]);
+  }, [isAdmin, isCoachMode, activeMode]);
 
   const [clients, setClients] = useState([]);
   const [invite, setInvite] = useState(null);
@@ -58,7 +70,7 @@ export default function Profile() {
   const [modeBusy, setModeBusy] = useState(false);
 
   const loadCoachData = useCallback(async () => {
-    if (!coachId || !isCoach) {
+    if (!coachId || !isCoachMode) {
       setClients([]);
       return;
     }
@@ -72,7 +84,7 @@ export default function Profile() {
     } catch (e) {
       /* no-op */
     }
-  }, [coachId, isCoach]);
+  }, [coachId, isCoachMode]);
 
   useEffect(() => {
     loadCoachData();
@@ -97,9 +109,23 @@ export default function Profile() {
     haptic("light");
     setModeBusy(true);
     try {
+      if (mode === "client") {
+        try {
+          window.localStorage.setItem("twb:preview_return_mode", activeMode);
+        } catch (e) {
+          /* no-op */
+        }
+      }
       await switchMode(mode);
       hapticNotify("success");
-      toast.success(mode === "coach" ? "Режим тренера включён" : "Режим спортсмена");
+      toast.success(
+        mode === "coach"
+          ? "Режим тренера включён"
+          : mode === "client"
+          ? "Режим клиента: предпросмотр"
+          : "Режим спортсмена"
+      );
+      if (mode === "client") navigate("/");
     } catch (e) {
       toast.error("Не удалось переключить режим");
     } finally {
@@ -200,9 +226,12 @@ export default function Profile() {
         >
           <span className="profile-nav-left">
             <span className="profile-nav-ic">
-              <ShieldCheck size={18} />
+              <ShieldCheck size={17} />
             </span>
-            Админ-панель
+            <span className="profile-nav-body">
+              <span className="profile-nav-title">Админ-панель</span>
+              <span className="profile-nav-sub">Пользователи, права, приглашения</span>
+            </span>
           </span>
           <ChevronRight size={18} className="profile-nav-chev" />
         </button>
@@ -247,8 +276,13 @@ export default function Profile() {
         <ChevronRight size={18} className="profile-nav-chev" />
       </button>
 
-      {/* Режим: спортсмен / тренер */}
-      <div className="profile-section" data-testid="profile-mode">
+      {/* Режим: спортсмен / тренер / клиент.
+          Переключатель видят только те, у кого есть кабинет тренера: у обычного
+          спортсмена кнопка «Тренер» сама выдавала роль coach на бэкенде, и после
+          этого тренерские разделы оставались в интерфейсе навсегда.
+          Managed-клиента ведёт тренер — у него режим один. */}
+      {!isManagedClient && (hasCoachRole || isAdmin) ? (
+        <div className="profile-section" data-testid="profile-mode">
         <span className="profile-section-title">
           <UserCog size={16} /> Режим
         </span>
@@ -269,11 +303,25 @@ export default function Profile() {
           >
             <Users size={15} /> Тренер
           </button>
+          <button
+            className={`mode-btn ${activeMode === "client" ? "active" : ""}`}
+            onClick={() => setMode("client")}
+            disabled={modeBusy}
+            data-testid="mode-client"
+            title="Предпросмотр интерфейса клиента — права не меняются"
+          >
+            <UserRound size={15} /> Клиент
+          </button>
         </div>
+        <p className="profile-mode-hint">
+          «Клиент» показывает приложение глазами вашего клиента: только прогресс,
+          история и план без редактирования.
+        </p>
       </div>
+      ) : null}
 
-      {/* Подопечные (для тренера) */}
-      {isCoach ? (
+      {/* Подопечные — только в режиме тренера */}
+      {isCoachMode ? (
         <div className="profile-section" data-testid="profile-clients">
           <div className="profile-section-head">
             <span className="profile-section-title">
@@ -325,7 +373,8 @@ export default function Profile() {
         </div>
       ) : null}
 
-      {/* Мой тренер (для спортсмена) */}
+      {/* Мой тренер (для спортсмена) — в режиме тренера этот блок не нужен */}
+      {!isCoachMode ? (
       <div className="profile-section" data-testid="profile-mycoach">
         <span className="profile-section-title">
           <Link2 size={16} /> Мой тренер
@@ -368,6 +417,7 @@ export default function Profile() {
           </div>
         )}
       </div>
+      ) : null}
 
       <div className="profile-meta">
         <div className="profile-meta-row">

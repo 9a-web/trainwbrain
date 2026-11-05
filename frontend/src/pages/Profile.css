@@ -3,6 +3,9 @@
   min-height: 100dvh;
   background-color: #1c1c1c;
   padding: 0 20px 40px;
+  /* Страница не должна уезжать вбок: длинные строки/кнопки обрезаются,
+     а не растягивают документ. */
+  overflow-x: hidden;
 }
 
 .profile-header {
@@ -103,12 +106,23 @@
   box-shadow: 0 6px 18px rgba(255, 107, 0, 0.25);
 }
 
-.profile-nav-admin .profile-nav-ic {
-  background: rgba(255, 107, 107, 0.14);
-  color: #ff8585;
+/* Двухстрочная подпись: заголовок + пояснение */
+.profile-nav-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
-.profile-nav-admin:hover {
-  border-color: rgba(255, 107, 107, 0.35);
+.profile-nav-title {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+}
+.profile-nav-sub {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #8a8a8a;
 }
 
 .profile-meta {
@@ -203,6 +217,37 @@
 }
 .profile-nav-chev { color: rgba(255, 255, 255, 0.4); flex: 0 0 auto; }
 .profile-nav:hover .profile-nav-chev { color: #ff8a24; }
+
+/* Админ-панель: акцентная карточка с подписью (дизайн перенесён с главного экрана) */
+.profile-nav-admin {
+  padding: 12px 16px;
+  gap: 12px;
+  background: rgba(255, 210, 74, 0.05);
+  border-color: rgba(255, 210, 74, 0.16);
+}
+.profile-nav-admin:hover {
+  background: rgba(255, 210, 74, 0.09);
+  border-color: rgba(255, 210, 74, 0.4);
+}
+.profile-nav-admin .profile-nav-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  background: rgba(255, 210, 74, 0.12);
+  color: #ffd24a;
+}
+.profile-nav-admin .profile-nav-left {
+  gap: 10px;
+}
+.profile-nav-admin .profile-nav-chev {
+  color: #6b6b6b;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.profile-nav-admin:hover .profile-nav-chev {
+  color: #ff8a24;
+  transform: translateX(2px);
+}
+
 .profile-section-head {
   display: flex;
   align-items: center;
@@ -279,6 +324,13 @@
   color: #1c1c1c;
 }
 .mode-btn:disabled { opacity: 0.7; cursor: default; }
+.mode-btn { font-size: 13px; padding: 10px 6px; }
+.profile-mode-hint {
+  margin: 10px 2px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.42);
+}
 
 /* Аватарки подопечных */
 .clients-avatars {
@@ -287,6 +339,7 @@
   overflow-x: auto;
   padding: 4px 2px 6px;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 .clients-avatars::-webkit-scrollbar { display: none; }
 .client-ava {
@@ -362,6 +415,9 @@
 }
 .mycoach-input {
   flex: 1;
+  /* Без min-width: 0 поле ввода не сжимается ниже своей intrinsic-ширины
+     и выталкивает кнопку за пределы экрана на узких телефонах. */
+  min-width: 0;
   background: #1f1f1f;
   border: 1px solid #3a3a3a;
   border-radius: 12px;
@@ -373,6 +429,8 @@
 }
 .mycoach-input::placeholder { color: rgba(255, 255, 255, 0.35); letter-spacing: 0; text-transform: none; }
 .mycoach-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
   background: linear-gradient(-34deg, #FF8A24, #FFDA24);
   color: #1c1c1c;
   border: none;

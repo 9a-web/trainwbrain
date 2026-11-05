@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, Component } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Dumbbell, Flame, CalendarDays, Clock,
@@ -18,11 +18,14 @@ import {
   getMuscleMap, getCoachClientMuscleMap,
   getCardioStats,
 } from "@/api";
+import { PERIODS, DEFAULT_PERIOD } from "@/lib/period";
+import StatsPeriodBar from "@/components/StatsPeriodBar";
 import MuscleGroupsChart from "@/components/MuscleGroupsChart";
 import MuscleMapCard from "@/components/MuscleMap";
 import "./Stats.css";
 
 const PIE_COLORS = ["#FF8A24", "#FFDA24", "#36C5F0", "#A78BFA", "#34D399", "#FB7185"];
+const PERIOD_LABELS = { week: "Неделя", month: "Месяц", quarter: "Квартал", year: "Год", all: "Всё время" };
 
 const fmtTon = (kg) => {
   const n = Number(kg) || 0;
@@ -62,7 +65,7 @@ const PROG_METRICS = [
 function ChartTooltip({ active, payload, label, unit }) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="stats-tt">
+    <div className="stats-tt" role="status">
       <div className="stats-tt-label">{label}</div>
       {payload.map((p) => (
         <div className="stats-tt-row" key={p.dataKey || p.name}>
@@ -115,6 +118,8 @@ function TabChips({ tabs, active, onChange, testPrefix }) {
       {tabs.map((t) => (
         <button
           key={t.key}
+          type="button"
+          aria-pressed={active === t.key}
           className={`stats-tab-chip ${active === t.key ? "active" : ""}`}
           onClick={() => onChange(t.key)}
           data-testid={`${testPrefix}-${t.key}`}
@@ -169,20 +174,26 @@ const CARDIO_TYPE_ICONS = {
  * Фаза 3 — сводка кардио для статистики атлета и подопечного у тренера.
  * Показывает недельную норму и её выполнение (compliance).
  */
-function CardioStatsCard({ fetchStats, testPrefix = "cardio" }) {
-  const [period, setPeriod] = useState("week");
+function CardioStatsCard({ fetchStats, testPrefix = "cardio", period, onPeriodChange }) {
+  const resolvedPeriod = period || "week";
+  const [localPeriod, setLocalPeriod] = useState(resolvedPeriod);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Sync from parent when provided
+  useEffect(() => { if (period) setLocalPeriod(period); }, [period]);
+
+  const activePeriod = period || localPeriod;
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    fetchStats({ period })
+    fetchStats({ period: activePeriod })
       .then((d) => { if (alive) setData(d); })
       .catch(() => { if (alive) setData(null); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [fetchStats, period]);
+  }, [fetchStats, activePeriod, period]);
 
   if (loading && !data) {
     return <div className="stats-skel-block h150" data-testid={`${testPrefix}-loading`} />;
@@ -206,8 +217,9 @@ function CardioStatsCard({ fetchStats, testPrefix = "cardio" }) {
         {weeks.map((w) => (
           <button
             key={w.key} type="button"
-            className={period === w.key ? "on" : ""}
-            onClick={() => setPeriod(w.key)}
+            aria-pressed={activePeriod === w.key}
+            className={activePeriod === w.key ? "on" : ""}
+            onClick={() => { if (onPeriodChange) onPeriodChange(w.key); setLocalPeriod(w.key); }}
             data-testid={`${testPrefix}-period-${w.key}`}
           >
             {w.label}
@@ -264,11 +276,47 @@ function CardioStatsCard({ fetchStats, testPrefix = "cardio" }) {
   );
 }
 
-function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed, fetchProgress, fetchMuscleMap, fetchCardio, telegramId, coachId }) {
+
+/** Локальный error boundary для отлова краша в одном блоке, не роняя всю страницу. */
+class StatsErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      console.error("StatsErrorBoundary caught:", this.state.error);
+      return (
+        <section className="stats-card" style={{ borderColor: "#FB718544", padding: 16, marginTop: 12 }}>
+          <p style={{ color: "#FB7185", fontSize: 13 }}>
+            Не удалось загрузить этот блок. Ошибка: {this.state.error.message}
+          </p>
+          <button
+            className="stats-scope-btn"
+            onClick={() => this.setState({ error: null })}
+            style={{ marginTop: 8 }}
+          >
+            Повторить
+          </button>
+        </section>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+
+function StatsView({ name, avatar, subtitle, onBack, onOpenSession, fetchPlanId, fetchDetailed, fetchProgress, fetchMuscleMap, fetchCardio, telegramId, coachId }) {
   const [scope, setScope] = useState("plan"); // 'plan' | 'all'
   const [planId, setPlanId] = useState(undefined); // undefined=loading, null=none
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [progress, setProgress] = useState(null);
   const [selectedSlug, setSelectedSlug] = useState(null);
   const [dynTab, setDynTab] = useState("tonnage");
@@ -285,20 +333,21 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
   }, [fetchPlanId]);
 
   const planParams = useMemo(
-    () => (scope === "plan" && planId ? { plan_id: planId } : {}),
-    [scope, planId]
+    () => ({ period, ...(scope === "plan" && planId ? { plan_id: planId } : {}) }),
+    [period, scope, planId]
   );
 
   useEffect(() => {
     if (planId === undefined) return undefined;
     let alive = true;
     setLoading(true);
+    setLoadError(false);
     fetchDetailed(planParams)
       .then((d) => { if (alive) setData(d); })
-      .catch(() => { if (alive) setData(null); })
+      .catch(() => { if (alive) setLoadError(true); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [planId, planParams, fetchDetailed]);
+  }, [planId, planParams, period, fetchDetailed, retryNonce]);
 
   useEffect(() => {
     if (planId === undefined) return undefined;
@@ -313,7 +362,7 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
       })
       .catch(() => { if (alive) setProgress(null); });
     return () => { alive = false; };
-  }, [planId, planParams, selectedSlug, fetchProgress]);
+  }, [planId, planParams, selectedSlug, period, fetchProgress]);
 
   const switchScope = (s) => {
     if (s === scope) return;
@@ -326,8 +375,8 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
   const empty = !loading && (!data || (summary.total_workouts || 0) === 0);
   const byMicro = scope === "plan" && !!planId; // B10: «микроциклы» только при реальном плане
 
-  const tonnage = data?.tonnage_by_week || [];
-  const frequency = data?.frequency_by_week || [];
+  const tonnage = data?.granularity === "day" ? (data?.tonnage_series || []) : (data?.tonnage_by_week || []);
+  const frequency = data?.granularity === "day" ? (data?.frequency_series || []) : (data?.frequency_by_week || []);
   const muscles = data?.muscle_distribution || [];
   const orm = data?.one_rep_max_est || [];
   const adherence = data?.adherence || {};
@@ -350,12 +399,12 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
     <div className="stats-page" data-testid="stats-page">
       <div className="stats-ambient" aria-hidden="true" />
       <header className="stats-header">
-        <button className="stats-back" onClick={onBack} aria-label="Назад" data-testid="stats-back">
+        <button type="button" className="stats-back" onClick={onBack} aria-label="Назад" data-testid="stats-back">
           <ArrowLeft size={22} />
         </button>
         <div className="stats-head-id">
           <span className="stats-head-ava-ring">
-            <img className="stats-head-ava" src={avatar || avatarFallback(name)} alt="" />
+            <img className="stats-head-ava" src={avatar || avatarFallback(name)} alt={name} />
           </span>
           <div className="stats-head-text">
             <h1 className="stats-title">{name}</h1>
@@ -367,6 +416,8 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
       {planId ? (
         <div className="stats-scope" data-testid="stats-scope">
           <button
+            type="button"
+            aria-pressed={scope === "plan"}
             className={`stats-scope-btn ${scope === "plan" ? "active" : ""}`}
             onClick={() => switchScope("plan")}
             data-testid="scope-plan"
@@ -374,6 +425,8 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
             По плану
           </button>
           <button
+            type="button"
+            aria-pressed={scope === "all"}
             className={`stats-scope-btn ${scope === "all" ? "active" : ""}`}
             onClick={() => switchScope("all")}
             data-testid="scope-all"
@@ -383,18 +436,36 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
         </div>
       ) : null}
 
-      {loading ? (
+      {loading && !data ? (
         <Skeleton />
+      ) : loadError && !data ? (
+        <div className="stats-empty" data-testid="stats-error">
+          <span className="stats-empty-ic"><XCircle size={30} /></span>
+          <p className="stats-empty-title">Не удалось загрузить статистику</p>
+          <p className="stats-empty-sub">Проверь подключение и попробуй ещё раз.</p>
+          <button className="stats-scope-btn active" type="button" onClick={() => setRetryNonce((n) => n + 1)}>Повторить</button>
+        </div>
       ) : empty ? (
         <div className="stats-empty" data-testid="stats-empty">
           <span className="stats-empty-ic"><Activity size={30} /></span>
-          <p className="stats-empty-title">Пока нет завершённых тренировок</p>
+          <p className="stats-empty-title">Пока нет силовых тренировок</p>
           <p className="stats-empty-sub">
-            Заверши хотя бы одну тренировку — здесь появятся тоннаж, прогресс и графики.
+            Данные кардио и период можно открыть уже сейчас, а после первой силовой появятся тоннаж, прогресс и графики.
           </p>
+          <StatsPeriodBar period={period} setPeriod={setPeriod} />
+          {fetchCardio ? (
+            <SectionCard title="Кардио" hint="минуты и норма недели" testid="stats-cardio-empty">
+              <StatsErrorBoundary>
+                <CardioStatsCard fetchStats={fetchCardio} testPrefix="cardio" period={period} onPeriodChange={setPeriod} />
+              </StatsErrorBoundary>
+            </SectionCard>
+          ) : null}
         </div>
       ) : (
         <>
+          {/* ===== Глобальный переключатель периода ===== */}
+          <StatsPeriodBar period={period} setPeriod={setPeriod} />
+
           {/* ===== Hero bento ===== */}
           <div className="stats-bento" data-testid="stats-kpis">
             <div className="stats-hero" data-testid="kpi-tonnage">
@@ -404,7 +475,7 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
                   {fmtTon(summary.total_tonnage)}
                 </div>
                 <span className="stats-hero-sub">
-                  {data?.plan_name && byMicro ? data.plan_name : "за всё время"}
+                  {data?.plan_name && byMicro ? data.plan_name : `за ${PERIOD_LABELS[period] || period}`}
                 </span>
               </div>
               <div className="stats-hero-spark">
@@ -551,14 +622,18 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
           {/* ===== Фаза 2: карта мышц 2D ===== */}
           {fetchMuscleMap ? (
             <SectionCard title="Карта мышц" hint="объём за период" testid="stats-muscle-map">
-              <MuscleMapCard fetchMap={fetchMuscleMap} testPrefix="mm" />
+              <StatsErrorBoundary>
+                <MuscleMapCard fetchMap={fetchMuscleMap} testPrefix="mm" period={period} onPeriodChange={setPeriod} />
+              </StatsErrorBoundary>
             </SectionCard>
           ) : null}
 
           {/* ===== Фаза 3: кардио ===== */}
           {fetchCardio ? (
             <SectionCard title="Кардио" hint="минуты и норма недели" testid="stats-cardio">
-              <CardioStatsCard fetchStats={fetchCardio} testPrefix="cardio" />
+              <StatsErrorBoundary>
+                <CardioStatsCard fetchStats={fetchCardio} testPrefix="cardio" period={period} onPeriodChange={setPeriod} />
+              </StatsErrorBoundary>
             </SectionCard>
           ) : null}
 
@@ -571,6 +646,7 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
                 <div className="stats-select-wrap">
                   <select
                     className="stats-select"
+                    aria-label="Упражнение для графика прогресса"
                     value={selectedSlug || ""}
                     onChange={(e) => setSelectedSlug(e.target.value)}
                     data-testid="exercise-select"
@@ -674,7 +750,9 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
           ) : null}
 
           {/* ===== Карта нагрузки по мышечным группам ===== */}
-          <MuscleGroupsChart telegramId={telegramId} coachId={coachId} />
+          <StatsErrorBoundary>
+            <MuscleGroupsChart telegramId={telegramId} coachId={coachId} period={period} onPeriodChange={setPeriod} />
+          </StatsErrorBoundary>
 
           {/* ===== Соответствие плану ===== */}
           <SectionCard title="Соответствие плану" hint="план ↔ факт" testid="stats-adherence">
@@ -707,7 +785,15 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
             <SectionCard title="Последние тренировки" testid="stats-recent">
               <ul className="stats-recent">
                 {recent.map((s) => (
-                  <li className="stats-recent-row" key={s.id} data-testid={`recent-${s.id}`}>
+                  <li
+                    className={`stats-recent-row ${onOpenSession ? "stats-recent-row-clickable" : ""}`}
+                    key={s.id}
+                    data-testid={`recent-${s.id}`}
+                    role={onOpenSession ? "button" : undefined}
+                    tabIndex={onOpenSession ? 0 : undefined}
+                    onClick={onOpenSession ? () => onOpenSession(s.id) : undefined}
+                    onKeyDown={onOpenSession ? (e) => { if (e.key === "Enter" || e.key === " ") onOpenSession(s.id); } : undefined}
+                  >
                     <div className="stats-recent-ring" style={{ "--p": `${s.progress_pct || 0}%` }}>
                       <span>{s.progress_pct || 0}<i>%</i></span>
                     </div>
@@ -721,7 +807,7 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
                         {s.difficulty ? <><span>·</span><span>{s.difficulty}</span></> : null}
                       </div>
                     </div>
-                    <div className="stats-recent-date">{formatShortDate(s.date || s.finished_at)}</div>
+                    <div className="stats-recent-date">{formatShortDate(s.finished_at || s.date)}</div>
                   </li>
                 ))}
               </ul>
@@ -736,13 +822,14 @@ function StatsView({ name, avatar, subtitle, onBack, fetchPlanId, fetchDetailed,
 }
 
 function AdherenceBar({ label, value }) {
-  const v = Math.max(0, Math.min(100, Math.round(value || 0)));
-  const color = v >= 85 ? "#34D399" : v >= 60 ? "#FFC24B" : "#FB7185";
+  const actual = Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value))) : null;
+  const v = Math.min(100, actual || 0);
+  const color = actual == null ? "rgba(255,255,255,0.35)" : actual >= 85 ? "#34D399" : actual >= 60 ? "#FFC24B" : "#FB7185";
   return (
     <div className="stats-bar">
       <div className="stats-bar-top">
         <span>{label}</span>
-        <b style={{ color }}>{v}%</b>
+        <b style={{ color }}>{actual == null ? "—" : `${actual}%`}</b>
       </div>
       <div className="stats-bar-track">
         <div className="stats-bar-fill" style={{ width: `${v}%`, background: color }} />
@@ -752,12 +839,16 @@ function AdherenceBar({ label, value }) {
 }
 
 function DeviationRow({ label, value }) {
-  const v = Math.round(value || 0);
-  const pos = v >= 0;
+  const numeric = Number(value);
+  const valid = Number.isFinite(numeric);
+  const v = valid ? Math.round(numeric) : null;
+  const pos = (v || 0) >= 0;
   return (
     <div className="stats-dev">
       <span><Zap size={13} style={{ marginRight: 5, verticalAlign: -2 }} />{label}</span>
-      <b className={pos ? "up" : "down"}>{pos ? "+" : ""}{v}%</b>
+      <b className={v == null ? "muted" : pos ? "up" : "down"}>
+        {v == null ? "—" : `${pos ? "+" : ""}${v}%`}
+      </b>
     </div>
   );
 }
@@ -796,6 +887,7 @@ export function StatsPage() {
       name={user?.first_name || "Моя статистика"}
       avatar={avatarUrl}
       subtitle="Моя статистика"
+       onOpenSession={(id) => navigate(`/stats/session/${id}`)}
       onBack={() => navigate(-1)}
       fetchPlanId={fetchPlanId}
       fetchDetailed={fetchDetailed}
@@ -851,6 +943,7 @@ export function CoachClientStatsPage() {
       avatar={athlete?.picture}
       subtitle="Статистика подопечного"
       onBack={() => navigate(`/coach/${aid}`)}
+      onOpenSession={(id) => navigate(`/stats/session/${id}`)}
       fetchPlanId={fetchPlanId}
       fetchDetailed={fetchDetailed}
       fetchProgress={fetchProgress}

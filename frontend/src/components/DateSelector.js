@@ -1,19 +1,21 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Zap, Pause, Play, Square, Lock, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useUser } from '@/context/UserContext';
 import { useCapabilities } from '@/hooks/useCapabilities';
 import {
-  getActivePlan, getWeekProgress, getPlanDay,
+  getActivePlan, getCoachClientPlan, getCoachClientSession, getWeekProgress, getPlanDay,
   startSession, getActiveSession, sessionExerciseAction,
   editSessionExercise, finishSession, resumeSession, pauseSession, logSessionSet,
 } from '@/api';
 import WorkoutView from '@/components/WorkoutView';
+import MuscleAiCard from '@/components/MuscleAiCard';
 import Portal from '@/components/Portal';
 import { haptic, hapticNotify, hapticSelection } from '@/lib/platform';
 import { useMainButton } from '@/hooks/useTelegramUI';
 import { useRealtime } from '@/hooks/useRealtime';
+import { useLiveActivity } from '@/hooks/useLiveActivity';
 import './DateSelector.css';
 
 // Сокращённые названия дней недели (index = JS getDay(): 0=Вс..6=Сб)
@@ -111,12 +113,39 @@ const MONTH_NAMES = [
 // Доступные тренировочные недели (смещения относительно текущей, 0 = текущая)
 const WEEK_OFFSETS = [-1, 0, 1];
 
-const DateSelector = () => {
+// «20 октября» из ISO-даты (YYYY-MM-DD). Полдень — чтобы не уехать по часовому поясу.
+const ruDateFromISO = (iso) => {
+  if (!iso) return '';
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].toLowerCase()}`;
+};
+
+const DateSelector = ({
+  athleteId: viewAthleteId = null,
+  readOnly = false,
+  // Режим тренера: показываем тренировку выбранного подопечного и заполняем её
+  // за него. `coachId` — адрес тренера (id в запросах co-scribe), `athlete`
+  // — выбранный подопечный или null (тогда ничего не загружено).
+  coachId = null,
+  athlete = null,
+}) => {
   const { user } = useUser();
   const { can: canPerm } = useCapabilities();
+  const coachMode = !!coachId;
+  // Чьи данные: подопечного в режиме тренера / предпросмотре, иначе свои.
+  const selectedAthleteId = athlete?.telegram_id ?? null;
+  const coachAthleteId = coachMode ? selectedAthleteId : null;
+  const actorBy = coachMode ? coachId : null;
+  // Данные какого спортсмена показываем: свой (по умолчанию) или подопечного
+  // в предпросмотре клиентского режима.
+  const athleteId = coachMode ? coachAthleteId : (viewAthleteId || user?.telegram_id);
   // Фаза 1: managed-атлет («физический подопечный») не заполняет силовую —
   // только просмотр (заполняет тренер). capabilities==null → true (back-compat).
-  const canLogStrength = canPerm('log_strength');
+  // readOnly принудительно включается в предпросмотре режима «Клиент».
+  const canLogStrength = coachMode
+    ? !!coachAthleteId
+    : !readOnly && canPerm('log_strength');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekOffset, setWeekOffset] = useState(0); // Смещение недели (0 = текущая)
   const [slideDir, setSlideDir] = useState(null); // Направление анимации смены недели
@@ -125,9 +154,22 @@ const DateSelector = () => {
 
   const [plan, setPlan] = useState(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [activeAny, setActiveAny] = useState(null); // идущая тренировка клиента
   const [progressByDay, setProgressByDay] = useState({}); // day_index -> info
   const [dayDetail, setDayDetail] = useState(null);
   const [dayLoading, setDayLoading] = useState(false);
+  const [session, setSession] = useState(null);
+  const [starting, setStarting] = useState(false);
+  const [confirmStartOpen, setConfirmStartOpen] = useState(false);
+
+  // Режим тренера: сменили подопечного — прежняя его тренировка не наша.
+  useEffect(() => {
+    if (!coachMode) return;
+    setSession(null);
+    setConfirmStartOpen(false);
+    setSelectedDate(new Date());
+    setWeekOffset(0);
+  }, [coachMode, coachAthleteId]);
 
   // Недели плана: текущая и общее количество
   const totalWeeks = (plan?.weeks && plan.weeks.length) || 0;
@@ -149,6 +191,26 @@ const DateSelector = () => {
     return Math.min(Math.max(1, baseWeek + weekOffset), total);
   }, [plan, baseWeek, weekOffset]);
 
+  // Переход к дню, в котором идёт активная тренировка (из уведомления 409).
+  // detail = { week_index, day_index, date, title, plan_id } — приходит с бэкенда.
+  const openActiveSessionDay = useCallback((detail) => {
+    const target = detail?.date ? new Date(`${detail.date}T12:00:00`) : null;
+    if (!target || Number.isNaN(target.getTime())) return;
+    const mondayOf = (d) => {
+      const x = new Date(d);
+      x.setHours(12, 0, 0, 0);
+      x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+      return x;
+    };
+    const wk = Number(detail?.week_index);
+    const offset = Number.isFinite(wk) && plan
+      ? wk - baseWeek
+      : Math.round((mondayOf(target) - mondayOf(new Date())) / (7 * 24 * 3600 * 1000));
+    haptic('light');
+    setWeekOffset(clampOffset(offset));
+    setSelectedDate(target);
+  }, [baseWeek, clampOffset, plan]);
+
   // Смещение, реально соответствующее выбранной неделе плана (после клампа)
   const effectiveOffset = totalWeeks ? planWeek - baseWeek : weekOffset;
 
@@ -169,10 +231,11 @@ const DateSelector = () => {
 
   // Недели, ещё не открытые тренером (published === false) — спортсмен их не видит
   const isWeekLocked = useCallback((wk) => {
+    if (coachMode) return false;
     if (!plan?.weeks) return false;
     const w = plan.weeks.find((x) => x.week_index === wk);
     return !!w && w.published === false;
-  }, [plan]);
+  }, [plan, coachMode]);
 
   // Динамика топового веса каждого упражнения по неделям плана (для графика)
   const forecastBySlug = useMemo(() => {
@@ -208,15 +271,21 @@ const DateSelector = () => {
     return map;
   }, [plan]);
 
-  // Загрузка активного плана спортсмена
+  // Загрузка плана: своего или подопечного (тренеру доступен и черновик)
   useEffect(() => {
-    if (!user?.telegram_id) return undefined;
+    if (!athleteId) {
+      setPlan(null);
+      setPlanLoading(false);
+      return undefined;
+    }
     let cancelled = false;
     setPlanLoading(true);
     (async () => {
       try {
-        const p = await getActivePlan(user.telegram_id);
-        if (!cancelled) setPlan(p);
+        const p = coachMode
+          ? await getCoachClientPlan(coachId, athleteId)
+          : await getActivePlan(athleteId);
+        if (!cancelled) setPlan(p || null);
       } catch (e) {
         if (!cancelled) setPlan(null);
       } finally {
@@ -224,7 +293,34 @@ const DateSelector = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.telegram_id]);
+  }, [athleteId, coachMode, coachId]);
+
+  // Режим тренера: у клиента может идти тренировка в другой день плана —
+  // при выборе клиента сразу открываем её день, чтобы заполнять без поисков.
+  useEffect(() => {
+    setActiveAny(null);
+    if (!coachMode || !athleteId || !coachId) return undefined;
+    let cancelled = false;
+    getCoachClientSession(coachId, athleteId)
+      .then((s) => { if (!cancelled) setActiveAny(s || null); })
+      .catch(() => { if (!cancelled) setActiveAny(null); });
+    return () => { cancelled = true; };
+  }, [coachMode, coachId, athleteId]);
+
+  const jumpedRef = useRef(null);
+  useEffect(() => {
+    if (!coachMode || !plan?.id || !activeAny) return;
+    if (activeAny.status !== 'in_progress' || activeAny.mode === 'diary') return;
+    if (activeAny.plan_id !== plan.id) return;
+    if (jumpedRef.current === activeAny.id) return;
+    const wk = Number(activeAny.week_index);
+    const di = Number(activeAny.day_index);
+    if (!Number.isFinite(wk) || !Number.isFinite(di)) return;
+    jumpedRef.current = activeAny.id;
+    setWeekOffset(clampOffset(wk - baseWeek));
+    const d = activeAny.date ? new Date(`${activeAny.date}T12:00:00`) : null;
+    if (d && !Number.isNaN(d.getTime())) setSelectedDate(d);
+  }, [coachMode, plan?.id, activeAny, baseWeek, clampOffset]);
 
   // Загрузка прогресса по дням выбранной недели
   useEffect(() => {
@@ -232,7 +328,7 @@ const DateSelector = () => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await getWeekProgress(plan.id, planWeek, user?.telegram_id, weekDatesStr);
+        const data = await getWeekProgress(plan.id, planWeek, athleteId, weekDatesStr);
         if (cancelled) return;
         const map = {};
         (data.days || []).forEach((d) => { map[d.day_index] = d; });
@@ -242,7 +338,7 @@ const DateSelector = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [plan?.id, planWeek, user?.telegram_id, weekDatesStr]);
+  }, [plan?.id, planWeek, athleteId, weekDatesStr]);
 
   // Генерируем дни недели с учётом смещения
   const weekDays = useMemo(() => {
@@ -282,7 +378,7 @@ const DateSelector = () => {
     setDayLoading(true);
     (async () => {
       try {
-        const d = await getPlanDay(plan.id, planWeek, di, user?.telegram_id);
+        const d = await getPlanDay(plan.id, planWeek, di, athleteId);
         if (!cancelled) setDayDetail(d);
       } catch (e) {
         if (!cancelled) setDayDetail(null);
@@ -291,7 +387,7 @@ const DateSelector = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [plan?.id, planWeek, selectedDate, user?.telegram_id]);
+  }, [plan?.id, planWeek, selectedDate, athleteId]);
 
   const handleDayClick = (date, event) => {
     hapticSelection();
@@ -355,32 +451,78 @@ const DateSelector = () => {
   const isRestSelected = !dayLoading && (!dayDetail || dayDetail.is_rest);
   const selectedDayIndex = toDayIndex(selectedDate.getDay());
   // Тренер ещё не опубликовал план — содержимое скрыто
-  const isDraft = !!plan && plan.visibility === "draft";
-
-  // Тренировочная сессия выбранного дня
-  const [session, setSession] = useState(null);
-  const [starting, setStarting] = useState(false);
-  const [confirmStartOpen, setConfirmStartOpen] = useState(false);
+  const isDraft = !coachMode && !!plan && plan.visibility === "draft";
 
   const refreshProgress = useCallback(async () => {
     if (!plan?.id) return;
     try {
-      const data = await getWeekProgress(plan.id, planWeek, user?.telegram_id, weekDatesStr);
+      const data = await getWeekProgress(plan.id, planWeek, athleteId, weekDatesStr);
       const map = {};
       (data.days || []).forEach((d) => { map[d.day_index] = d; });
       setProgressByDay(map);
       window.dispatchEvent(new Event('twb:progress'));
     } catch (e) { /* no-op */ }
-  }, [plan?.id, planWeek, user?.telegram_id, weekDatesStr]);
+  }, [plan?.id, planWeek, athleteId, weekDatesStr]);
 
   // Перезагрузка активного плана (когда тренер опубликовал/изменил недели/дни)
   const reloadPlan = useCallback(async () => {
-    if (!user?.telegram_id) return;
+    if (!athleteId) return;
     try {
-      const p = await getActivePlan(user.telegram_id);
-      setPlan(p);
+      const p = coachMode
+        ? await getCoachClientPlan(coachId, athleteId)
+        : await getActivePlan(athleteId);
+      setPlan(p || null);
     } catch (e) { /* no-op */ }
-  }, [user?.telegram_id]);
+  }, [athleteId, coachMode, coachId]);
+
+  // Незавершённая тренировка из прошлой (уже закрытой) программы: в текущем плане
+  // её не открыть, поэтому предлагаем сразу завершить — иначе она навсегда
+  // блокирует старт новой.
+  const closeStaleSession = useCallback(async (info) => {
+    if (!info?.session_id) return;
+    haptic('medium');
+    try {
+      await finishSession(info.session_id);
+      hapticNotify('success');
+      toast.success('Старая тренировка завершена', {
+        description: 'Теперь можно начать новую',
+      });
+      refreshProgress();
+    } catch (e) {
+      toast.error('Не удалось завершить тренировку');
+    }
+  }, [refreshProgress]);
+
+  // Уведомление «уже есть активная тренировка»: дата + кнопка действия.
+  const notifyActiveSession = useCallback((detail, fallbackMsg) => {
+    const info = detail && typeof detail === 'object' ? detail : null;
+    const dateLabel = info ? ruDateFromISO(info.date) : '';
+    if (!dateLabel) {
+      toast.error((info && info.message) || fallbackMsg);
+      return;
+    }
+    const dayLabel = `${dateLabel}${info.title ? ` · ${info.title}` : ''}`;
+    const fromCurrentPlan = !info.plan_id || !plan?.id || info.plan_id === plan.id;
+    if (fromCurrentPlan) {
+      toast.error('Уже есть активная тренировка', {
+        description: dayLabel,
+        duration: 9000,
+        action: {
+          label: 'Перейти к тренировке',
+          onClick: () => openActiveSessionDay(info),
+        },
+      });
+      return;
+    }
+    toast.error('Незавершённая тренировка из прошлой программы', {
+      description: `${dayLabel} — завершите её, чтобы начать новую`,
+      duration: 12000,
+      action: {
+        label: 'Завершить старую тренировку',
+        onClick: () => closeStaleSession(info),
+      },
+    });
+  }, [openActiveSessionDay, closeStaleSession, plan?.id]);
 
   // Real-time: ход тренировки и правки тренера приходят вживую
   const onRtEvent = useCallback((evt) => {
@@ -425,13 +567,13 @@ const DateSelector = () => {
 
   // Загрузка активной сессии выбранного дня
   useEffect(() => {
-    if (!plan?.id || !dayDetail || isRestSelected || !user?.telegram_id) { setSession(null); return undefined; }
+    if (!plan?.id || !dayDetail || isRestSelected || !athleteId) { setSession(null); return undefined; }
     let cancelled = false;
     (async () => {
       try {
         const s = await getActiveSession({
           plan_id: plan.id, week: planWeek, day: selectedDayIndex,
-          athlete: user.telegram_id, date: toISODate(selectedDate),
+          athlete: athleteId, date: toISODate(selectedDate),
         });
         if (!cancelled) setSession(s);
       } catch (e) {
@@ -439,7 +581,7 @@ const DateSelector = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [plan?.id, planWeek, selectedDayIndex, isRestSelected, dayDetail, user?.telegram_id, selectedDate]);
+  }, [plan?.id, planWeek, selectedDayIndex, isRestSelected, dayDetail, athleteId, selectedDate]);
 
   // Превью дня (до старта тренировки)
   const previewView = useMemo(() => {
@@ -487,18 +629,21 @@ const DateSelector = () => {
     setStarting(true);
     try {
       const s = await startSession({
-        plan_id: plan.id, athlete_telegram_id: user.telegram_id,
+        plan_id: plan.id, athlete_telegram_id: athleteId,
         week: planWeek, day: selectedDayIndex, date: toISODate(selectedDate),
+        ...(coachMode ? { coach_telegram_id: coachId } : {}),
       });
       setSession(s);
       hapticNotify('success');
       refreshProgress();
     } catch (e) {
       if (e?.response?.status === 409) {
-        const msg = e.response.data?.detail?.message
-          || 'У вас уже есть активная тренировка. Завершите её, чтобы начать новую.';
-        toast.error(msg);
+        notifyActiveSession(
+          e.response.data?.detail,
+          'У вас уже есть активная тренировка. Завершите её, чтобы начать новую.'
+        );
       } else {
+        hapticNotify('error');
         toast.error('Не удалось начать тренировку');
       }
     } finally {
@@ -522,7 +667,7 @@ const DateSelector = () => {
     if (!session) return;
     haptic(action === 'done' ? 'medium' : 'light');
     try {
-      const s = await sessionExerciseAction(session.id, order, action);
+      const s = await sessionExerciseAction(session.id, order, action, coachMode ? 'coach' : undefined, actorBy);
       setSession(s);
       refreshProgress();
       if (s.status === 'finished') {
@@ -538,7 +683,7 @@ const DateSelector = () => {
   const handleEditSave = async (order, body) => {
     if (!session) return;
     try {
-      const s = await editSessionExercise(session.id, order, body);
+      const s = await editSessionExercise(session.id, order, body, coachMode ? 'coach' : undefined, actorBy);
       setSession(s);
       toast.success('Упражнение обновлено');
     } catch (e) {
@@ -551,7 +696,7 @@ const DateSelector = () => {
     if (!session) return;
     if (body && body.done !== undefined) haptic(body.done ? 'medium' : 'light');
     try {
-      const s = await logSessionSet(session.id, order, setIndex, body);
+      const s = await logSessionSet(session.id, order, setIndex, body, coachMode ? 'coach' : undefined, actorBy);
       setSession(s);
       refreshProgress();
       if (s.status === 'finished') {
@@ -597,10 +742,12 @@ const DateSelector = () => {
       toast.success('Тренировка возобновлена');
     } catch (e) {
       if (e?.response?.status === 409) {
-        const msg = e.response.data?.detail?.message
-          || 'У вас уже есть активная тренировка. Завершите её, чтобы продолжить эту.';
-        toast.error(msg);
+        notifyActiveSession(
+          e.response.data?.detail,
+          'У вас уже есть активная тренировка. Завершите её, чтобы продолжить эту.'
+        );
       } else {
+        hapticNotify('error');
         toast.error('Не удалось продолжить тренировку');
       }
     } finally {
@@ -617,6 +764,7 @@ const DateSelector = () => {
 
   // Telegram native MainButton mirrors the primary CTA (no-op off-Telegram).
   const tgMainVisible =
+    !coachMode &&
     canLogStrength &&
     !!plan &&
     !isRestSelected &&
@@ -638,6 +786,71 @@ const DateSelector = () => {
         : sessionStatus === 'finished'
         ? handleResume
         : handleStart,
+  });
+
+  // ---- Dynamic Island / Live Activity ----
+  // Вычисляем текущее упражнение (in_progress) для отображения в Dynamic Island
+  const liveActivityExercise = useMemo(() => {
+    if (!session || session.status !== 'in_progress') return null;
+    const exs = session.exercises || [];
+    const activeEx = exs.find((e) => e.status === 'in_progress');
+    if (activeEx) return activeEx;
+    // Если нет активного — берём последнее не-pending (чтобы показывать последнее выполненное)
+    const lastNonPending = [...exs].reverse().find((e) => e.status !== 'pending');
+    return lastNonPending || null;
+  }, [session]);
+
+  const liveActivitySetsCompleted = useMemo(() => {
+    if (!liveActivityExercise?.set_logs) return 0;
+    return liveActivityExercise.set_logs.filter((s) => s.done).length;
+  }, [liveActivityExercise]);
+
+  const liveActivityTotalSets = useMemo(() => {
+    if (!liveActivityExercise?.set_logs) return 0;
+    return liveActivityExercise.set_logs.length;
+  }, [liveActivityExercise]);
+
+  const liveActivityRepScheme = useMemo(() => {
+    if (!liveActivityExercise?.sets_scheme) return '';
+    return liveActivityExercise.sets_scheme
+      .map((s) => `${s.sets || 1}×${s.reps || 1}`)
+      .join(' ');
+  }, [liveActivityExercise]);
+
+  const liveActivityWeight = useMemo(() => {
+    if (!liveActivityExercise?.set_logs) return '';
+    const doneSets = liveActivityExercise.set_logs.filter((s) => s.done);
+    if (doneSets.length === 0) return '';
+    const lastDone = doneSets[doneSets.length - 1];
+    return lastDone.weight != null ? `${lastDone.weight} кг` : '';
+  }, [liveActivityExercise]);
+
+  const liveActivityElapsed = useMemo(() => {
+    if (!session?.stats?.duration_sec) return 0;
+    return Math.floor(session.stats.duration_sec / 60);
+  }, [session?.stats?.duration_sec]);
+
+  // Определяем, активно ли live activity (тренировка идёт, не на паузе)
+  const isLiveActivityActive = !!(session && session.status === 'in_progress' && !session.paused);
+
+  // Определяем статус для Dynamic Island
+  const liveActivityStatus = useMemo(() => {
+    if (!session) return 'finished';
+    if (session.paused) return 'rest';
+    if (session.status === 'finished') return 'finished';
+    return 'active';
+  }, [session]);
+
+  useLiveActivity({
+    enabled: isLiveActivityActive && !coachMode,
+    sessionId: session?.id,
+    exerciseName: liveActivityExercise?.exercise_name || 'Тренировка',
+    setsCompleted: liveActivitySetsCompleted,
+    totalSets: liveActivityTotalSets,
+    repScheme: liveActivityRepScheme,
+    weight: liveActivityWeight,
+    status: liveActivityStatus,
+    elapsedMinutes: liveActivityElapsed,
   });
 
   return (
@@ -718,7 +931,7 @@ const DateSelector = () => {
       <div className="date-title-row">
         <h2 className="selected-date-title">{formattedDate}</h2>
         <div className="date-actions" data-testid="date-actions">
-          {sessionStatus === 'in_progress' ? (
+          {sessionStatus === 'in_progress' && canLogStrength ? (
             <>
               <button className="icon-btn" type="button" onClick={handlePauseToggle}
                 aria-label={session.paused ? 'Продолжить' : 'Пауза'} data-testid="btn-pause">
@@ -730,7 +943,7 @@ const DateSelector = () => {
               </button>
             </>
           ) : sessionStatus === 'finished' ? (
-            allExercisesResolved ? (
+            allExercisesResolved || !canLogStrength ? (
               <button
                 className="icon-btn info-btn"
                 type="button"
@@ -769,11 +982,37 @@ const DateSelector = () => {
       </div>
 
       {/* Нет активной программы */}
-      {!planLoading && !plan ? (
+      {!coachMode && !planLoading && !plan ? (
         <div className="no-plan-card" data-testid="no-plan-card">
           <p className="no-plan-text">У вас пока нет активной программы.</p>
-          <Link to="/programs" className="no-plan-button" data-testid="choose-program-button">
-            Выбрать программу
+          {!readOnly ? (
+            <Link to="/programs" className="no-plan-button" data-testid="choose-program-button">
+              Выбрать программу
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Режим тренера: подопечный не выбран — данных нет */}
+      {coachMode && !coachAthleteId ? (
+        <div className="coach-no-client" data-testid="coach-no-client">
+          <p className="coach-no-client-text">
+            Клиент не выбран — историю тренировок пока загрузить нельзя.
+          </p>
+          <p className="coach-no-client-sub">
+            Выберите клиента в списке выше, чтобы увидеть его тренировку и заполнить её.
+          </p>
+        </div>
+      ) : null}
+
+      {/* Режим тренера: у подопечного нет активной программы */}
+      {coachMode && coachAthleteId && !planLoading && !plan ? (
+        <div className="no-plan-card" data-testid="coach-no-plan-card">
+          <p className="no-plan-text">
+            У клиента пока нет активной программы — тренировку начать нельзя.
+          </p>
+          <Link to={`/coach/${coachAthleteId}`} className="no-plan-button" data-testid="coach-open-client-button">
+            Открыть карточку клиента
           </Link>
         </div>
       ) : null}
@@ -799,6 +1038,7 @@ const DateSelector = () => {
         <WorkoutView
           view={view}
           isPreview={!session}
+          mode={coachMode ? 'coach' : undefined}
           paused={!!session?.paused}
           readOnly={!canLogStrength}
           onAction={handleAction}
@@ -808,6 +1048,11 @@ const DateSelector = () => {
           currentWeek={planWeek}
           planSetsByOrder={planSetsByOrder}
         />
+      ) : null}
+
+      {/* ИИ-разбор мышц после завершённой тренировки */}
+      {session && sessionStatus === 'finished' && session.id ? (
+        <MuscleAiCard sessionId={session.id} testPrefix="session-muscle-ai" />
       ) : null}
 
       {/* Подтверждение старта тренировки не на сегодня */}

@@ -3,7 +3,6 @@ import math
 
 import pytest
 from fastapi import HTTPException
-
 from server import (
     CARDIO_MET,
     cardio_kcal,
@@ -56,6 +55,8 @@ def test_kcal_monotonic_in_duration_and_weight():
 def test_pace_parsing():
     # 5 км за 35:00 → 07:00 /км
     assert _parse_hhmmss_pace(5.0, 2100) == "07:00"
+    # При округлении 59.6 секунд переносим минуту, а не выдаём 00:60.
+    assert _parse_hhmmss_pace(1.0, 59.6) == "01:00"
     assert _parse_hhmmss_pace(0, 1800) is None
     assert _parse_hhmmss_pace(5.0, 0) is None
 

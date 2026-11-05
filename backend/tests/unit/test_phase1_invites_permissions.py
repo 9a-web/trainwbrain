@@ -1,10 +1,12 @@
 """Unit-тесты Фазы 1: профили прав, слияние оверрайдов, tier-резолвер,
 capabilities, _assert_admin, валидация инвайта при redeem (офлайн, без БД)."""
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
 
+import server
 from server import (
     PERMISSION_KEYS,
     _assert_admin,
@@ -117,6 +119,22 @@ def test_capabilities_roles_always_include_athlete():
     assert caps["roles"] == ["athlete"]
 
 
+def test_capabilities_client_preview_keeps_permissions():
+    caps = _get_capabilities({"roles": ["coach"], "active_mode": "client"})
+    assert caps["active_mode"] == "client"
+    assert caps["client_preview"] is True
+    # Предпросмотр — только UI: права тренера не урезаются.
+    assert caps["permissions"]["log_strength"] is True
+    assert caps["access_tier"] == "standalone"
+
+
+def test_capabilities_defaults_and_unknown_mode():
+    caps = _get_capabilities({"roles": ["athlete"]})
+    assert caps["active_mode"] == "athlete"
+    assert caps["client_preview"] is False
+    assert _get_capabilities({"roles": ["athlete"], "active_mode": "nope"})["active_mode"] == "athlete"
+
+
 # --- _assert_admin -------------------------------------------------------------
 
 def test_assert_admin_passes_for_admin():
@@ -194,3 +212,50 @@ def test_future_expiry_passes_and_naive_expiry_handled():
 
 def test_bad_expiry_format_ignored():
     _validate_invite_for_redeem(_invite(expires_at="not-a-date"))
+
+
+# --- switch_user_mode: режим «Клиент» ---------------------------------------
+
+
+class _UsersCollection:
+    def __init__(self, doc):
+        self.doc = dict(doc)
+
+    async def find_one(self, query, projection=None):
+        if self.doc.get("telegram_id") != query.get("telegram_id"):
+            return None
+        return {k: v for k, v in self.doc.items() if k != "password_hash"}
+
+    async def update_one(self, query, update):
+        self.doc.update(update.get("$set") or {})
+        return SimpleNamespace(matched_count=1)
+
+
+@pytest.mark.asyncio
+async def test_switch_mode_client_is_ui_only(monkeypatch):
+    users = _UsersCollection({"telegram_id": 5, "roles": ["coach", "athlete"], "active_mode": "coach"})
+    monkeypatch.setattr(server, "db", SimpleNamespace(users=users))
+
+    updated = await server.switch_user_mode(
+        5, server.ModeReq(mode="client"), current={"telegram_id": 5}
+    )
+
+    assert updated["active_mode"] == "client"
+    assert users.doc["active_mode"] == "client"
+    # Режим клиента не выдаёт и не отнимает роли и не создаёт инвайт.
+    assert users.doc["roles"] == ["athlete", "coach"]
+    assert "invite_code" not in users.doc
+
+
+@pytest.mark.asyncio
+async def test_switch_mode_rejects_unknown_and_foreign(monkeypatch):
+    users = _UsersCollection({"telegram_id": 5, "roles": ["athlete"]})
+    monkeypatch.setattr(server, "db", SimpleNamespace(users=users))
+
+    with pytest.raises(HTTPException) as bad_mode:
+        await server.switch_user_mode(5, server.ModeReq(mode="admin"), current={"telegram_id": 5})
+    assert bad_mode.value.status_code == 400
+
+    with pytest.raises(HTTPException) as foreign:
+        await server.switch_user_mode(6, server.ModeReq(mode="client"), current={"telegram_id": 5})
+    assert foreign.value.status_code == 403

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft, Sparkles, FileText, Wand2, Upload, KeyRound,
   CheckCircle2, PencilLine, Dumbbell, Eye, Camera, X,
@@ -13,6 +13,7 @@ import {
 import { hapticNotify } from "@/lib/platform";
 import { useBackButton } from "@/hooks/useTelegramUI";
 import { AiProgressChart } from "@/components/AiProgressChart";
+import { addBgJob, updateBgJob, removeBgJob, getBgJobs } from "@/hooks/useBackgroundJobs";
 import { AiProgramPreview } from "@/components/AiProgramPreview";
 import "./AiImport.css";
 
@@ -52,12 +53,35 @@ const errText = (e, fallback) => {
   return typeof d === "string" ? d : fallback;
 };
 
-function BusyOverlay({ steps = BUSY_STEPS, sub = "Обычно занимает 30–90 секунд" }) {
+function BusyOverlay({ steps = BUSY_STEPS, sub = "Обычно занимает 30–90 секунд", progress = null, jobId = null }) {
   const [step, setStep] = useState(0);
+  const [currentProgress, setCurrentProgress] = useState(progress || "");
+  const [lastFetch, setLastFetch] = useState(0);
+
+  // Анимированное троеточие
+  const [dots, setDots] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setDots((d) => (d + 1) % 4), 600);
+    return () => clearInterval(t);
+  }, []);
+
+  // Циклические фейковые шаги (только если нет реального прогресса)
   useEffect(() => {
     const t = setInterval(() => setStep((s) => (s + 1) % steps.length), 2600);
     return () => clearInterval(t);
   }, [steps]);
+
+  // Живой прогресс с бэкенда (подтягиваем каждый раз, когда parent обновляет)
+  useEffect(() => {
+    setCurrentProgress(progress || "");
+  }, [progress]);
+
+  const dotStr = ".".repeat(dots);
+  const hasRealProgress = currentProgress && currentProgress.length > 5;
+  const displayText = hasRealProgress
+    ? currentProgress
+    : (steps[step] + dotStr);
+
   return (
     <div className="ai-busy" data-testid="ai-busy">
       <div className="ai-busy-shader" aria-hidden="true">
@@ -74,15 +98,25 @@ function BusyOverlay({ steps = BUSY_STEPS, sub = "Обычно занимает 
         />
       </div>
       <span className="ai-busy-orb"><Sparkles size={26} /></span>
-      <p>{steps[step]}</p>
-      <span className="ai-busy-sub">{sub}</span>
+      <p className="ai-busy-text">{displayText}</p>
+      {hasRealProgress ? null : <span className="ai-busy-sub">{sub}</span>}
+      {hasRealProgress ? <span className="ai-busy-sub model">Модель рассуждает{dotStr}</span> : null}
     </div>
   );
 }
 
 export default function AiImport() {
   const navigate = useNavigate();
+  const location = useLocation();
   useBackButton(true, () => navigate("/programs"));
+
+  // Проверяем, не перешли ли мы по ссылке с ?job=xxx (возврат к фоновой задаче)
+  const resumeJobId = new URLSearchParams(location.search).get("job");
+  // Если указан job — ищем его в хранилище и восстанавливаем состояние занятости
+  // (само состояние восстановится через обработку ниже)
+  const resumeJob = resumeJobId
+    ? getBgJobs().find((j) => j.id === resumeJobId)
+    : null;
 
   const [status, setStatus] = useState(null);
   const [tab, setTab] = useState("generate"); // generate | parse
@@ -93,6 +127,8 @@ export default function AiImport() {
   const [photoPreviews, setPhotoPreviews] = useState([]); // string[] (object URLs)
   const [busy, setBusy] = useState(false);
   const [busyKind, setBusyKind] = useState("program"); // program | questions | refine | photo
+  const [busyProgress, setBusyProgress] = useState(""); // живой прогресс с бэкенда
+  const [busyJobId, setBusyJobId] = useState(null); // последний job_id для опроса прогресса
   const [result, setResult] = useState(null);
   const [questions, setQuestions] = useState(null);
   const [qStep, setQStep] = useState("basic"); // basic | advanced
@@ -105,6 +141,46 @@ export default function AiImport() {
 
   useEffect(() => {
     getAiStatus().then(setStatus).catch(() => setStatus({ enabled: false }));
+  }, []);
+
+  // Возврат к фоновой задаче: если перешли с ?job=xxx и задача ещё активна,
+  // восстанавливаем состояние busy и подключаемся к опросу
+  useEffect(() => {
+    if (!resumeJob) return;
+    const job = resumeJob;
+    if (job.status === "running") {
+      // Задача ещё выполняется — запускаем фоновый опрос
+      (async () => {
+        try {
+          const tpl = await pollUntilDone(job.id);
+          setBusyJobId(null);
+          setBusyProgress("");
+          setResult(tpl);
+          removeBgJob(job.id);
+          hapticNotify("success");
+          toast.success(`Программа «${tpl.name}» сохранена в «Мои программы»`);
+        } catch (e) {
+          updateBgJob(job.id, { status: "error", error: errText(e, "Ошибка") });
+          hapticNotify("error");
+          toast.error(errText(e, "Не удалось обработать запрос"));
+        } finally {
+          setBusy(false);
+        }
+      })();
+      // Сразу выставляем busy UI
+      setBusy(true);
+      setBusyJobId(job.id);
+      if (job.progress) setBusyProgress(job.progress);
+      const kindMap = { generate: "program", parse: "parse", "parse-photo": "photo", refine: "refine" };
+      setBusyKind(kindMap[job.kind] || "program");
+    } else if (job.status === "done" && job.result) {
+      // Задача завершена — показываем результат сразу
+      setResult(job.result);
+      removeBgJob(job.id);
+    } else if (job.status === "error") {
+      toast.error(job.error || "Задача завершилась ошибкой");
+      removeBgJob(job.id);
+    }
   }, []);
 
   // Освобождаем object URLs ТОЛЬКО при размонтировании. Revoke по deps
@@ -122,37 +198,64 @@ export default function AiImport() {
   const enabled = !!status?.enabled;
   const visionEnabled = !!status?.vision_enabled;
 
+  // Опрос задачи в фоне (возвращается к результату через await)
+  const pollUntilDone = async (jobId) => {
+    let fails = 0;
+    const deadline = Date.now() + 5 * 60 * 1000;
+    for (;;) {
+      if (Date.now() > deadline) {
+        throw { response: { data: { detail: "ИИ отвечает слишком долго — попробуйте ещё раз" } } };
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+      let job;
+      try {
+        job = await getAiJob(jobId);
+        fails = 0;
+      } catch (e) {
+        if (++fails >= 3) throw e;
+        continue;
+      }
+      // Обновляем прогресс
+      if (job.progress && typeof job.progress === "string" && job.progress.length > 3) {
+        setBusyProgress(job.progress);
+        updateBgJob(jobId, { progress: job.progress });
+      }
+      if (job.status === "running" && !job.progress) {
+        setBusyProgress("Модель обрабатывает запрос…");
+      }
+      if (job.status === "done") return job.template;
+      if (job.status === "error") {
+        throw { response: { data: { detail: job.error } } };
+      }
+    }
+  };
+
   const run = async (fn, kind = "program") => {
     setBusyKind(kind);
     setBusy(true);
+    setBusyProgress("");
+    setBusyJobId(null);
     if (kind !== "refine") setResult(null);
     try {
       const started = await fn();
       let tpl = started;
       if (started?.job_id) {
-        let fails = 0;
-        const deadline = Date.now() + 5 * 60 * 1000;
-        for (;;) {
-          if (Date.now() > deadline) {
-            throw { response: { data: { detail: "ИИ отвечает слишком долго — попробуйте ещё раз" } } };
-          }
-          await new Promise((r) => setTimeout(r, 3000));
-          let job;
-          try {
-            job = await getAiJob(started.job_id);
-            fails = 0;
-          } catch (e) {
-            if (++fails >= 3) throw e;
-            continue;
-          }
-          if (job.status === "done") { tpl = job.template; break; }
-          if (job.status === "error") {
-            throw { response: { data: { detail: job.error } } };
-          }
-        }
+        setBusyJobId(started.job_id);
+        // Сохраняем в персистентное хранилище фоновых задач
+        const preview = kind === "generate" ? (prompt || "Новая программа").slice(0, 50)
+          : kind === "refine" ? (feedback || "Правка программы").slice(0, 50)
+          : kind === "parse" ? "Разбор плана"
+          : kind === "photo" ? "Разбор фото"
+          : kind;
+        addBgJob({ id: started.job_id, kind, preview });
+        tpl = await pollUntilDone(started.job_id);
       }
+      setBusyJobId(null);
+      setBusyProgress("");
       setResult(tpl);
       setQuestions(null);
+      // Убираем завершённую задачу из хранилища
+      if (started?.job_id) removeBgJob(started.job_id);
       hapticNotify("success");
       if (kind === "refine") {
         setFeedback("");
@@ -161,6 +264,10 @@ export default function AiImport() {
         toast.success(`Программа «${tpl.name}» сохранена в «Мои программы»`);
       }
     } catch (e) {
+      // При ошибке помечаем задачу в хранилище как ошибочную
+      if (busyJobId) {
+        updateBgJob(busyJobId, { status: "error", error: errText(e, "Ошибка") });
+      }
       hapticNotify("error");
       toast.error(errText(e, "Не удалось обработать запрос"));
     } finally {
@@ -358,6 +465,8 @@ export default function AiImport() {
             : busyKind === "photo" ? "Обычно занимает 40–90 секунд"
             : "Обычно занимает 20–60 секунд"
           }
+          progress={busyProgress}
+          jobId={busyJobId}
         />
       ) : result ? (
         <div className="ai-result" data-testid="ai-result">

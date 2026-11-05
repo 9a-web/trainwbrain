@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&display=swap&subset=cyrillic,latin');
+/* Шрифты (Plus Jakarta Sans, Playfair Display) подключены локально в
+   styles/fonts.css — внешний @import с fonts.googleapis.com убран,
+   он блокировал отрисовку и тормозил ввод в РФ / Telegram WebView. */
 
 @font-face {
   font-family: 'GG Zaglav';
@@ -26,6 +28,20 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Горизонтальный «резинковый» overscroll страницы отключён: свайп вбок
+     не тянет страницу и не открывает пустоту по краям. */
+  overscroll-behavior-x: none;
+  /* pinch-to-zoom выключен. Это единственная мера, которую слушаются все
+     движки: meta user-scalable=no в iOS игнорируется, а в Chromium работает
+     именно touch-action. pan-x/pan-y оставлены, чтобы внутренние
+     горизонтальные ленты (даты, чипы, heatmap) продолжали скроллиться. */
+  touch-action: pan-x pan-y;
+  /* iOS не раздувает текст при повороте экрана. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -34,11 +50,51 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   min-height: 100vh;
+  /* overflow-x на body пробрасывается на вьюпорт — страница не скроллится
+     вбок. На html его специально не дублируем: это сломало бы sticky-бары. */
   overflow-x: hidden;
+  max-width: 100%;
+  overscroll-behavior-x: none;
+  touch-action: pan-x pan-y;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Тап по кнопке/полю срабатывает сразу: manipulation убирает
+   double-tap-zoom и связанную с ним задержку распознавания клика.
+   Специально НЕ вешаем на html/body — иначе пострадает вложенный скролл. */
+a,
+button,
+input,
+select,
+textarea,
+label,
+[role='button'] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari / WKWebView (в т.ч. Telegram на iPhone) сам зумит страницу,
+   когда фокус попадает в поле с font-size < 16px, и не возвращает масштаб
+   обратно. Держим текстовые поля не мельче 16px на телефонах.
+   Плотные числовые строки (вес/повторы в подходе) не трогаем — у них своя
+   вёрстка, а type="number" в правила не попадает. */
+@media (max-width: 767px) {
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='search'],
+  input[type='tel'],
+  input[type='url'],
+  textarea,
+  textarea.ai-textarea,
+  textarea.pb-desc,
+  input.login-input,
+  input.mycoach-input {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* Font classes */

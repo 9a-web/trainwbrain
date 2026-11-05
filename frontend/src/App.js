@@ -1,235 +1,84 @@
 import "@/App.css";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
-  Link,
   Navigate,
   useLocation,
   useNavigate,
 } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { UserProvider, useUser } from "@/context/UserContext";
-import { getStats, getCardioStats } from "@/api";
-import DateSelector from "@/components/DateSelector";
-import Programs from "@/pages/Programs";
-import ProgramBuilder from "@/pages/ProgramBuilder";
-import AiImport from "@/pages/AiImport";
-import ImportLanding from "@/pages/ImportLanding";
+import { UserProvider } from "@/context/UserContext";
+import { redeemInvite } from "@/api";
+// Экран, который нужен сразу (или почти сразу), грузим синхронно:
+// главный экран и вход должны появляться без сетевого «догруза» чанка.
+import HomeScreen from "@/components/HomeScreen";
 import Login from "@/pages/Login";
-import { getStartParam } from "@/lib/platform";
-import Profile from "@/pages/Profile";
-import Coach from "@/pages/Coach";
-import CoachClient from "@/pages/CoachClient";
-import CoachPlanEditor from "@/pages/CoachPlanEditor";
-import CoachLiveSession from "@/pages/CoachLiveSession";
-import { StatsPage, CoachClientStatsPage } from "@/pages/Stats";
-import StreakPage from "@/pages/Streak";
-import NotificationSettings from "@/pages/NotificationSettings";
-import OneRepMax from "@/pages/OneRepMax";
-import SharedPlan from "@/pages/SharedPlan";
 import Onboarding from "@/pages/Onboarding";
-import Admin from "@/pages/Admin";
-import CardioPage from "@/pages/Cardio";
+import ImportLanding from "@/pages/ImportLanding";
+import { getStartParam } from "@/lib/platform";
 import { useCapabilities } from "@/hooks/useCapabilities";
-import { ChevronRight, Activity } from "lucide-react";
+import { Check, Info, AlertTriangle, X, Loader2 } from "lucide-react";
+import BgJobFloater from "@/components/BgJobFloater";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
-const pluralize = (n, forms) => {
-  const a = Math.abs(n) % 100;
-  const b = a % 10;
-  if (a > 10 && a < 20) return forms[2];
-  if (b > 1 && b < 5) return forms[1];
-  if (b === 1) return forms[0];
-  return forms[2];
-};
+// --- Code splitting ------------------------------------------------------
+// Всё остальное — отдельными чанками. Без этого весь бандл (three.js,
+// recharts, шейдеры, все страницы) весил ~2.3 МБ и парсился на телефоне
+// несколько секунд: приложение «зависало» на старте, а поля ввода
+// не реагировали на тапы (главный поток занят разбором JS).
+const chunk = (loader) => lazy(() => loader().then((m) => ({ default: m.default || m })));
 
-const Home = () => {
-  const { user, avatarUrl } = useUser();
-  const navigate = useNavigate();
-  const [streak, setStreak] = useState(0);
-  const [cardio, setCardio] = useState(null);
-  // Дневник временно скрыт: режим всегда «План» (переключатель убран).
+const Programs = chunk(() => import(/* webpackChunkName: "programs" */ "@/pages/Programs"));
+const ProgramBuilder = chunk(() => import(/* webpackChunkName: "program-builder" */ "@/pages/ProgramBuilder"));
+const AiImport = chunk(() => import(/* webpackChunkName: "ai-import" */ "@/pages/AiImport"));
+const Profile = chunk(() => import(/* webpackChunkName: "profile" */ "@/pages/Profile"));
+const Coach = chunk(() => import(/* webpackChunkName: "coach" */ "@/pages/Coach"));
+const CoachClient = chunk(() => import(/* webpackChunkName: "coach" */ "@/pages/CoachClient"));
+const CoachPlanEditor = chunk(() => import(/* webpackChunkName: "coach" */ "@/pages/CoachPlanEditor"));
+const CoachLiveSession = chunk(() => import(/* webpackChunkName: "coach" */ "@/pages/CoachLiveSession"));
+const CoachDiary = chunk(() => import(/* webpackChunkName: "coach" */ "@/pages/CoachDiary"));
+const StreakPage = chunk(() => import(/* webpackChunkName: "streak" */ "@/pages/Streak"));
+const NotificationSettings = chunk(() => import(/* webpackChunkName: "notifications" */ "@/pages/NotificationSettings"));
+const OneRepMax = chunk(() => import(/* webpackChunkName: "onerepmax" */ "@/pages/OneRepMax"));
+const SharedPlan = chunk(() => import(/* webpackChunkName: "shared-plan" */ "@/pages/SharedPlan"));
+const Admin = chunk(() => import(/* webpackChunkName: "admin" */ "@/pages/Admin"));
+const CardioPage = chunk(() => import(/* webpackChunkName: "cardio" */ "@/pages/Cardio"));
+const ClientDashboard = chunk(() => import(/* webpackChunkName: "client-dashboard" */ "@/pages/ClientDashboard"));
+const SessionDetail = chunk(() => import(/* webpackChunkName: "session-detail" */ "@/pages/SessionDetail"));
+const StatsPage = lazy(() => import(/* webpackChunkName: "stats" */ "@/pages/Stats").then((m) => ({ default: m.StatsPage })));
+const CoachClientStatsPage = lazy(() =>
+  import(/* webpackChunkName: "stats" */ "@/pages/Stats").then((m) => ({ default: m.CoachClientStatsPage }))
+);
 
-  useEffect(() => {
-    if (!user?.telegram_id) return undefined;
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const s = await getStats(user.telegram_id);
-        if (!cancelled) setStreak(s?.streak_days || 0);
-      } catch (e) {
-        /* no-op */
-      }
-    };
-    load();
-    const onProgress = () => load();
-    window.addEventListener("twb:progress", onProgress);
-    return () => {
-      cancelled = true;
-      window.removeEventListener("twb:progress", onProgress);
-    };
-  }, [user?.telegram_id]);
+const Home = () => <HomeScreen />;
 
-  // Виджет кардио: минуты за неделю + норма
-  useEffect(() => {
-    if (!user?.telegram_id) return undefined;
-    let cancelled = false;
-    getCardioStats(user.telegram_id, { period: "week" })
-      .then((d) => { if (!cancelled) setCardio(d || null); })
-      .catch(() => { if (!cancelled) setCardio(null); });
-    return () => { cancelled = true; };
-  }, [user?.telegram_id]);
+/** Route guards для тренерских/админских экранов.
+ *
+ * Роль coach остаётся у аккаунта навсегда, поэтому одного `roles.includes`
+ * мало: кабинет тренера доступен только при активном режиме «Тренер», а
+ * админ-панель — только с ролью admin. Прямой переход по ссылке в другом
+ * режиме уводит на главный экран.
+ */
+const CoachRoute = ({ allowed, children }) =>
+  allowed ? children : <Navigate to="/" replace />;
 
-  // Get greeting and icon based on current time
-  const getGreetingData = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      return { text: 'Доброе утро', icon: '/sunrise.svg' };
-    } else if (hour >= 12 && hour < 18) {
-      return { text: 'Добрый день', icon: '/day.svg' };
-    } else if (hour >= 18 && hour < 23) {
-      return { text: 'Добрый вечер', icon: '/sunset.svg' };
-    } else {
-      return { text: 'Доброй ночи', icon: '/night.svg' };
-    }
-  };
-
-  const greetingData = getGreetingData();
-
-  return (
-    <div className="app-container" data-testid="main-container">
-      {/* Gradient Background with Blur Effect */}
-      <div className="gradient-background" data-testid="gradient-background">
-        <img 
-          src="/gradientcenter.png" 
-          alt="" 
-          aria-hidden="true"
-        />
-      </div>
-      
-      {/* Content Layer */}
-      <div className="content-layer" data-testid="content-layer">
-        {/* Header */}
-        <header className="header" data-testid="header">
-          {/* Logo */}
-          <div className="header-logo" data-testid="header-logo">
-            <img src="/TWBlogo.png" alt="TrainWithBrain" />
-          </div>
-          
-          {/* Right side: Mode toggle + Menu + Avatar */}
-          <div className="header-right" data-testid="header-right">
-            <Link
-              to="/programs"
-              className="menu-button"
-              data-testid="menu-button"
-              aria-label="Программы"
-            >
-              <img src="/menu.svg" alt="Программы" width={40} height={40} />
-            </Link>
-            {avatarUrl ? (
-              <Link to="/profile" aria-label="Профиль" data-testid="profile-link">
-                <img
-                  src={avatarUrl}
-                  alt="Профиль"
-                  className="profile-avatar"
-                  data-testid="profile-avatar"
-                />
-              </Link>
-            ) : null}
-          </div>
-        </header>
-        
-        {/* Main Content Area - Greeting */}
-        <main className="main-content" data-testid="main-content">
-          <div className="greeting-row" data-testid="greeting-row">
-            <h1 className="greeting-text" data-testid="greeting-text">
-              {greetingData.text}, {user?.first_name || 'Гость'}!
-            </h1>
-            <img 
-              src={greetingData.icon} 
-              alt="" 
-              className="greeting-icon"
-              data-testid="greeting-icon"
-            />
-          </div>
-          
-          {/* Training Streak — ведёт к экрану тренировочной серии */}
-          <button
-            type="button"
-            className="streak-row streak-row-link"
-            data-testid="streak-row"
-            onClick={() => navigate("/streak")}
-            aria-label="Открыть тренировочную серию"
-          >
-            <img 
-              src="/fire_strike.svg" 
-              alt="" 
-              className="streak-icon"
-              data-testid="streak-icon"
-            />
-            <span className="streak-text" data-testid="streak-text">
-              Тренировочная серия в течение {streak} {pluralize(streak, ['дня', 'дней', 'дней'])}
-            </span>
-            <ChevronRight size={18} className="streak-chevron" aria-hidden="true" />
-          </button>
-
-          {/* Кардио за неделю → экран кардио */}
-          <button
-            type="button"
-            className="cardio-widget"
-            data-testid="home-cardio-widget"
-            onClick={() => navigate("/cardio")}
-            aria-label="Открыть кардио"
-          >
-            <span className="cardio-widget-ico" aria-hidden="true">
-              <Activity size={17} />
-            </span>
-            <span className="cardio-widget-body">
-              <span className="cardio-widget-top">
-                <b data-testid="home-cardio-minutes">
-                  {cardio?.weekly_minutes || 0} мин
-                </b>
-                <span className="cardio-widget-sub">
-                  {cardio?.weekly_target
-                    ? `из ${cardio.weekly_target} мин · норма недели`
-                    : "кардио за неделю"}
-                </span>
-              </span>
-              {cardio?.weekly_target ? (
-                <span className="cardio-widget-track">
-                  <i
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        Math.round(((cardio.weekly_minutes || 0) / cardio.weekly_target) * 100)
-                      )}%`,
-                    }}
-                  />
-                </span>
-              ) : (
-                <span className="cardio-widget-sub">
-                  {(cardio?.sessions || 0) > 0
-                    ? `${cardio.sessions} ${cardio.sessions === 1 ? "сессия" : "сессий"} · ${cardio.km || 0} км`
-                    : "Добавьте первую запись"}
-                </span>
-              )}
-            </span>
-            <ChevronRight size={18} className="streak-chevron" aria-hidden="true" />
-          </button>
-          
-          {/* Дневник временно скрыт: показываем только режим «План». */}
-          <DateSelector />
-        </main>
-      </div>
-    </div>
-  );
-};
+const AdminRoute = ({ allowed, children }) =>
+  allowed ? children : <Navigate to="/" replace />;
 
 const SplashScreen = () => (
   <div className="app-splash" data-testid="app-splash">
     <img src="/TWBlogo.png" alt="TrainWithBrain" className="app-splash-logo" />
+  </div>
+);
+
+/** Лёгкий фолбэк для догружаемого чанка: без полноэкранного сплэша,
+ *  чтобы не «мигать» логотипом на каждый переход. */
+const RouteFallback = () => (
+  <div className="route-fallback" data-testid="route-fallback" aria-busy="true">
+    <span className="route-fallback-spinner" />
   </div>
 );
 
@@ -279,12 +128,50 @@ const GoogleCallback = () => {
   return <SplashScreen />;
 };
 
+// Отложенный инвайт-код: гость вводит код на /welcome, затем регистрируется/
+// входит на /login, и после успешного входа код применяется автоматически.
+const PENDING_INVITE_KEY = "twb_pending_invite";
+function getPendingInvite() {
+  try {
+    return window.localStorage.getItem(PENDING_INVITE_KEY);
+  } catch (e) {
+    return null;
+  }
+}
+function setPendingInvite(code) {
+  try {
+    if (code) window.localStorage.setItem(PENDING_INVITE_KEY, code);
+    else window.localStorage.removeItem(PENDING_INVITE_KEY);
+  } catch (e) {
+    /* no-op */
+  }
+}
+
 const AppShell = () => {
   const { loading, isAuthenticated } = useAuth();
-  const { capabilities, onboarded, loading: capsLoading } = useCapabilities();
+  const {
+    capabilities,
+    onboarded,
+    loading: capsLoading,
+    refresh: refreshCapabilities,
+  } = useCapabilities();
+  const capsRoles = capabilities?.roles || [];
+  // Managed-клиент по правам ИЛИ предпросмотр клиентского интерфейса
+  // (режим «Клиент» в профиле тренера — только UI, права не меняются).
+  const isManagedClient = capabilities?.access_tier === "coach_managed" && !capsRoles.includes("coach");
+  const isClientPreview = capabilities?.active_mode === "client";
+  const isClientView = isManagedClient || isClientPreview;
+  // Тренерские/админские экраны: кабинет тренера открывается только в режиме
+  // тренера, админ-панель — только с ролью admin. Роль coach у аккаунта остаётся
+  // навсегда, поэтому одного `roles.includes("coach")` недостаточно.
+  const capsActiveMode = capabilities?.active_mode || "athlete";
+  const canUseCoachCabinet =
+    (capsRoles.includes("coach") || capsRoles.includes("admin")) && capsActiveMode === "coach";
+  const isAdminUser = capsRoles.includes("admin");
   const location = useLocation();
   const navigate = useNavigate();
   const importHandledRef = useRef(false);
+  const [redeeming, setRedeeming] = useState(false);
 
   // Отложенный импорт по ссылке/коду: после логина или из Telegram start_param
   useEffect(() => {
@@ -310,58 +197,124 @@ const AppShell = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Фаза 1 — онбординг-гейт. Редиректим ТОЛЬКО когда бэкенд явно сообщил
-  // onboarded === false (строго false). Если поле неизвестно/запрос упал —
-  // пропускаем как раньше (обратная совместимость до появления API).
+  // Гостевой шаг «код → вход»: после входа применяем отложенный код и
+  // снимаем онбординг-гейт. Если код неверный/просрочен — очищаем и отдаём на гейт.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const code = getPendingInvite();
+    if (!code) return;
+    let cancelled = false;
+    setRedeeming(true);
+    (async () => {
+      try {
+        const caps = await redeemInvite(code);
+        if (!cancelled) {
+          setPendingInvite(null);
+          try {
+            window.localStorage.setItem("twb_capabilities", JSON.stringify(caps || {}));
+          } catch (e) {
+            /* no-op */
+          }
+          await refreshCapabilities();
+        }
+      } catch (e) {
+        if (!cancelled) setPendingInvite(null);
+      } finally {
+        if (!cancelled) setRedeeming(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, refreshCapabilities]);
+
+  // Свежие capabilities после входа: иначе онбординг-гейт работал бы на устаревшем
+  // «гостевом» ответе и не отражал актуальный onboarded.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    refreshCapabilities();
+  }, [isAuthenticated, refreshCapabilities]);
+
+  // Фаза 1 — онбординг-гейт. Редиректим на /welcome ТОЛЬКО когда бэкенд явно
+  // сообщил onboarded === false (строго false). Пока применяется отложенный код —
+  // держим сплэш-экран, чтобы не мигнуть на /welcome.
   if (
     isAuthenticated &&
     !capsLoading &&
     onboarded === false &&
     location.pathname !== "/welcome"
   ) {
+    if (redeeming) return <SplashScreen />;
     return <Navigate to="/welcome" replace />;
   }
   if (location.pathname === "/auth/google") return <GoogleCallback />;
-  if (loading) return <SplashScreen />;
+  if (location.pathname === "/login") {
+    if (isAuthenticated) return <Navigate to="/" replace />;
+    return <Login />;
+  }
+  if (loading || redeeming) return <SplashScreen />;
   if (!isAuthenticated) {
     // Публичные страницы доступны без входа
     if (location.pathname.startsWith("/import/")) return <ImportLanding />;
     if (location.pathname.startsWith("/shared/")) {
       return (
-        <Routes>
-          <Route path="/shared/plan/:token" element={<SharedPlan />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<SplashScreen />}>
+          <Routes>
+            <Route path="/shared/plan/:token" element={<SharedPlan />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       );
     }
-    return <Login />;
+    // Инвайт-первая стратегия: гостя встречает экран «вход по коду».
+    return <Onboarding />;
   }
+  // Авторизован: пока не известен onboarded (после входа/редима) — сплэш,
+  // чтобы гейт не «мигал» приложением, а потом увёз на /welcome.
+  if (capsLoading) return <SplashScreen />;
   return (
     <UserProvider>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/programs" element={<Programs />} />
-        <Route path="/programs/builder/:templateId" element={<ProgramBuilder />} />
-        <Route path="/programs/ai" element={<AiImport />} />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={isClientView ? <ClientDashboard /> : <Home />} />
+        <Route path="/programs" element={isClientView ? <Navigate to="/" replace /> : <Programs />} />
+        <Route path="/programs/builder/:templateId" element={isClientView ? <Navigate to="/" replace /> : <ProgramBuilder />} />
+        <Route path="/programs/ai" element={isClientView ? <Navigate to="/" replace /> : <AiImport />} />
         <Route path="/import/:code" element={<ImportLanding />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/stats" element={<StatsPage />} />
+        <Route path="/stats/session/:sessionId" element={<SessionDetail />} />
         <Route path="/cardio" element={<CardioPage />} />
         <Route path="/streak" element={<StreakPage />} />
         <Route path="/notifications" element={<NotificationSettings />} />
         <Route path="/tools/1rm" element={<OneRepMax />} />
         <Route path="/welcome" element={<Onboarding />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<AdminRoute allowed={isAdminUser}><Admin /></AdminRoute>} />
         <Route path="/shared/plan/:token" element={<SharedPlan />} />
-        <Route path="/coach" element={<Coach />} />
-        <Route path="/coach/:athleteId" element={<CoachClient />} />
-        <Route path="/coach/:athleteId/live" element={<CoachLiveSession />} />
-        <Route path="/coach/:athleteId/edit" element={<CoachPlanEditor />} />
-        <Route path="/coach/:athleteId/stats" element={<CoachClientStatsPage />} />
+        <Route path="/coach" element={<CoachRoute allowed={canUseCoachCabinet}><Coach /></CoachRoute>} />
+        <Route path="/coach/:athleteId" element={<CoachRoute allowed={canUseCoachCabinet}><CoachClient /></CoachRoute>} />
+        <Route path="/coach/:athleteId/live" element={<CoachRoute allowed={canUseCoachCabinet}><CoachLiveSession /></CoachRoute>} />
+        <Route path="/coach/:athleteId/diary" element={<CoachRoute allowed={canUseCoachCabinet}><CoachDiary /></CoachRoute>} />
+        <Route path="/coach/diary" element={<CoachRoute allowed={canUseCoachCabinet}><CoachDiary /></CoachRoute>} />
+        <Route path="/coach/:athleteId/edit" element={<CoachRoute allowed={canUseCoachCabinet}><CoachPlanEditor /></CoachRoute>} />
+        <Route path="/coach/:athleteId/stats" element={<CoachRoute allowed={canUseCoachCabinet}><CoachClientStatsPage /></CoachRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
+      {/* Плавающее уведомление о фоновых ИИ-задачах (на всех страницах) */}
+      <BgJobFloater />
     </UserProvider>
   );
+};
+
+// Иконки уведомлений (стеклянные плашки в стиле iOS)
+const TOAST_ICONS = {
+  success: <Check size={17} strokeWidth={2.8} />,
+  info: <Info size={17} strokeWidth={2.8} />,
+  warning: <AlertTriangle size={17} strokeWidth={2.5} />,
+  error: <X size={17} strokeWidth={3} />,
+  loading: <Loader2 size={17} strokeWidth={2.6} className="twb-spin" />,
+  close: <X size={11} strokeWidth={3.2} />,
 };
 
 function App() {
@@ -369,8 +322,21 @@ function App() {
     <div className="App">
       <AuthProvider>
         <BrowserRouter>
-          <Toaster position="top-center" theme="dark" richColors />
-          <AppShell />
+          <Toaster
+            position="top-center"
+            theme="dark"
+            offset={{ top: 12 }}
+            mobileOffset={{ top: 10, left: 12, right: 12 }}
+            gap={10}
+            visibleToasts={3}
+            closeButton
+            duration={4200}
+            icons={TOAST_ICONS}
+            toastOptions={{ closeButtonAriaLabel: "Закрыть уведомление" }}
+          />
+          <ErrorBoundary>
+            <AppShell />
+          </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
     </div>
